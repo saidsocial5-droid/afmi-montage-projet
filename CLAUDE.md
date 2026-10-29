@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 AFMI Montage Projet is a WPF desktop app (.NET 9, `net9.0-windows`) for designing development projects for donors (EU, UNDP, GEF, AFD, etc.) following PCM/RBM methodology: funding radar, strategic planning/ToC, problem tree, logframe, risks, Gantt, budget, collaboration, export. The UI language is French. The long-form docs in `ARCHITECTURE.md` and `docs/` are mostly written in Arabic (with French/English terms). `docs/DECISIONS.md` is the ADR log.
 
-The folder is not a git repository (`git` is not available; see ADR 1). Changes are tracked in `docs/PLAN*.md`, `docs/REPORT*.md` and `docs/DECISIONS.md`.
+Since v1.9.20 the folder is a git repository (branch `main`, remote `origin` = https://github.com/saidsocial5-droid/afmi-montage-projet, which also serves the update releases; ADR 26). Changes are still documented in `docs/PLAN*.md`, `docs/REPORT*.md` and `docs/DECISIONS.md`.
 
 ## Commands
 
