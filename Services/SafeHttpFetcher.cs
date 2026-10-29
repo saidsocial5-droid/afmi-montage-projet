@@ -100,13 +100,14 @@ namespace AFMI_Montage_projet_2.Services
         };
 
         /// <summary>Récupère une ressource avec nouvel essai (délai progressif) sur erreur temporaire.</summary>
-        public async Task<SafeFetchResponse> FetchWithRetryAsync(string url, string? etag = null, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
+        public async Task<SafeFetchResponse> FetchWithRetryAsync(string url, string? etag = null, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default,
+            System.Collections.Generic.IDictionary<string, string>? headers = null)
         {
             for (int attempt = 1; ; attempt++)
             {
                 try
                 {
-                    return await FetchAsync(url, etag, lastModified, cancellationToken);
+                    return await FetchAsync(url, etag, lastModified, cancellationToken, headers);
                 }
                 catch (Exception ex) when (attempt < MaxAttempts && IsTransient(ex) && !cancellationToken.IsCancellationRequested)
                 {
@@ -116,9 +117,10 @@ namespace AFMI_Montage_projet_2.Services
         }
 
         /// <summary>Une tentative : redirections suivies manuellement (chaque saut revalidé), corps limité à <see cref="MaxBytes"/>.</summary>
-        public async Task<SafeFetchResponse> FetchAsync(string url, string? etag = null, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
+        public async Task<SafeFetchResponse> FetchAsync(string url, string? etag = null, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default,
+            System.Collections.Generic.IDictionary<string, string>? headers = null)
         {
-            var (response, finalUrl) = await SendFollowingRedirectsAsync(url, etag, lastModified, null, cancellationToken);
+            var (response, finalUrl) = await SendFollowingRedirectsAsync(url, etag, lastModified, headers, cancellationToken);
             using (response)
             {
                 if (response.StatusCode == HttpStatusCode.NotModified)
@@ -185,6 +187,10 @@ namespace AFMI_Montage_projet_2.Services
             }
         }
 
+        public static bool SameHost(string originalUrl, string currentUrl) =>
+            Uri.TryCreate(originalUrl, UriKind.Absolute, out var a) && Uri.TryCreate(currentUrl, UriKind.Absolute, out var b) &&
+            a.Scheme == b.Scheme && a.Port == b.Port && string.Equals(a.Host, b.Host, StringComparison.OrdinalIgnoreCase);
+
         /// <summary>
         /// Envoie la requête en suivant manuellement les redirections (chaque saut revalidé contre le SSRF).
         /// Renvoie une réponse réussie ou 304 (à libérer par l'appelant) ; lève une exception sinon.
@@ -205,7 +211,8 @@ namespace AFMI_Montage_projet_2.Services
                 using var request = new HttpRequestMessage(HttpMethod.Get, current);
                 if (!string.IsNullOrEmpty(etag) && EntityTagHeaderValue.TryParse(etag, out var tag)) request.Headers.IfNoneMatch.Add(tag);
                 if (lastModified.HasValue) request.Headers.IfModifiedSince = lastModified;
-                if (headers != null)
+                // En-têtes (dont l'authentification) envoyés uniquement à l'hôte d'origine, jamais après une redirection vers un autre hôte
+                if (headers != null && SameHost(url, current))
                     foreach (var (name, value) in headers) request.Headers.TryAddWithoutValidation(name, value);
 
                 var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);

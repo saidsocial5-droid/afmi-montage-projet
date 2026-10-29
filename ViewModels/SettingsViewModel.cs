@@ -75,6 +75,33 @@ namespace AFMI_Montage_projet_2.ViewModels
 
         public string CurrentVersion => AutoUpdaterService.CurrentVersion;
 
+        [ObservableProperty] private string _gitHubTokenStatus = string.Empty;
+
+        private void RefreshGitHubTokenStatus() =>
+            GitHubTokenStatus = Services.Updates.GitHubUpdateService.HasAccessToken
+                ? "🔒 Clé d'accès enregistrée sur ce poste."
+                : "Aucune clé d'accès (nécessaire si le dépôt est privé).";
+
+        public void SaveGitHubToken(string token)
+        {
+            if (!Services.Updates.GitHubUpdateService.LooksLikeToken(token))
+            {
+                UpdateStatus = "Clé d'accès non reconnue : elle commence par github_pat_ (ou ghp_).";
+                return;
+            }
+            Services.Updates.GitHubUpdateService.SaveAccessToken(token);
+            RefreshGitHubTokenStatus();
+            UpdateStatus = "Clé d'accès enregistrée (chiffrée). Cliquez sur « Rechercher une mise à jour » pour la tester.";
+        }
+
+        [RelayCommand]
+        private void ClearGitHubToken()
+        {
+            Services.Updates.GitHubUpdateService.SaveAccessToken(null);
+            RefreshGitHubTokenStatus();
+            UpdateStatus = "Clé d'accès supprimée de ce poste.";
+        }
+
         [RelayCommand]
         private void SaveGitHubRepository()
         {
@@ -167,6 +194,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 SelectedResponseLanguage = ResponseLanguageOptions.FirstOrDefault(o => o.Code == language) ?? ResponseLanguageOptions[0];
                 _loadingSettings = false;
                 GitHubRepository = Services.Updates.GitHubUpdateService.Repository;
+                RefreshGitHubTokenStatus();
             }
             catch (Exception ex)
             {

@@ -381,6 +381,11 @@
      - `.github/workflows/release.yml` : à l'envoi d'une étiquette `vX.Y.Z`, il vérifie la cohérence des versions, lance les tests, publie en autonome win-x64, compile Inno Setup, calcule l'empreinte et crée la Release ;
      - `build_and_sign.ps1` : produit le même installateur localement (paramètre `-GitHubRepository`, fichier `.sha256`) ;
      - `setup.iss` est enregistré en UTF-8 avec BOM.
+  5. **Dépôt privé** (`saidsocial5-droid/afmi-montage-projet`, à la demande de l'utilisateur) :
+     - chaque poste reçoit d'un administrateur une clé d'accès GitHub « fine-grained » limitée au dépôt, avec la seule permission Contents en lecture ;
+     - la clé est chiffrée DPAPI dans `AppSettings` (`Update_GitHubTokenProtected`), une table propre au poste, jamais publiée avec l'équipe ni intégrée à l'installateur, car une clé intégrée serait extractible par quiconque possède le fichier ;
+     - la clé n'est envoyée qu'à api.github.com : les fichiers passent par l'API des assets (`application/octet-stream`), et `SafeHttpFetcher` n'envoie les en-têtes qu'à l'hôte d'origine, jamais après une redirection vers le stockage GitHub.
+     - Alternative écartée : un second dépôt public réservé aux installateurs, qui rendrait l'application téléchargeable par tous.
 * **Limites :** l'installateur n'est pas signé (pas de certificat de signature de code) : Windows SmartScreen affiche un avertissement au premier lancement. L'API GitHub non authentifiée est limitée à 60 requêtes par heure et par poste (une vérification par démarrage).
 * **Alternatives rejetées :**
   - (a) Squirrel / Velopack / ClickOnce : ce serait une dépendance supplémentaire et une refonte de l'installation existante (Inno Setup, ADR 14).

@@ -168,6 +168,79 @@ namespace AFMI_Montage_Projet.Tests
             Assert.True(release.Version > Version.Parse(GitHubUpdateService.CurrentVersion));
         }
 
+        private sealed class RecordingHandler : System.Net.Http.HttpMessageHandler
+        {
+            public List<(string Url, string? Auth)> Requests { get; } = new();
+
+            protected override Task<System.Net.Http.HttpResponseMessage> SendAsync(System.Net.Http.HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+            {
+                Requests.Add((request.RequestUri!.AbsoluteUri, request.Headers.Authorization?.ToString()));
+                if (request.RequestUri.Host == "140.82.112.6")
+                {
+                    var redirect = new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.Found);
+                    redirect.Headers.Location = new Uri("https://185.199.108.133/release-asset/setup.exe?sig=abc");
+                    return Task.FromResult(redirect);
+                }
+                return Task.FromResult(new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new System.Net.Http.ByteArrayContent(new byte[] { 1, 2, 3 }) });
+            }
+        }
+
+        [Fact]
+        public async Task PrivateRepoKey_IsNeverForwardedToAnotherHost()
+        {
+            var handler = new RecordingHandler();
+            var fetcher = new SafeHttpFetcher(new System.Net.Http.HttpClient(handler)) { MaxAttempts = 1 };
+            string path = Path.Combine(TestEnvironment.DataDirectory, "download_test.exe");
+
+            long bytes = await fetcher.DownloadToFileAsync("https://140.82.112.6/repos/o/r/releases/assets/1", path, 1024, null,
+                new Dictionary<string, string> { ["Authorization"] = "Bearer github_pat_secret" });
+
+            Assert.Equal(3, bytes);
+            Assert.Equal(2, handler.Requests.Count);
+            Assert.Equal("Bearer github_pat_secret", handler.Requests[0].Auth);
+            Assert.Null(handler.Requests[1].Auth);
+        }
+
+        [Fact]
+        public void PrivateRepo_AssetIsDownloadedThroughApiOnlyWithKey()
+        {
+            var asset = new ReleaseAsset
+            {
+                Name = "AFMIMontageProjet_Setup_v1.9.21.exe",
+                DownloadUrl = "https://github.com/o/r/releases/download/v1.9.21/AFMIMontageProjet_Setup_v1.9.21.exe",
+                ApiUrl = "https://api.github.com/repos/o/r/releases/assets/42"
+            };
+            try
+            {
+                GitHubUpdateService.SaveAccessToken(null);
+                var (publicUrl, publicHeaders) = GitHubUpdateService.AssetRequest(asset);
+                Assert.Equal(asset.DownloadUrl, publicUrl);
+                Assert.Null(publicHeaders);
+
+                GitHubUpdateService.SaveAccessToken("github_pat_" + new string('A', 60));
+                Assert.True(GitHubUpdateService.HasAccessToken);
+                var (apiUrl, headers) = GitHubUpdateService.AssetRequest(asset);
+                Assert.Equal(asset.ApiUrl, apiUrl);
+                Assert.Equal("application/octet-stream", headers!["Accept"]);
+                Assert.StartsWith("Bearer github_pat_", headers["Authorization"]);
+
+                // Adresse API falsifiée : pas de clé envoyée ailleurs qu'à api.github.com
+                asset.ApiUrl = "https://evil.example.com/assets/42";
+                Assert.Equal(asset.DownloadUrl, GitHubUpdateService.AssetRequest(asset).Url);
+            }
+            finally
+            {
+                GitHubUpdateService.SaveAccessToken(null);
+            }
+        }
+
+        [Theory]
+        [InlineData("github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP", true)]
+        [InlineData("ghp_abcdefghijklmnopqrstuvwxyz0123456789", true)]
+        [InlineData("mot de passe", false)]
+        [InlineData("", false)]
+        public void AccessToken_FormatIsChecked(string token, bool expected) => Assert.Equal(expected, GitHubUpdateService.LooksLikeToken(token));
+
         [Fact]
         public void Sha256_OfDownloadedFile_IsComputed()
         {

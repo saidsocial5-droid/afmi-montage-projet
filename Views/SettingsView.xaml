@@ -98,6 +98,21 @@
                                                  helpers:AiTextAssistant.IsExcluded="True" helpers:AiTextAssistant.ExclusionReason="Identifiant technique de dépôt GitHub"/>
                                         <Button Grid.Column="1" Content="Enregistrer" Command="{Binding SaveGitHubRepositoryCommand}" Margin="8,0,0,0" Padding="10,4" Cursor="Hand"/>
                                     </Grid>
+                                    <StackPanel Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVis}}" Margin="0,10,0,0">
+                                        <TextBlock FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,4"
+                                                   Text="Clé d'accès (dépôt privé) : jeton GitHub « fine-grained » limité à ce dépôt, permission Contents en lecture seule. Chiffrée sur ce poste uniquement."/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <PasswordBox x:Name="TokenBox" Height="30" Padding="5" VerticalContentAlignment="Center"/>
+                                            <Button Grid.Column="1" Content="Enregistrer" Click="SaveToken_Click" Margin="8,0,0,0" Padding="10,4" Cursor="Hand"/>
+                                            <Button Grid.Column="2" Content="Effacer" Command="{Binding ClearGitHubTokenCommand}" Margin="6,0,0,0" Padding="10,4" Cursor="Hand"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding GitHubTokenStatus}" FontSize="11" Foreground="#047857" Margin="0,4,0,0"/>
+                                    </StackPanel>
                                     <Button Content="Rechercher une mise à jour" Command="{Binding CheckGitHubUpdatesCommand}" Margin="0,10,0,0" Padding="12,7" HorizontalAlignment="Left"
                                             Background="#0284C7" Foreground="White" BorderThickness="0" Cursor="Hand"/>
                                     <TextBlock Text="{Binding UpdateStatus}" Foreground="#0369A1" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>

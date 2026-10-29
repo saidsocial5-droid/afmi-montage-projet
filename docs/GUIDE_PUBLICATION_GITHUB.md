@@ -20,25 +20,27 @@
 
 ## الإعداد (مرة واحدة)
 
-1. أنشئ حساباً على https://github.com، يفضَّل أن يكون للجمعية، ثم أنشئ مستودعاً، مثلاً `afmi-montage-projet`.
-   - **مستودع عام (Public):** يجعل التحديثات تعمل دون أي مفتاح.
-   - **مستودع خاص (Private):** يتطلب مفتاح وصول، وهذا غير مدعوم حالياً.
-2. افتح PowerShell في مجلد المشروع وارفع الشيفرة. Git مثبَّت على جهازك:
+1. أنشئ المستودع `afmi-montage-projet` في حساب `saidsocial5-droid` على https://github.com/new:
+   - النوع: **خاص (Private)**.
+   - دون README أو أي ملف آخر.
+2. أنشئ مفتاح وصول للقراءة فقط، تحتاجه الحواسيب لتحميل التحديثات من مستودع خاص:
+   - افتح https://github.com/settings/personal-access-tokens/new (Fine-grained token).
+   - **Repository access:** اختر Only select repositories ثم `afmi-montage-projet`.
+   - **Permissions › Repository permissions › Contents:** اختر **Read-only**، ولا تمنح أي صلاحية أخرى.
+   - **Expiration:** يُنصح بسنة، وجدّده قبل انتهائه.
+   - انسخ المفتاح الذي يبدأ بـ `github_pat_`.
+3. في كل حاسوب، يُدخل المدير هذا المفتاح مرة واحدة في **Paramètres › Apparence › Mises à jour › Clé d'accès**:
+   - يُحفظ المفتاح مشفراً على ذلك الحاسوب فقط.
+   - لا يُرسل إلى الفريق، ولا يُدمج في ملف التثبيت.
+   - لا يُرسل إلا إلى `api.github.com`.
+   - هذا المفتاح يسمح بقراءة الشيفرة. إن ضاع حاسوب، احذف المفتاح من GitHub وأنشئ غيره.
+4. ارفع الشيفرة والإصدار الأول. المستودع المحلي جاهز: الفرع `main` والوسم `v1.9.20` والوجهة `origin`.
    ```powershell
-   git init
-   git add .
-   git commit -m "AFMI Montage Projet 1.9.20"
-   git branch -M main
-   git remote add origin https://github.com/<الحساب>/afmi-montage-projet.git
-   git push -u origin main
+   git push -u origin main --tags
    ```
-   الملف `.gitignore` يستبعد مجلدات البناء والشهادات والملفات الثنائية الكبيرة.
-3. انشر الإصدار الأول:
-   ```powershell
-   git tag v1.9.20
-   git push origin v1.9.20
-   ```
-   تابع التنفيذ في تبويب **Actions**. بعد نحو 10 دقائق يظهر الإصدار في **Releases**.
+   - الملف `.gitignore` يستبعد مجلدات البناء والشهادات والملفات الثنائية الكبيرة.
+   - تابع التنفيذ في تبويب **Actions**. بعد نحو 15 دقيقة يظهر الإصدار في **Releases**.
+   - المستودع الخاص المجاني يمنح 2000 دقيقة تنفيذ شهرياً، وكل دقيقة على Windows تُحتسب دقيقتين. هذا يكفي لعشرات الإصدارات في الشهر.
 
 ## نشر إصدار جديد لاحقاً
 
@@ -55,9 +57,8 @@
 
 ## ملاحظات
 
-- **الحواسيب المثبَّتة قبل ربط GitHub:** يجب أن يُدخل المدير اسم المستودع (`الحساب/afmi-montage-projet`) في **Paramètres › Apparence › Mises à jour**.
-  - النسخ المبنية عبر GitHub Actions تعرف مستودعها تلقائياً.
-  - أو ثبّت مرة واحدة إصداراً مبنياً من GitHub.
+- **اسم المستودع:** النسخ المبنية عبر GitHub Actions، ونسخة 1.9.20 المحلية بعد إعادة بنائها، تعرف مستودعها تلقائياً (`saidsocial5-droid/afmi-montage-projet`). أما النسخ الأقدم فيُدخل المدير اسم المستودع يدوياً في الإعدادات.
+- **تحميل ملف التثبيت يدوياً:** في المستودع الخاص يتطلب ذلك تسجيل الدخول إلى GitHub. لذلك يوزَّع أول تثبيت باليد (USB أو Drive)، وتأتي التحديثات اللاحقة تلقائياً.
 - **البناء المحلي:** يمكنك البناء على جهازك بالأمر:
   ```powershell
   .\build_and_sign.ps1 -GitHubRepository الحساب/afmi-montage-projet

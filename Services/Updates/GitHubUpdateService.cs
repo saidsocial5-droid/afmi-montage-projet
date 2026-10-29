@@ -16,6 +16,9 @@ namespace AFMI_Montage_projet_2.Services.Updates
     {
         public string Name { get; set; } = string.Empty;
         public string DownloadUrl { get; set; } = string.Empty;
+
+        /// <summary>Adresse API du fichier (api.github.com/…/releases/assets/{id}) : seule voie de téléchargement d'un dépôt privé.</summary>
+        public string ApiUrl { get; set; } = string.Empty;
         public long Size { get; set; }
 
         /// <summary>Empreinte publiée par GitHub (« sha256:… ») ou lue dans le fichier .sha256 joint à la version.</summary>
@@ -49,10 +52,14 @@ namespace AFMI_Montage_projet_2.Services.Updates
     /// (refus en cas d'absence ou de différence), puis il est lancé en mode silencieux et l'application se ferme.
     /// Le dépôt (« propriétaire/nom ») vient du réglage Update_GitHubRepository, sinon de Config/update.json
     /// (renseigné automatiquement par la chaîne de publication GitHub Actions).
+    /// Dépôt privé : une clé d'accès en lecture seule (jeton GitHub « fine-grained », Contents: Read-only) est saisie
+    /// par poste, chiffrée DPAPI dans les réglages locaux (jamais partagés avec l'équipe, ni intégrée à l'installateur),
+    /// et n'est envoyée qu'à api.github.com.
     /// </summary>
     public class GitHubUpdateService
     {
         public const string RepositorySetting = "Update_GitHubRepository";
+        public const string TokenSetting = "Update_GitHubTokenProtected";
         public const string InstallerPattern = @"^AFMIMontageProjet_Setup_v[\d.]+\.exe$";
         public const long MaxInstallerBytes = 600L * 1024 * 1024;
 
@@ -103,11 +110,44 @@ namespace AFMI_Montage_projet_2.Services.Updates
         public static bool IsValidRepository(string? value) =>
             !string.IsNullOrWhiteSpace(value) && RepositoryRegex.IsMatch(NormalizeRepository(value));
 
-        private static readonly Dictionary<string, string> ApiHeaders = new()
+        /// <summary>Clé d'accès GitHub de ce poste (déchiffrée), ou chaîne vide.</summary>
+        public static string AccessToken
         {
-            ["Accept"] = "application/vnd.github+json",
-            ["X-GitHub-Api-Version"] = "2022-11-28"
-        };
+            get
+            {
+                try { return Helpers.EncryptionHelper.Unprotect(SettingsService.GetSetting(TokenSetting, "")).Trim(); }
+                catch (Exception ex)
+                {
+                    AppLogger.Warn(nameof(GitHubUpdateService), "Clé d'accès GitHub illisible.", ex);
+                    return string.Empty;
+                }
+            }
+        }
+
+        public static bool HasAccessToken => AccessToken.Length > 0;
+
+        public static void SaveAccessToken(string? token) =>
+            SettingsService.SaveSetting(TokenSetting, string.IsNullOrWhiteSpace(token) ? "" : Helpers.EncryptionHelper.Protect(token.Trim()));
+
+        /// <summary>Format des jetons GitHub (classiques ghp_, « fine-grained » github_pat_).</summary>
+        public static bool LooksLikeToken(string? token) =>
+            !string.IsNullOrWhiteSpace(token) && Regex.IsMatch(token.Trim(), @"^(ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})$");
+
+        private static Dictionary<string, string> ApiHeaders(string accept = "application/vnd.github+json")
+        {
+            var headers = new Dictionary<string, string>
+            {
+                ["Accept"] = accept,
+                ["X-GitHub-Api-Version"] = "2022-11-28"
+            };
+            string token = AccessToken;
+            if (token.Length > 0) headers["Authorization"] = "Bearer " + token;
+            return headers;
+        }
+
+        private static bool IsGitHubApiUrl(string url) =>
+            Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps &&
+            uri.Host.Equals("api.github.com", StringComparison.OrdinalIgnoreCase);
 
         public async Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken = default)
         {
@@ -120,7 +160,18 @@ namespace AFMI_Montage_projet_2.Services.Updates
             }
             result.IsConfigured = true;
 
-            var response = await _fetcher.FetchWithRetryAsync($"https://api.github.com/repos/{repo}/releases/latest", cancellationToken: cancellationToken);
+            SafeFetchResponse response;
+            try
+            {
+                response = await _fetcher.FetchWithRetryAsync($"https://api.github.com/repos/{repo}/releases/latest", cancellationToken: cancellationToken, headers: ApiHeaders());
+            }
+            catch (SafeFetchException ex) when (ex.Message.StartsWith("HTTP 404", StringComparison.Ordinal) || ex.Message.StartsWith("HTTP 401", StringComparison.Ordinal))
+            {
+                result.Message = HasAccessToken
+                    ? $"Dépôt {repo} introuvable avec la clé d'accès de ce poste, ou aucune version publiée (clé expirée ou sans accès à ce dépôt ?)."
+                    : $"Dépôt {repo} privé ou sans version publiée : saisissez la clé d'accès GitHub dans Paramètres › Mises à jour.";
+                return result;
+            }
             var release = ParseRelease(Encoding.UTF8.GetString(response.Body));
             result.Release = release;
 
@@ -168,6 +219,7 @@ namespace AFMI_Montage_projet_2.Services.Updates
                     {
                         Name = Str(a, "name"),
                         DownloadUrl = Str(a, "browser_download_url"),
+                        ApiUrl = Str(a, "url"),
                         Size = a.TryGetProperty("size", out var s) && s.TryGetInt64(out var size) ? size : 0
                     };
                     string digest = Str(a, "digest");
@@ -186,17 +238,15 @@ namespace AFMI_Montage_projet_2.Services.Updates
         public async Task<string> DownloadVerifiedInstallerAsync(GitHubRelease release, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             var installer = release.Installer ?? throw new InvalidOperationException("Aucun installateur dans cette version.");
-            if (!Uri.TryCreate(installer.DownloadUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
-                !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Adresse de téléchargement inattendue : seules les versions publiées sur github.com sont acceptées.");
+            var (url, headers) = AssetRequest(installer);
 
             string expected = installer.Sha256 ?? await ReadChecksumFileAsync(release, cancellationToken)
                 ?? throw new InvalidOperationException("Aucune empreinte SHA-256 publiée pour cet installateur : installation refusée par sécurité.");
 
             string folder = Path.Combine(Path.GetTempPath(), "AFMI_Update");
             Directory.CreateDirectory(folder);
-            string path = Path.Combine(folder, installer.Name);
-            await _fetcher.DownloadToFileAsync(installer.DownloadUrl, path, MaxInstallerBytes, progress, cancellationToken: cancellationToken);
+            string path = Path.Combine(folder, Path.GetFileName(installer.Name));
+            await _fetcher.DownloadToFileAsync(url, path, MaxInstallerBytes, progress, headers, cancellationToken);
 
             string actual = ComputeSha256(path);
             if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
@@ -211,9 +261,25 @@ namespace AFMI_Montage_projet_2.Services.Updates
         private async Task<string?> ReadChecksumFileAsync(GitHubRelease release, CancellationToken cancellationToken)
         {
             if (release.ChecksumFile == null) return null;
-            var response = await _fetcher.FetchWithRetryAsync(release.ChecksumFile.DownloadUrl, cancellationToken: cancellationToken);
+            var (url, headers) = AssetRequest(release.ChecksumFile);
+            var response = await _fetcher.FetchWithRetryAsync(url, cancellationToken: cancellationToken, headers: headers);
             var match = Regex.Match(Encoding.UTF8.GetString(response.Body), @"\b[a-fA-F0-9]{64}\b");
             return match.Success ? match.Value.ToLowerInvariant() : null;
+        }
+
+        /// <summary>
+        /// Adresse et en-têtes de téléchargement d'un fichier de version : dépôt privé (clé présente) par l'API
+        /// (application/octet-stream, redirection vers le stockage GitHub sans la clé), sinon lien public github.com.
+        /// </summary>
+        public static (string Url, Dictionary<string, string>? Headers) AssetRequest(ReleaseAsset asset)
+        {
+            if (HasAccessToken && IsGitHubApiUrl(asset.ApiUrl))
+                return (asset.ApiUrl, ApiHeaders("application/octet-stream"));
+
+            if (!Uri.TryCreate(asset.DownloadUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
+                !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Adresse de téléchargement inattendue : seules les versions publiées sur GitHub sont acceptées.");
+            return (asset.DownloadUrl, null);
         }
 
         public static string ComputeSha256(string path)
