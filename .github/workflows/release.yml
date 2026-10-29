@@ -1,0 +1,86 @@
+# Publication d'une version d'AFMI Montage Projet (ADR 26)
+#
+# Déclenchement : envoi d'une étiquette « vX.Y.Z » (identique à <Version> du .csproj et à MyAppVersion de setup.iss),
+# ou lancement manuel depuis l'onglet Actions (version de test, sans publication).
+# Résultat : une « Release » GitHub contenant l'installateur Windows et son empreinte SHA-256 ;
+# les postes installés la détectent au démarrage et proposent la mise à jour.
+
+name: Publication de l'installateur Windows
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: SDK .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cohérence des versions (étiquette, .csproj, setup.iss)
+        run: |
+          $csproj = ([xml](Get-Content "AFMI Montage projet 2.csproj")).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $iss = (Select-String -Path setup.iss -Pattern '#define MyAppVersion "([^"]+)"').Matches[0].Groups[1].Value
+          if ($csproj -ne $iss) { throw "Version incohérente : .csproj = $csproj, setup.iss = $iss" }
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $tag = "${{ github.ref_name }}".TrimStart('v')
+            if ($tag -ne $csproj) { throw "L'étiquette ${{ github.ref_name }} ne correspond pas à la version $csproj" }
+          }
+          "VERSION=$csproj" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Dépôt des mises à jour intégré à l'application
+        run: |
+          @{ GitHubRepository = "${{ github.repository }}" } | ConvertTo-Json | Out-File Config/update.json -Encoding utf8
+
+      - name: Tests
+        run: dotnet test AFMI_Montage_Projet.Tests -c Release
+
+      - name: Publication autonome win-x64
+        run: dotnet publish "AFMI Montage projet 2.csproj" -c Release -r win-x64 --self-contained true
+
+      - name: Installateur WebView2 (prérequis)
+        run: Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile MicrosoftEdgeWebview2Setup.exe
+
+      - name: Inno Setup
+        run: |
+          choco install innosetup --no-progress -y
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
+          if ($LASTEXITCODE -ne 0) { throw "Échec de la compilation Inno Setup" }
+
+      - name: Empreinte SHA-256
+        run: |
+          Get-ChildItem Installer\*.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)" | Out-File "$($_.FullName).sha256" -Encoding ascii
+          }
+
+      - name: Artefact (lancement manuel)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: installateur-${{ env.VERSION }}
+          path: Installer/*
+
+      - name: Publication de la version
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AFMI Montage Projet ${{ env.VERSION }}
+          files: |
+            Installer/*.exe
+            Installer/*.exe.sha256
+          generate_release_notes: true

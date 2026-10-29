@@ -1,0 +1,24 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace AFMI_Montage_projet_2.Models
+{
+    public class Notification
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int UserId { get; set; }
+        public User? User { get; set; }
+
+        [Required]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        public string Message { get; set; } = string.Empty;
+
+        public bool IsRead { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}

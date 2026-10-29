@@ -1,0 +1,588 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.Radar.ProjectRadarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels.Radar"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             FlowDirection="{Binding FlowDirection}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+
+        <Style x:Key="ChipButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#334155"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E2E8F0"/>
+                    <Setter Property="BorderBrush" Value="#94A3B8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ActionCardButtonStyle" TargetType="Button">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="#F8FAFC">
+        <Grid.RowDefinitions>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Refreshing progress notification bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Tabs -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Header -->
+        <Border Grid.Row="0" Background="#0F172A" Padding="20,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📡" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Radar des Projets (Veille &amp; Subventions)" Foreground="White" FontSize="19" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="Veille automatisée multi-bailleurs (GEF, PNUD, UE, Banque Mondiale, AFD, UICN, FAO, CEPF) et ciblage par IA pour l'AFMI" 
+                               Foreground="#94A3B8" FontSize="12" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Toggle Langue / RTL -->
+                    <Button Content="🌐 Direction RTL / LTR" Command="{Binding ToggleRtlDirectionCommand}"
+                            Background="#334155" Foreground="White" BorderThickness="0" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" FontWeight="SemiBold">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Actualiser les flux -->
+                    <Button Command="{Binding RefreshAllFeedsCommand}"
+                            Background="#059669" Foreground="White" BorderThickness="0" Padding="14,8" Cursor="Hand" FontWeight="Bold">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄 "/>
+                            <TextBlock Text="Actualiser tout"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Refresh Progress Bar (when active) -->
+        <Border Grid.Row="1" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="0,0,0,1" Padding="20,8"
+                Visibility="{Binding IsRefreshing, Converter={StaticResource BoolToVisConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding RefreshStatusMessage}" Foreground="#065F46" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                <ProgressBar Grid.Column="1" Value="{Binding RefreshProgress}" Maximum="100" Height="10" Margin="15,0" Foreground="#059669"/>
+                <Button Grid.Column="2" Content="✕ Annuler" Command="{Binding CancelRefreshCommand}"
+                        Background="#DC2626" Foreground="White" BorderThickness="0" Padding="8,4" FontSize="11" Cursor="Hand" FontWeight="SemiBold">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="3"/></Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Main Content (Tabs) -->
+        <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}" BorderThickness="0" Background="Transparent" Margin="20,10,20,10">
+            <!-- TAB 1: Opportunités Découvertes -->
+            <TabItem Header="🔍 Opportunités Découvertes" FontSize="13" FontWeight="SemiBold" Padding="15,8">
+                <Grid Margin="0,15,0,0">
+                    <Grid.RowDefinitions>
+                        <!-- Barre de recherche -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Chips thématiques -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Filtres multi-critères -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Liste des opportunités -->
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 1. Barre de recherche plein texte -->
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="12" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="🔍" FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                     BorderThickness="0" FontSize="13" VerticalContentAlignment="Center" Background="Transparent"/>
+                            <Button Grid.Column="2" Content="✕" Command="{Binding ClearFiltersCommand}"
+                                    Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Cursor="Hand" FontWeight="Bold" Padding="6,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- 2. Suggestions thématiques rapides (Chips) AFMI -->
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding ThematicChips}" Margin="0,0,0,6">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}" Style="{StaticResource ChipButtonStyle}"
+                                        Command="{Binding DataContext.SelectThematicChipCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- 3. Filtres multi-critères (AND) avec recherche par date et échéance -->
+                    <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="12" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Ligne 1: Donateur, Axe Stratégique, Note IA, Tri -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="Bailleur / Donateur :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                <ComboBox ItemsSource="{Binding AvailableDonors}" SelectedItem="{Binding SelectedDonorFilter}" Height="30" FontSize="12"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,8,0">
+                                <TextBlock Text="Axe Stratégique AFMI :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                <ComboBox ItemsSource="{Binding AvailableAxes}" SelectedItem="{Binding SelectedAxisFilter}" Height="30" FontSize="12"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,8,0">
+                                <TextBlock Text="Score de pertinence IA :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                <ComboBox ItemsSource="{Binding AvailableScoreFilters}" SelectedItem="{Binding SelectedScoreFilter}" Height="30" FontSize="12"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="3" Margin="0,0,8,0">
+                                <TextBlock Text="Trier par :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                <ComboBox ItemsSource="{Binding AvailableSortOptions}" SelectedItem="{Binding SelectedSortOption}" Height="30" FontSize="12"/>
+                            </StackPanel>
+
+                            <!-- Ligne 2: Filtres de Date (Publication & Date limite / Échéance) + Réinitialiser & Compteur -->
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,8,0">
+                                <TextBlock Text="📅 Date de publication :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                <ComboBox ItemsSource="{Binding AvailablePublishDateFilters}" SelectedItem="{Binding SelectedPublishDateFilter}" Height="30" FontSize="12"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,10,8,0">
+                                <TextBlock Text="⏰ Date limite (Échéance) :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                <ComboBox ItemsSource="{Binding AvailableDeadlineFilters}" SelectedItem="{Binding SelectedDeadlineFilter}" Height="30" FontSize="12"/>
+                            </StackPanel>
+
+                            <!-- Période personnalisée (si sélectionnée) -->
+                            <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,10,8,0" Orientation="Horizontal" VerticalAlignment="Center"
+                                        Visibility="{Binding IsCustomPublishDateRange, Converter={StaticResource BoolToVisConverter}}">
+                                <TextBlock Text="Du :" VerticalAlignment="Center" FontSize="11" Foreground="#64748B" Margin="0,0,4,0"/>
+                                <DatePicker SelectedDate="{Binding CustomPublishDateMin, Mode=TwoWay}" Height="30" Width="110" Margin="0,0,8,0"/>
+                                <TextBlock Text="Au :" VerticalAlignment="Center" FontSize="11" Foreground="#64748B" Margin="0,0,4,0"/>
+                                <DatePicker SelectedDate="{Binding CustomPublishDateMax, Mode=TwoWay}" Height="30" Width="110"/>
+                            </StackPanel>
+
+                            <!-- Clear button & Count -->
+                            <StackPanel Grid.Row="1" Grid.Column="4" VerticalAlignment="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="✕ Réinitialiser" Command="{Binding ClearFiltersCommand}"
+                                        Background="#F1F5F9" Foreground="#64748B" BorderThickness="0" Padding="10,6" Height="30" Cursor="Hand" FontWeight="SemiBold" Margin="0,0,8,0">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                                <TextBlock VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="#0EA5E9">
+                                    <Run Text="{Binding FilteredOpportunities.Count, Mode=OneWay}"/>
+                                    <Run Text=" résultat(s)"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 4. Liste des cartes d'opportunités avec virtualisation -->
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                            <!-- Empty State -->
+                            <Border Background="White" CornerRadius="8" Padding="40" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1"
+                                    Visibility="{Binding FilteredOpportunities.Count, Converter={StaticResource InverseCountToVisibilityConverter}}">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="📡" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Aucune opportunité ne correspond à ces critères." FontSize="15" FontWeight="Bold" Foreground="#475569" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Essayez d'élargir votre recherche, de réinitialiser les filtres ou d'actualiser les flux institutionnels." 
+                                               FontSize="12" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Opportunities List -->
+                            <ItemsControl ItemsSource="{Binding FilteredOpportunities}"
+                                          VirtualizingStackPanel.IsVirtualizing="True"
+                                          VirtualizingStackPanel.VirtualizationMode="Recycling">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,12" BorderBrush="#E2E8F0" BorderThickness="1">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="8" Direction="-90" RenderingBias="Quality" ShadowDepth="1" Color="#0F172A" Opacity="0.05"/>
+                                            </Border.Effect>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <!-- Metadata Row (Donor, Date, Score) -->
+                                                    <RowDefinition Height="Auto"/>
+                                                    <!-- Title Row -->
+                                                    <RowDefinition Height="Auto"/>
+                                                    <!-- Badges (Budget, Deadline, Matched Axes) -->
+                                                    <RowDefinition Height="Auto"/>
+                                                    <!-- Description / AI Summary -->
+                                                    <RowDefinition Height="Auto"/>
+                                                    <!-- Rationale -->
+                                                    <RowDefinition Height="Auto"/>
+                                                    <!-- Action buttons -->
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Metadata Row -->
+                                                <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <!-- Donor Badge -->
+                                                        <Border Background="#EFF6FF" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding Donor}" Foreground="#1D4ED8" FontSize="11" FontWeight="Bold"/>
+                                                        </Border>
+                                                        <!-- Feed Name -->
+                                                        <TextBlock Text="{Binding FeedName}" Foreground="#64748B" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                        <!-- Publish Date -->
+                                                        <TextBlock Text="{Binding PublishDate, StringFormat={}{0:dd/MM/yyyy}}" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+
+                                                    <!-- Score Badge -->
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                        <Border Background="{Binding ScoreColor}" CornerRadius="12" Padding="10,3" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ScoreBadgeText}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Title Row -->
+                                                <TextBlock Grid.Row="1" Text="{Binding Title}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" 
+                                                           TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+                                                <!-- Badges Row (Budget, Deadline, Matched Axes) -->
+                                                <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+                                                    <!-- Budget Badge -->
+                                                    <Border Background="#F1F5F9" CornerRadius="4" Padding="8,4" Margin="0,0,8,4">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="💰 " FontSize="11"/>
+                                                            <TextBlock Text="Budget : " FontWeight="SemiBold" Foreground="#475569" FontSize="11"/>
+                                                            <TextBlock Text="{Binding FormattedBudget}" Foreground="#0F172A" FontWeight="Bold" FontSize="11"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- Dynamic Deadline Status Badge (Active / Imminent / Expired) -->
+                                                    <Border Background="{Binding DeadlineStatusBadgeBackground}" 
+                                                            BorderBrush="{Binding DeadlineStatusBadgeBorder}" 
+                                                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,8,4">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="📅 " FontSize="11"/>
+                                                            <TextBlock Text="Échéance : " FontWeight="SemiBold" Foreground="#475569" FontSize="11"/>
+                                                            <TextBlock Text="{Binding DeadlineStatusText}" Foreground="{Binding DeadlineStatusColor}" FontWeight="Bold" FontSize="11"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- In Pipeline Badge -->
+                                                    <Border Background="#D1FAE5" CornerRadius="4" Padding="8,4" Margin="0,0,8,4"
+                                                            Visibility="{Binding IsInPipeline, Converter={StaticResource BoolToVisConverter}}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="✓ " Foreground="#065F46" FontWeight="Bold" FontSize="11"/>
+                                                            <TextBlock Text="Dans le Pipeline" Foreground="#065F46" FontWeight="Bold" FontSize="11"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- Matched Axes -->
+                                                    <Border Background="#ECFDF5" CornerRadius="4" Padding="8,4" Margin="0,0,8,4"
+                                                            Visibility="{Binding AiMatchedAxes, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="🎯 " FontSize="11"/>
+                                                            <TextBlock Text="{Binding AiMatchedAxes}" Foreground="#065F46" FontWeight="SemiBold" FontSize="11"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </WrapPanel>
+
+                                                <!-- Description / AI Summary with Language Switch -->
+                                                <Border Grid.Row="3" Background="#F8FAFC" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <!-- Lang Switch header -->
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="Résumé / Aperçu de l'appel :" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                                                            <Button Grid.Column="1" Content="🌐 Traduire le résumé" 
+                                                                    Command="{Binding DataContext.ToggleSummaryLanguageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="Transparent" Foreground="#0284C7" BorderThickness="0" FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                                                        </Grid>
+
+                                                        <!-- Content with FlowDirection -->
+                                                        <TextBlock Grid.Row="1" Text="{Binding DisplaySummary}" 
+                                                                   FlowDirection="{Binding DisplaySummaryDirection}" 
+                                                                   FontFamily="{Binding DisplaySummaryFontFamily}"
+                                                                   FontSize="13" Foreground="#334155" TextWrapping="Wrap" LineHeight="20"/>
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- AI Rationale (if scored) -->
+                                                <Border Grid.Row="4" Background="#FEFCE8" CornerRadius="6" Padding="10" Margin="0,0,0,10"
+                                                        Visibility="{Binding AiScoreRationale, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="💡 Justification du ciblage IA pour AFMI (Moyen Atlas) :" FontWeight="Bold" FontSize="11" Foreground="#854D0E" Margin="0,0,0,3"/>
+                                                        <TextBlock Text="{Binding AiScoreRationale}" FontSize="12" Foreground="#713F12" TextWrapping="Wrap" LineHeight="18"/>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- Action Buttons Row -->
+                                                <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <!-- Évaluer par IA -->
+                                                    <Button Content="⚡ Évaluer par l'IA" 
+                                                            Command="{Binding DataContext.ScoreItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionCardButtonStyle}"
+                                                            Background="#F3E8FF" Foreground="#7E22CE"/>
+
+                                                    <!-- Ouvrir lien officiel -->
+                                                    <Button Content="🌐 Source officielle" 
+                                                            Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding Link}"
+                                                            Style="{StaticResource ActionCardButtonStyle}"
+                                                            Background="#F1F5F9" Foreground="#334155"/>
+
+                                                    <!-- Rédiger proposition IA (Formulation complète de projet) -->
+                                                    <Button Content="✨ Formuler le projet par l'IA (Projet complet)" 
+                                                            Command="{Binding DataContext.DraftProposalCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Génère un projet complet (Cadrage, Arbre de problèmes, Cadre Logique, Indicateurs SMART, Risques, Budget) et l'ouvre directement dans l'espace de montage"
+                                                            Style="{StaticResource ActionCardButtonStyle}"
+                                                            Background="#6366F1" Foreground="White"/>
+
+                                                    <!-- Ajouter à la pipeline -->
+                                                    <Button Content="📥 Ajouter au Pipeline" 
+                                                            Command="{Binding DataContext.AddToPipelineCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource ActionCardButtonStyle}"
+                                                            Background="#059669" Foreground="White"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 2: Pipeline des Projets -->
+            <TabItem Header="📥 Pipeline des Projets" FontSize="13" FontWeight="SemiBold" Padding="15,8">
+                <Grid Margin="0,15,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Pipeline des opportunités de financement" FontSize="16" FontWeight="Bold" Foreground="#1E293B"/>
+                                <TextBlock Text="Opportunités sélectionnées et enregistrées en base locale, prêtes pour le montage de dossiers de subvention." Foreground="#64748B" FontSize="12" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" FontWeight="Bold" Foreground="#059669">
+                                <Run Text="{Binding PipelineOpportunities.Count, Mode=OneWay}"/>
+                                <Run Text=" opportunité(s)"/>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+
+                    <!-- Pipeline Items List -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding PipelineOpportunities}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              BorderBrush="#CBD5E1" BorderThickness="1" Background="White"
+                              RowHeaderWidth="0" FontSize="12" RowHeight="45">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Bailleur" Binding="{Binding Donor}" Width="120" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Titre de l'opportunité" Binding="{Binding Title}" Width="3*"/>
+                            <DataGridTextColumn Header="Budget Est." Binding="{Binding EstimatedBudget, StringFormat={}{0:N0}}" Width="110"/>
+                            <DataGridTextColumn Header="Devise" Binding="{Binding Currency}" Width="60"/>
+                            <DataGridTextColumn Header="Échéance" Binding="{Binding Deadline, StringFormat={}{0:dd/MM/yyyy}}" Width="95"/>
+                            <DataGridTextColumn Header="Statut" Binding="{Binding PipelineStatus}" Width="120"/>
+                            <DataGridTemplateColumn Header="Actions" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="🌐" Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding OriginalUrl}"
+                                                    ToolTip="Ouvrir la source officielle"
+                                                    Background="#F1F5F9" Foreground="#334155" BorderThickness="0" Padding="6,2" Margin="0,0,4,0" Cursor="Hand"/>
+                                            <Button Content="🗑️" Command="{Binding DataContext.RemoveFromPipelineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Retirer du Pipeline"
+                                                    Background="#FEE2E2" Foreground="#DC2626" BorderThickness="0" Padding="6,2" Cursor="Hand"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 3: Sources RSS / Atom -->
+            <TabItem Header="⚙️ Sources des Flux RSS" FontSize="13" FontWeight="SemiBold" Padding="15,8">
+                <Grid Margin="0,15,0,0">
+                    <Grid.RowDefinitions>
+                        <!-- Toolbar -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Sources List -->
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Sources Toolbar -->
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Gestion des flux institutionnels RSS / Atom" FontSize="16" FontWeight="Bold" Foreground="#1E293B"/>
+                                <TextBlock Text="Activez, désactivez ou enrichissez la liste des bailleurs de fonds surveillés automatiquement." Foreground="#64748B" FontSize="12" Margin="0,3,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="⚙️ Configurer les 10 Axes AFMI" Command="{Binding OpenConfigureAxesDialogCommand}"
+                                        Background="#065F46" Foreground="White" BorderThickness="0" Padding="12,8" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,8,0">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="➕ Ajouter un flux RSS" Command="{Binding OpenAddFeedDialogCommand}"
+                                        Background="#0284C7" Foreground="White" BorderThickness="0" Padding="12,8" FontWeight="Bold" Cursor="Hand">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Feeds DataGrid -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding FeedConfigs}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              BorderBrush="#CBD5E1" BorderThickness="1" Background="White"
+                              RowHeaderWidth="0" FontSize="12" RowHeight="45">
+                        <DataGrid.Columns>
+                            <!-- Switch Actif / Inactif -->
+                            <DataGridTemplateColumn Header="Actif" Width="60">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                  Command="{Binding DataContext.ToggleFeedCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  CommandParameter="{Binding}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Bailleur" Binding="{Binding Donor}" Width="140" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Nom du flux" Binding="{Binding Name}" Width="2*"/>
+                            <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="3*"/>
+                            <DataGridTextColumn Header="Intervalle (min)" Binding="{Binding CheckIntervalMinutes}" Width="100"/>
+                            <DataGridTemplateColumn Header="Actions" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑️" Command="{Binding DataContext.DeleteFeedCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Supprimer ce flux personnalisé"
+                                                Background="#FEE2E2" Foreground="#DC2626" BorderThickness="0" Padding="6,2" Cursor="Hand"
+                                                Visibility="{Binding IsDefault, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

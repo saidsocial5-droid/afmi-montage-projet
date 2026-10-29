@@ -1,0 +1,105 @@
+﻿<UserControl x:Class="AFMI_Montage_projet_2.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1000"
+             Background="#F5F6F8">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="📈 Tableau de Bord d'Exécution" FontSize="18" FontWeight="Bold" Foreground="#1E293B"/>
+                <TextBlock Text="Vue globale sur l'avancement des activités et la consommation budgétaire." Foreground="#64748B" FontSize="12" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Key Metrics -->
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Taux global d'exécution -->
+            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="15">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Taux d'Exécution Global" Foreground="#64748B" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding GlobalExecutionRate, StringFormat='{}{0:N2}%'}" Foreground="#0284C7" FontSize="28" FontWeight="Black" Margin="0,5,0,0"/>
+                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding GlobalExecutionRate}" Height="8" Margin="0,10,0,0" Foreground="#0284C7" Background="#E2E8F0" BorderThickness="0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Budget Consommé -->
+            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="15">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Budget Consommé (Estimé)" Foreground="#64748B" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ConsumedBudget, StringFormat='{}{0:N2}'}" Foreground="#16A34A" FontSize="28" FontWeight="Black" Margin="0,5,0,0"/>
+                    <TextBlock Text="{Binding TotalBudget, StringFormat='Sur un total de {0:N2}'}" Foreground="#94A3B8" FontSize="11" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+            
+            <!-- Reste à charge -->
+            <Border Grid.Column="4" Background="White" CornerRadius="8" Padding="15">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Reste à financer / disponible" Foreground="#64748B" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding RemainingBudget, StringFormat='{}{0:N2}'}" Foreground="#EA580C" FontSize="28" FontWeight="Black" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Détail par activité -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="15">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Avancement par Activité" FontWeight="Bold" FontSize="14" Foreground="#1E293B" Margin="0,0,0,10"/>
+                
+                <DataGrid Grid.Row="1" ItemsSource="{Binding ActivityProgresses}" AutoGenerateColumns="False" IsReadOnly="True" BorderBrush="#E2E8F0" Background="Transparent" RowHeaderWidth="0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Code" Binding="{Binding ActivityCode}" Width="100" Foreground="#0284C7" FontWeight="Bold"/>
+                        <DataGridTextColumn Header="Description de l'Activité" Binding="{Binding ActivityDescription}" Width="2*"/>
+                        <DataGridTextColumn Header="Exécution (%)" Binding="{Binding ExecutionRate, StringFormat='{}{0:N2}%'}" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Budget Alloué" Binding="{Binding TotalBudget, StringFormat='{}{0:N2}'}" Width="120"/>
+                        <DataGridTextColumn Header="Budget Consommé" Binding="{Binding ConsumedBudget, StringFormat='{}{0:N2}'}" Width="120" Foreground="#16A34A"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+

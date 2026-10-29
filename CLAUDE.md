@@ -1,0 +1,77 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+AFMI Montage Projet is a WPF desktop app (.NET 9, `net9.0-windows`) for designing development projects for donors (EU, UNDP, GEF, AFD, etc.) following PCM/RBM methodology: funding radar, strategic planning/ToC, problem tree, logframe, risks, Gantt, budget, collaboration, export. The UI language is French. The long-form docs in `ARCHITECTURE.md` and `docs/` are mostly written in Arabic (with French/English terms). `docs/DECISIONS.md` is the ADR log.
+
+The folder is not a git repository (`git` is not available; see ADR 1). Changes are tracked in `docs/PLAN*.md`, `docs/REPORT*.md` and `docs/DECISIONS.md`.
+
+## Commands
+
+```powershell
+dotnet build "AFMI Montage projet 2.csproj"
+dotnet run --project "AFMI Montage projet 2.csproj"
+dotnet test AFMI_Montage_Projet.Tests
+dotnet test AFMI_Montage_Projet.Tests --filter "FullyQualifiedName~PropagationEngineTests"            # one class
+dotnet test AFMI_Montage_Projet.Tests --filter "FullyQualifiedName~PropagationEngineTests.SomeMethod" # one test
+```
+
+- The main `.csproj` sits at the repo root and explicitly excludes `AFMI_Montage_Projet.Tests\**`. Any folder of `.cs` files placed under the root (for example a backup copy) gets compiled into the app, so keep such copies outside the project tree (ADR 14).
+- Tests use xUnit with parallelization disabled (`AssemblyInfo.cs`). DB tests build `AppDbContext` on an in-memory SQLite connection: `new AppDbContext(options)` with `UseSqlite(":memory:" connection)` followed by `EnsureCreated()`. `TestEnvironment` (module initializer) sets `AFMI_DATA_DIR` to a temp folder, so any default `new AppDbContext()`, backup or log in tests goes there and never touches the real user data.
+- `XamlCoverageTests` checks that every `TextBox` in the XAML gets the AI assistant unless it is marked `AiTextAssistant.IsExcluded="True"`. The exclusion criteria and inventory are in `docs/EXCLUSIONS_TEXT_ASSIST.md`. Update both when you add a secret, technical or numeric field.
+- Release (ADR 26): pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml` (version check, tests, self-contained publish, Inno Setup, SHA-256, GitHub Release). Locally, `build_and_sign.ps1 [-GitHubRepository owner/repo]` does the same (output and `.sha256` in `Installer/`). Bump `<Version>` in the `.csproj` and `MyAppVersion` in `setup.iss` together; keep `setup.iss` in UTF-8 **with BOM** (tests enforce both). Installed apps update from GitHub Releases (`GitHubUpdateService`: SHA-256 verified, silent Inno Setup run); see `docs/GUIDE_PUBLICATION_GITHUB.md`. `clean_dev_data.ps1` wipes local app data (`%APPDATA%`/`%LOCALAPPDATA%\AFMI_Montage_Projet`, plus the legacy `AFMIV3` and `AFMI_ProjectManager` folders) before building an installer.
+
+## Architecture
+
+**MVVM with CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`). There is no DI container: view models and services are created with `new`, and many services are static.
+- `MainViewModel` holds `CurrentViewModel`. It swaps between `ProjectListViewModel` and `ProjectWorkspaceViewModel(project, this)`. The workspace hosts the per-module view models (Cadrage, CadreLogique, ArbreProbleme, Risques, Budget, Chronogramme, Indicateurs, Strategic/*, etc.). Views are matched to view models by DataTemplate.
+- `App.OnStartup` runs these steps in order: single-instance mutex, global exception handlers, `DataMigrationService.MigrateLegacyData()`, `ThemeManager.Initialize()`, `AiTextAssistant.InitializeGlobalHooks()`, `AppDbContext.SeedDefaultData()`. The update check (`AutoUpdaterService`, via Google Drive) runs from `MainViewModel`.
+- Errors go to `AppLogger` (`%LOCALAPPDATA%\AFMI_Montage_Projet\logs\app_yyyyMMdd.log`). A WinExe has no console, so don't use `Console.WriteLine` or empty `catch { }`.
+- The app version comes from `<Version>` in the `.csproj` and must match `MyAppVersion` in `setup.iss` (a test enforces this).
+
+**Data layer (`Models/AppDbContext.cs`)**
+- One EF Core context for two providers. `OnConfiguring` reads `%APPDATA%\AFMI_Montage_Projet\dbconfig.json` through `DatabaseConfigManager`. If `UseCloud` is set it uses PostgreSQL (Npgsql); otherwise it uses SQLite at `%LOCALAPPDATA%\AFMI_Montage_Projet\projects.db`. Contexts are short-lived (`using var db = new AppDbContext()`) throughout services and view models.
+- **No EF migrations** (ADR 3, never use `dotnet ef migrations`). Schema upgrades happen in `SeedDefaultData()`: `EnsureCreated()`, then `AddColumnIfMissing(table, column, sqlDefinition)` for new columns (it inspects existing columns first; helpers in `Models/AppDbContext.Schema.cs`, ADR 21). When you add a property to an entity, also add an `AddColumnIfMissing` call so existing user databases get the column. The legacy `CREATE TABLE ... AUTOINCREMENT` blocks run on SQLite only. The SQLite file is backed up once per process to `Backups/` (last 10 kept).
+- `DatabaseConfigManager` caches `dbconfig.json` and stores the PostgreSQL password DPAPI-encrypted (`PasswordProtected`).
+- Strategic entities are soft-deleted (`IsDeleted`/`DeletedAt`/`DeletedBy` plus a global `HasQueryFilter`) (ADR 2).
+- Key/value settings live in the `AppSettings` table and are accessed through the static `SettingsService.GetSetting`/`SaveSetting`. Feature flags work the same way. For example, `ProjectRadar.Enabled` toggles the Radar module at runtime through `IsProjectRadarEnabled` bound to Visibility, not through `#if` (ADR 16).
+- `Config/*.json` (AFMI axes, organization profile, RSS feeds) is copied to the output folder and read by the Radar and profile services.
+
+**AI**
+- All LLM calls go through `AiRouterService.GenerateResponseAsync`. It picks `LocalAiEngine` (Ollama) or `CloudAiEngine` based on `AppConfigs`: `UseLocalByDefault`, `CloudOptInGranted`, `MonthlyRequestLimit` and internet availability. When the cloud engine is used with `DataMinimizationEnabled`, it minimizes the prompt first and logs to `AiLog`. Local is the default, and cloud requires opt-in.
+- Feature-specific AI services sit on top of the router: `TextAssistService`/`TextEnhancementService` (Enrichir/Détailler/Reformuler), `RiskAiService`, `ProblemTreeAiHelper`, `OrganizationAiService`, and `Services/Radar/AiProjectFormulationService` (grant call → full project scaffold). `ProjectContextBuilder` builds the compact project context these services send to the AI. `Strategic/StructuredAiPrompter` isolates document text against prompt injection and validates JSON output (ADR 6).
+- `Helpers/AiTextAssistant` registers class-level handlers on `TextBoxBase`, so every text box gets the ✨ IA adorner and the Ctrl+Shift+E/D/R shortcuts automatically; it also adds translation (FR/AR/EN, Ctrl+Shift+T, `TranslationWindow`) to every non-excluded text box including read-only ones, and to any displayed `TextBlock` of 25+ characters (right click).
+- Response language (ADR 26): `AiRouterService.GenerateResponseAsync(..., expectedLanguage)` resolves the expected language (caller → explicit request in the prompt → `AI_ResponseLanguage` setting → dominant prompt language), adds it to the system prompt, checks the answer with `Services/Language/LanguageGuard` and auto-translates prose answers in the wrong language (`TranslationService`). Pass `expectedLanguage` when the output must follow a user text (as the text assistants do); JSON answers are not checked. `FidelityGuard` rejects outputs that drop numbers, dates or names from the source text and puts `[à compléter : …]` placeholders in place of invented content.
+
+**Strategic pipeline (`Services/Strategic`)**
+- `PropagationEngineService` pushes strategic-foundation data downstream: general and specific objectives to Cadrage, core problem to the problem tree, ToC outcomes and activities to results and activities in the logframe. Each derived item gets a `StrategicLink`. `RefreshLinkStatusesAsync` compares SHA-256 hashes: a hand-edited target becomes `Overridden` (takes precedence, never pre-selected for overwrite), and a changed source becomes `Stale` (ADR 4, ADR 22). It runs after every foundation save and before every global analysis. The UI is the "🔗 10. Propagation" tab of `StrategicPlanningView`.
+- `DeterministicQualityChecker` checks RBM/SMART rules plus cross-module coherence rules (COH/CHR/IND/RSK/SYNC: problem tree ↔ foundation, budget ↔ activities ↔ funding, schedule vs project period, indicator completeness, risks, stale propagation) without using an LLM (ADR 7, ADR 22). `ReadinessGateService` gates the 9 lifecycle stages and allows a justified override that is logged to `AuditLog` (ADR 5).
+- `ProjectAnalysisService` combines both into one `ProjectAnalysisResult`. It powers the Audit tab's instant diagnostic, and its `ToPromptSummary()` grounds the AI audit, which must explain and prioritize the findings, not recompute them. Add new coherence checks as rules in the quality checker, not as AI prompts.
+- `ProjectContextBuilder.BuildFullContext` is the shared AI context (strategy, territory and beneficiaries, logframe, indicators, budget by category, funding, top risks, analyzed documents and knowledge sources), capped to limit tokens and expressed in the project's `Currency`. Never hard-code a currency.
+- Stage sequencing (ADR 25): the stepper checks every previous gate; `ProjectAnalysisService.AddSequenceFindings` reports skipped stages (SEQ-01). Data that appears in several stages has one source: the intervention zone and target beneficiaries are owned by `TerritoryProfile`/`BeneficiaryGroup` (tab "Territoire & Bénéficiaires") and copied into `Project.InterventionZone`, `StrategicFoundation.TargetZone/TargetBeneficiaries` and beneficiary stakeholders by `TerritoryService.SynchronizeAsync`; do not add new editable copies of these fields. Rules COH-06/07/08 and DUP-01 catch remaining divergences and duplicates.
+
+**Research (`Services/Research`, ADR 25)**
+- `SafeHttpFetcher` is the only way to fetch web content (SSRF check at connect time and on every redirect, size limit, retry on transient errors only); RSS uses it too. `HtmlTextExtractor` turns pages into clean text.
+- `DocumentIntelligenceService` extracts text (files, web pages, online PDF/Word), keeps it (`ProjectDocument.ExtractedText`, `ContentHash`), asks the AI for structured `DocumentInsights` (untrusted-data tags), verifies figures against the source (`FactExtraction`) and falls back to heuristic extraction without AI. Call-for-proposals insights feed rules DOC-01..04 (ceiling, max duration, deadline, cofinancing).
+- `ProjectIntegrationService` applies user-selected `IntegrationProposal`s to the right stage entity (data source, context indicator, need, SWOT, donor, beneficiary group, territory, ToC activity, risk, option, partner), deduplicating with `SameMeaning`.
+- `SimilarProjectsService` queries the World Bank Projects API and IATI d-portal (no key), optionally Gemini web search, then extracts `ProjectIdeas`. Tests use the `ParseWorldBank`/`ParseIati` parsers and the `aiAnalyzer` hook of `DocumentIntelligenceService`; never call real AI or network in tests.
+- `AppDbContext.EnsureModelTablesExist` creates tables added to the model after a database was created (both providers): adding a new entity only needs its `DbSet`; new columns on existing entities still need `AddColumnIfMissing`.
+
+**Collaboration and sync (`Services/Collab`, `Services/Drive`)**
+- Team workspace (ADR 23), UI in `Views/TeamWorkspaceWindow` (opened from the project list). Each member signs in with their own Google account (`AuthService`); the workspace is the `AssociationPM_Workspace` folder owned by `SecurityConstants.WorkspaceOwnerEmail` (projet.afmi@gmail.com), found by owner in "My Drive" or "Shared with me". Admins are `SecurityConstants.SuperAdminEmails` (projet.afmi, said.afmi); other roles come from `team.json` (Member, Reviewer, Guest). Decision rule `AdminDecision`: no voting, an admin approves or rejects.
+- The station signed in as the owner with a local SQLite DB is the **official station** (`AuthService.IsOfficialStation`). Its DB is the source of truth: `TeamWorkspaceService.PublishAsync` uploads a sanitized copy (`OfficialSnapshotService`, `VACUUM INTO`, every station-only table emptied). Station-only vs shared tables are defined from the EF model in `TeamDataModel`: when you add an entity that holds accounts, secrets, settings or logs, add it to `StationOnlyTypes`. Member stations replace only their shared tables with that snapshot (with a backup) and keep it as `team\official_base.db`; `TeamChangeDetector` diffs the local DB against it to produce field-change and creation proposals.
+- `MergeService.ApproveAsync`/`RejectAsync`: on the official station approval is integrated at once (with a check that the official value didn't change since the proposal); elsewhere it becomes `Accepted` and the official station integrates it in `SyncService` (`ApplyAcceptedProposalsAsync`), then republishes. Trust comes from Drive metadata: author must be the file's creator, decisions/team.json/snapshot count only if last modified by an admin (`SyncService.MergeRemoteProposalToLocalDbAsync`, `GoogleDriveCollabStore`).
+- `ICollabStore` → `GoogleDriveCollabStore` (tests use `InMemoryFakeCollabStore`; detached sessions via `AuthService.CreateDetached`). Proposals and votes from paired mobile devices are signed with HMAC-SHA256 using a secret shared at pairing time via QR code (`DevicePairingService`), and unsigned or tampered JSON is rejected (ADR 8). OAuth tokens and API keys are stored with DPAPI (`DpapiDataStore`, `Helpers/EncryptionHelper`). `ProjectsJsonExporter` and the `Phase6MobileCompatibilityTests` cover the JSON format shared with the Android app.
+
+**Radar (`Services/Radar`)**
+- `RssFeedService` fetches feeds in parallel. Every URL and every redirect hop goes through `SsrfValidator`, and the default `HttpClient`'s `ConnectCallback` re-checks the IP actually connected to; tests inject an `HttpClient` with a fake handler and must use public IP literals (no DNS). Conditional requests (ETag/Last-Modified), feed health and the 24 h suspension after 5 failures are stored in `rss_feeds.json`; a 304 is "À jour", not a failure (ADR 24). `RssParser` is built on `System.Xml.Linq` only, with no extra feed libraries (ADR 15); it decodes bytes (BOM → XML declaration → HTTP charset) and discovers feeds announced by HTML pages. When a default feed URL changes, bump `ProjectRadarConfigService.DefaultFeedsRevision` and add the old URL to `ObsoleteDefaultUrls` so existing installs are migrated. `OpportunityScoringService` scores items 0–10 against the AFMI axes. Results are cached offline (`RssItemsCache`, grants pipeline). `NotebookLmService` exports Markdown knowledge packs.
+
+**Export**: `DocumentExportService` produces Word (DocX), PDF (QuestPDF) and Excel (ClosedXML) files, with RTL support for Arabic (ADR 9).
+
+## Conventions
+
+- User-facing strings are in French (ADR 10). Code comments mix French and Arabic.
+- Before adding a NuGet package or editing the `.csproj`, check `docs/DECISIONS.md`. The ADRs deliberately avoid extra dependencies and unnecessary `.csproj` changes.
+- After significant work, record it in the relevant `docs/PLAN*.md`/`REPORT*.md`, and add a new ADR to `docs/DECISIONS.md` for any architectural choice.

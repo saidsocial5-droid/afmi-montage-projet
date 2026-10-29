@@ -1,0 +1,367 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.RisquesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+             xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1100">
+
+    <Border Background="#F5F6F8" Padding="15">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Titre -->
+                <RowDefinition Height="Auto"/>
+                <!-- Contenu (Grille principale) -->
+                <RowDefinition Height="*"/>
+                <!-- Statut -->
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+
+            <!-- Titre & Barre d'assistance IA -->
+            <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="⚠️ Registre des Risques &amp; Matrice d'Atténuation" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,10,0"/>
+                            <Border Background="#EEF2FF" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                <TextBlock Text="✨ Assistance IA" FontSize="11" FontWeight="Bold" Foreground="#4F46E5"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Listez, cotez et suivez les risques du projet (sociaux, environnementaux, financiers) ainsi que leurs plans de contingence pour les bailleurs de fonds." 
+                                   Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Boutons d'Action IA Globale -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="🛡️ Diagnostic &amp; Audit IA" Command="{Binding AuditRisksCommand}"
+                                Background="#F1F5F9" Foreground="#0284C7" BorderBrush="#CBD5E1" BorderThickness="1"
+                                Padding="12,8" Margin="0,0,10,0" Cursor="Hand" FontWeight="SemiBold"
+                                ToolTip="Auditer la matrice des risques et la couverture sectorielle avec l'IA">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                            </Button.Resources>
+                        </Button>
+
+                        <Button Content="✨ Identifier les Risques par l'IA" Command="{Binding AutoGenerateRisksCommand}"
+                                Background="#0284C7" Foreground="White" BorderThickness="0"
+                                Padding="14,8" Cursor="Hand" FontWeight="Bold"
+                                ToolTip="Analyser le projet et générer automatiquement le registre complet des risques par l'IA">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                            </Button.Resources>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Contenu -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <!-- Liste et saisie des risques (7*) -->
+                    <ColumnDefinition Width="7*"/>
+                    <!-- Matrice Heatmap 5x5 à droite (3.5*) -->
+                    <ColumnDefinition Width="3.5*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Partie Gauche : Liste & Formulaire -->
+                <Grid Grid.Column="0" Margin="0,0,15,0">
+                    <Grid.RowDefinitions>
+                        <!-- Liste des Risques -->
+                        <RowDefinition Height="3*"/>
+                        <!-- Formulaire d'édition -->
+                        <RowDefinition Height="3.4*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Liste des risques -->
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Liste des Risques Projet" FontSize="13" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Risks.Count, StringFormat='Total : {0} risque(s)'}" FontSize="11" Foreground="#64748B" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </Grid>
+                            
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding Risks}" AutoGenerateColumns="False" 
+                                      SelectedItem="{Binding SelectedRisk}" SelectionMode="Single"
+                                      IsReadOnly="True" BorderBrush="#E2E8F0" Background="White" RowHeaderWidth="0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="110"/>
+                                    <DataGridTextColumn Header="Risque / Description" Binding="{Binding Description}" Width="2*"/>
+                                    <DataGridTextColumn Header="Probabilité (P)" Binding="{Binding Probability}" Width="95"/>
+                                    <DataGridTextColumn Header="Impact (I)" Binding="{Binding Impact}" Width="80"/>
+                                    <DataGridTextColumn Header="Statut" Binding="{Binding Status}" Width="90"/>
+                                    <DataGridTemplateColumn Width="70">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Éditer" Command="{Binding DataContext.SelectRiskCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Formulaire d'édition (Corrigé et Enrichi IA) -->
+                    <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Ajouter / Éditer un risque" FontSize="13" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="{Binding IsAiBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="⏳ Assistance IA en cours..." FontSize="11" Foreground="#D97706" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <!-- Row 0: Catégorie & Statut -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Row 1: Probabilité & Impact -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Row 2: Rôle responsable & Score de Criticité -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Row 3: Description & Atténuation -->
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Row 0, Col 0: Catégorie -->
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
+                                        <TextBlock Text="Catégorie de risque" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}" Height="30" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Row 0, Col 1: Statut -->
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,10">
+                                        <TextBlock Text="Statut" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status}" Height="30" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Row 1, Col 0: Probabilité -->
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,10">
+                                        <TextBlock Text="Probabilité (1 à 5)" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <Slider Minimum="1" Maximum="5" Value="{Binding Probability}" TickFrequency="1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                                        <TextBlock Text="{Binding Probability, StringFormat='Valeur : {0}'}" FontSize="10" Foreground="#64748B"/>
+                                    </StackPanel>
+
+                                    <!-- Row 1, Col 1: Impact -->
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="10,0,0,10">
+                                        <TextBlock Text="Impact (1 à 5)" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <Slider Minimum="1" Maximum="5" Value="{Binding Impact}" TickFrequency="1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                                        <TextBlock Text="{Binding Impact, StringFormat='Valeur : {0}'}" FontSize="10" Foreground="#64748B"/>
+                                    </StackPanel>
+
+                                    <!-- Row 2, Col 0: Rôle responsable -->
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,10">
+                                        <TextBlock Text="Rôle responsable" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <TextBox Text="{Binding ResponsibleRole, UpdateSourceTrigger=PropertyChanged}" Height="30" VerticalContentAlignment="Center" Padding="5,0"/>
+                                    </StackPanel>
+
+                                    <!-- Row 2, Col 1: Score de Criticité calculé -->
+                                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="10,0,0,10">
+                                        <TextBlock Text="Criticité calculée (P × I)" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <Border Background="{Binding CriticalityBrush}" CornerRadius="4" Padding="10,0" Height="30">
+                                            <TextBlock Text="{Binding CriticalityText}" Foreground="White" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- Row 3: Description & Atténuation (Pleine largeur sans chevauchement) -->
+                                    <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Description du risque -->
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <TextBlock Text="Description du risque" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBox Grid.Row="0" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" Height="65" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                                                
+                                                <!-- Outils IA Description -->
+                                                <WrapPanel Grid.Row="1" Margin="0,6,0,0">
+                                                    <Button Content="✨ Suggérer" Command="{Binding SuggererRisqueCommand}" 
+                                                            Background="Transparent" Foreground="#8B5CF6" BorderThickness="0" Margin="0,0,8,4" Padding="4,0" Cursor="Hand" FontWeight="SemiBold" ToolTip="Suggérer des risques selon le projet"/>
+                                                    <Button Content="🎲 Estimer P &amp; I" Command="{Binding EstimerScoreIaCommand}" 
+                                                            Background="Transparent" Foreground="#0284C7" BorderThickness="0" Margin="0,0,8,4" Padding="4,0" Cursor="Hand" FontWeight="SemiBold" ToolTip="Calibrer automatiquement la probabilité et l'impact par l'IA"/>
+                                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirRisqueCommand}" 
+                                                            Background="Transparent" Foreground="#475569" BorderThickness="0" Margin="0,0,8,4" Padding="4,0" Cursor="Hand" ToolTip="Enrichir avec l'IA"/>
+                                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerRisqueCommand}" 
+                                                            Background="Transparent" Foreground="#475569" BorderThickness="0" Margin="0,0,8,4" Padding="4,0" Cursor="Hand" ToolTip="Reformuler avec l'IA"/>
+                                                </WrapPanel>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Mesure d'atténuation / Contingence -->
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                            <TextBlock Text="Mesure d'atténuation / Contingence" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBox Grid.Row="0" Text="{Binding MitigationMeasure, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" Height="65" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                                                
+                                                <!-- Outils IA Atténuation -->
+                                                <WrapPanel Grid.Row="1" Margin="0,6,0,0">
+                                                    <Button Content="🛡️ Proposer plan d'atténuation IA" Command="{Binding ProposerMitigationIaCommand}" 
+                                                            Background="#EEF2FF" Foreground="#4F46E5" BorderThickness="0" Margin="0,0,8,4" Padding="8,2" Cursor="Hand" FontWeight="Bold" ToolTip="Concevoir une mesure d'atténuation concrète et suggérer le responsable">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                                        </Button.Resources>
+                                                    </Button>
+                                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirMitigationCommand}" 
+                                                            Background="Transparent" Foreground="#475569" BorderThickness="0" Margin="0,0,8,4" Padding="4,0" Cursor="Hand" ToolTip="Enrichir avec l'IA"/>
+                                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerMitigationCommand}" 
+                                                            Background="Transparent" Foreground="#475569" BorderThickness="0" Margin="0,0,8,4" Padding="4,0" Cursor="Hand" ToolTip="Reformuler avec l'IA"/>
+                                                </WrapPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </ScrollViewer>
+
+                            <!-- Actions -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+                                <Button Content="Nouveau / Effacer" Command="{Binding ClearFormCommand}" Width="130" Height="32" Background="#94A3B8" Foreground="White" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="Supprimer" Command="{Binding DeleteRiskCommand}" Width="100" Height="32" Background="#EF4444" Foreground="White" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand"
+                                        Visibility="{Binding SelectedRisk, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="Enregistrer le Risque" Command="{Binding SaveRiskCommand}" Width="160" Height="32" Background="#0284C7" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Partie Droite : Heatmap 5x5 -->
+                <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="15">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                            <TextBlock Text="Matrice de Criticité 5x5" FontSize="13" FontWeight="Bold" Foreground="#334155"/>
+                            <TextBlock Text="Nombre de risques actifs croisés par Probabilité (Y) et Impact (X)" FontSize="10" Foreground="#64748B"/>
+                        </StackPanel>
+
+                        <!-- Matrice Heatmap -->
+                        <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <!-- Légende Y (Probabilité) -->
+                                <ColumnDefinition Width="Auto"/>
+                                <!-- La Grille 5x5 -->
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <!-- La Grille 5x5 -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Légende X (Impact) -->
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Légende Y (A gauche verticalement) -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <TextBlock Text="5" FontWeight="Bold" Foreground="#475569" Height="40" TextAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="4" FontWeight="Bold" Foreground="#475569" Height="40" TextAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="3" FontWeight="Bold" Foreground="#475569" Height="40" TextAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="2" FontWeight="Bold" Foreground="#475569" Height="40" TextAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="1" FontWeight="Bold" Foreground="#475569" Height="40" TextAlignment="Center" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- La Grille UniformGrid 5x5 -->
+                            <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding HeatmapCells}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="5" Rows="5" Width="200" Height="200"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding ColorBrush}" BorderBrush="#F1F5F9" BorderThickness="1" CornerRadius="4" Margin="2">
+                                            <TextBlock Text="{Binding Label}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Légende X (En bas horizontalement) -->
+                            <UniformGrid Grid.Row="1" Grid.Column="1" Columns="5" Width="200" Margin="0,10,0,0">
+                                <TextBlock Text="1" FontWeight="Bold" Foreground="#475569" TextAlignment="Center"/>
+                                <TextBlock Text="2" FontWeight="Bold" Foreground="#475569" TextAlignment="Center"/>
+                                <TextBlock Text="3" FontWeight="Bold" Foreground="#475569" TextAlignment="Center"/>
+                                <TextBlock Text="4" FontWeight="Bold" Foreground="#475569" TextAlignment="Center"/>
+                                <TextBlock Text="5" FontWeight="Bold" Foreground="#475569" TextAlignment="Center"/>
+                            </UniformGrid>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Pied de page -->
+            <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="15,0" Margin="0,15,0,0" CornerRadius="4">
+                <Grid VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#1E293B" FontWeight="Medium" FontSize="12" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

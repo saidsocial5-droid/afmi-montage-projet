@@ -1,0 +1,18 @@
+# Sorties de build
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+
+# Livrables binaires (à publier en release, pas à versionner)
+Installer/
+*.apk
+MicrosoftEdgeWebview2Setup.exe
+
+# Certificats de signature
+*.pfx
+*.p12
+
+# Paramètres locaux de Claude Code
+.claude/settings.local.json

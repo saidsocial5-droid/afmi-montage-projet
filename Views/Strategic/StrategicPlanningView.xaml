@@ -1,0 +1,814 @@
+﻿<UserControl x:Class="AFMI_Montage_projet_2.Views.Strategic.StrategicPlanningView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views.Strategic"
+             xmlns:converters="clr-namespace:AFMI_Montage_projet_2.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+        
+        <!-- Style pour les champs de formulaire -->
+        <Style x:Key="FormFieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#334155"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <Style x:Key="FormFieldTextBox" TargetType="TextBox">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- Style pour les boutons d'action primaires -->
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="#0284C7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="#F1F5F9">
+        <Grid.RowDefinitions>
+            <!-- En-tête : Titre, Score et Bouton Sauvegarder -->
+            <RowDefinition Height="Auto"/>
+            <!-- Message de statut -->
+            <RowDefinition Height="Auto"/>
+            <!-- Contenu principal avec les 9 onglets -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. En-tête -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="20,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Planification Stratégique &amp; Analyse des Données" 
+                               FontSize="18" FontWeight="ExtraBold" Foreground="#0F172A"/>
+                    <TextBlock Text="Socle méthodologique fondamental pour le montage de projets axé sur les résultats (GAR / RBM &amp; Théorie du Changement)" 
+                               FontSize="12" Foreground="#64748B" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <!-- Indicateur de complétude -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,25,0">
+                    <StackPanel Margin="0,0,10,0" VerticalAlignment="Center">
+                        <TextBlock Text="Indicateur de complétude" FontSize="11" Foreground="#64748B" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Foundation.CompletenessScore, StringFormat='{}{0}%'}" FontSize="15" FontWeight="Bold" Foreground="#0284C7" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                    <ProgressBar Value="{Binding Foundation.CompletenessScore}" Maximum="100" Width="100" Height="10" Foreground="#0284C7" Background="#E2E8F0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Boutons d'action -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="💾 Enregistrer" Command="{Binding SaveFoundationCommand}" Style="{StaticResource PrimaryBtn}" Margin="0,0,8,0"/>
+                    <Button Content="🔄 Actualiser" Command="{Binding LoadFoundationDataCommand}" Background="#E2E8F0" Foreground="#334155" FontWeight="SemiBold" Padding="12,8" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. Message de statut -->
+        <Border Grid.Row="1" Background="#E0F2FE" BorderBrush="#BAE6FD" BorderThickness="1" CornerRadius="6" Margin="20,10,20,0" Padding="12,8"
+                Visibility="{Binding StatusMessage, Converter={StaticResource BoolToVisConverter}}">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#0369A1" FontWeight="SemiBold" FontSize="12"/>
+        </Border>
+
+        <!-- 3. Les 9 Onglets Stratégiques -->
+        <TabControl Grid.Row="2" Margin="20,15,20,20" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent" BorderThickness="0">
+            
+            <!-- Tab 1: Fiche & Contexte -->
+            <TabItem Header="📋 1. Fiche &amp; Contexte" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Fiche d'idée et contexte général du projet" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+
+                            <!-- Bandeau d'assistance IA Rédactionnel -->
+                            <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="🤖 Assistant IA AFMI :" FontWeight="Bold" FontSize="12" Foreground="#166534" VerticalAlignment="Center"/>
+                                        <TextBlock Text=" Clic droit sur n'importe quel champ ou Ctrl+Alt+A pour améliorer, enrichir ou reformuler." FontSize="12" Foreground="#15803D" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button Content="📝 Enrichir" Click="BtnEnrichTitle_Click" Background="#0284C7" Foreground="White" FontWeight="SemiBold" FontSize="11" Padding="10,4" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0" ToolTip="Enrichir l'intitulé avec le contexte"/>
+                                        <Button Content="🔄 Reformuler" Click="BtnReformulateTitle_Click" Background="#0284C7" Foreground="White" FontWeight="SemiBold" FontSize="11" Padding="10,4" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0" ToolTip="Reformuler l'intitulé selon les standards bailleurs"/>
+                                        <Button Content="✨ Améliorer l'intitulé" Click="BtnEnhanceTitle_Click" Background="#22C55E" Foreground="White" FontWeight="SemiBold" FontSize="11" Padding="10,4" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                                        <Button Content="💡 Suggérer le contexte" Click="BtnSuggestContext_Click" Background="#0284C7" Foreground="White" FontWeight="SemiBold" FontSize="11" Padding="10,4" BorderThickness="0" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <Grid Margin="0,0,0,4">
+                                        <TextBlock Text="Intitulé de l'idée de projet :" Style="{StaticResource FormFieldLabel}" VerticalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="✨ IA" Click="BtnEnhanceTitle_Click" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand" Margin="0,0,4,0" ToolTip="Assistant IA"/>
+                                            <Button Content="📝 Enrichir" Click="BtnEnrichTitle_Click" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand" Margin="0,0,4,0" ToolTip="Enrichir l'intitulé"/>
+                                            <Button Content="🔄 Reformuler" Click="BtnReformulateTitle_Click" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand" ToolTip="Reformuler l'intitulé"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBox x:Name="TxtIdeaTitle" Text="{Binding Foundation.IdeaTitle, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource FormFieldTextBox}"/>
+
+                                    <!-- Zone et public cible : dérivés de l'onglet « Territoire & Bénéficiaires » (source unique, ADR 25) -->
+                                    <Grid Margin="0,12,0,4">
+                                        <TextBlock Text="Zone géographique ciblée :" Style="{StaticResource FormFieldLabel}" VerticalAlignment="Center"/>
+                                        <Button Content="🗺️ Définir dans Territoire" Command="{Binding OpenTerritoryTabCommand}" HorizontalAlignment="Right" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                    </Grid>
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" Padding="8,6" MinHeight="36">
+                                        <TextBlock Text="{Binding Foundation.TargetZone, TargetNullValue='(à définir dans « Territoire &amp; Bénéficiaires »)'}" TextWrapping="Wrap" FontSize="12" Foreground="#334155" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <TextBlock Text="Public cible et bénéficiaires (synthèse) :" Style="{StaticResource FormFieldLabel}" Margin="0,12,0,4"/>
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" Padding="8,6" MinHeight="36">
+                                        <TextBlock Text="{Binding Foundation.TargetBeneficiaries}" TextWrapping="Wrap" FontSize="12" Foreground="#334155" VerticalAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Secteur de développement principal :" Style="{StaticResource FormFieldLabel}"/>
+                                    <TextBox Text="{Binding Foundation.Sector, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource FormFieldTextBox}"/>
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Budget estimatif initial :" Style="{StaticResource FormFieldLabel}"/>
+                                            <TextBox Text="{Binding Foundation.EstimatedBudget, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource FormFieldTextBox}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Devise :" Style="{StaticResource FormFieldLabel}"/>
+                                            <TextBox Text="{Binding Foundation.Currency, UpdateSourceTrigger=PropertyChanged}" Width="70" Style="{StaticResource FormFieldTextBox}"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Text="Durée estimative (en mois) :" Style="{StaticResource FormFieldLabel}" Margin="0,12,0,4"/>
+                                    <TextBox Text="{Binding Foundation.EstimatedDurationMonths, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource FormFieldTextBox}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Bailleur pressenti et priorités stratégiques :" Style="{StaticResource FormFieldLabel}" Margin="0,10,0,4"/>
+                            <TextBox Text="{Binding Foundation.PotentialDonor, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource FormFieldTextBox}"/>
+
+                            <Grid Margin="0,12,0,4">
+                                <TextBlock Text="Détails des critères et priorités du bailleur :" Style="{StaticResource FormFieldLabel}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="✨ Améliorer" Click="BtnEnhanceDonor_Click" Margin="0,0,4,0" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                    <Button Content="📝 Enrichir" Click="BtnEnrichDonor_Click" Margin="0,0,4,0" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                    <Button Content="🔄 Reformuler" Click="BtnReformulateDonor_Click" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBox x:Name="TxtDonorPriorities" Text="{Binding Foundation.DonorPriorities, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource FormFieldTextBox}"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 2: Territoire & Bénéficiaires (ADR 25) -->
+            <TabItem Header="🗺️ 2. Territoire &amp; Bénéficiaires" FontSize="12" FontWeight="SemiBold">
+                <local:TerritoryView DataContext="{Binding Territory}"/>
+            </TabItem>
+            <!-- Tab 2: Données & Indicateurs -->
+            <TabItem Header="📊 3. Données &amp; Indicateurs" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <!-- Registre des sources de données -->
+                        <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Registre des sources de données et documents (Data Sources)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="170"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewDataSourceTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Intitulé de la source ou du document"/>
+                                    <ComboBox Grid.Column="1" SelectedValue="{Binding NewDataSourceType}" SelectedValuePath="Tag" Height="36" Margin="0,0,8,0">
+                                        <ComboBoxItem Content="Document Word / PDF" Tag="Document Word/PDF" IsSelected="True"/>
+                                        <ComboBoxItem Content="Rapport Statistique" Tag="Rapport Statistique"/>
+                                        <ComboBoxItem Content="Enquête Terrain" Tag="Enquête Terrain"/>
+                                        <ComboBoxItem Content="Entretien / Interview" Tag="Interview"/>
+                                    </ComboBox>
+                                    <ComboBox Grid.Column="2" SelectedValue="{Binding NewDataSourceReliability}" SelectedValuePath="Tag" Height="36" Margin="0,0,8,0">
+                                        <ComboBoxItem Content="Élevée (High)" Tag="High" IsSelected="True"/>
+                                        <ComboBoxItem Content="Moyenne (Medium)" Tag="Medium"/>
+                                        <ComboBoxItem Content="Faible (Low)" Tag="Low"/>
+                                    </ComboBox>
+                                    <Button Grid.Column="3" Content="➕ Ajouter une source" Command="{Binding AddDataSourceCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding DataSources}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Titre de la source" Binding="{Binding Title}" Width="*"/>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding SourceType}" Width="150"/>
+                                        <DataGridTextColumn Header="Fiabilité" Binding="{Binding ReliabilityLevel}" Width="100"/>
+                                        <DataGridTemplateColumn Width="70">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteDataSourceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Indicateurs de référence contextuels -->
+                        <Border Background="White" CornerRadius="8" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Indicateurs de référence contextuels (Baseline Context Indicators)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewIndicatorName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Nom de l'indicateur"/>
+                                    <TextBox Grid.Column="1" Text="{Binding NewIndicatorBaseline, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Valeur de référence"/>
+                                    <TextBox Grid.Column="2" Text="{Binding NewIndicatorUnit, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Unité"/>
+                                    <Button Grid.Column="3" Content="➕ Ajouter un indicateur" Command="{Binding AddContextIndicatorCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding ContextIndicators}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Indicateur" Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Valeur de référence" Binding="{Binding BaselineValue}" Width="140"/>
+                                        <DataGridTextColumn Header="Unité" Binding="{Binding Unit}" Width="100"/>
+                                        <DataGridTextColumn Header="Année" Binding="{Binding Year}" Width="80"/>
+                                        <DataGridTemplateColumn Width="70">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteContextIndicatorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 3: Parties Prenantes -->
+            <TabItem Header="👥 4. Parties Prenantes" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Identification et analyse des parties prenantes (Stakeholders)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewStakeholderName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Nom de la partie prenante ou institution"/>
+                                    <TextBox Grid.Column="1" Text="{Binding NewStakeholderCategory, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Catégorie"/>
+                                    <TextBox Grid.Column="2" Text="{Binding NewStakeholderRole, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Rôle attendu"/>
+                                    <TextBox Grid.Column="3" Text="{Binding NewStakeholderPower, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Pouvoir (1-5)"/>
+                                    <TextBox Grid.Column="4" Text="{Binding NewStakeholderInterest, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Intérêt (1-5)"/>
+                                    <Button Grid.Column="5" Content="➕ Ajouter" Command="{Binding AddStakeholderCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding Stakeholders}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Partie prenante" Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="120"/>
+                                        <DataGridTextColumn Header="Rôle" Binding="{Binding Role}" Width="140"/>
+                                        <DataGridTextColumn Header="Pouvoir" Binding="{Binding PowerLevel}" Width="60"/>
+                                        <DataGridTextColumn Header="Intérêt" Binding="{Binding InterestLevel}" Width="70"/>
+                                        <DataGridTextColumn Header="Stratégie d'engagement" Binding="{Binding EngagementStrategy}" Width="200"/>
+                                        <DataGridTemplateColumn Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteStakeholderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Matrice visuelle interactive -->
+                        <local:StakeholderMatrixView DataContext="{Binding}" Height="280"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 4: Diagnostic Stratégique (SWOT & Besoins) -->
+            <TabItem Header="🔍 5. Diagnostic Stratégique" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <!-- Éléments SWOT -->
+                        <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Matrice d'analyse SWOT fondée sur les données probantes" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="170"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0" SelectedValue="{Binding NewSwotCategory}" SelectedValuePath="Tag" Height="36" Margin="0,0,8,0">
+                                        <ComboBoxItem Content="Force (Strength)" Tag="Strength" IsSelected="True"/>
+                                        <ComboBoxItem Content="Faiblesse (Weakness)" Tag="Weakness"/>
+                                        <ComboBoxItem Content="Opportunité (Opportunity)" Tag="Opportunity"/>
+                                        <ComboBoxItem Content="Menace (Threat)" Tag="Threat"/>
+                                    </ComboBox>
+                                    <TextBox Grid.Column="1" Text="{Binding NewSwotStatement, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Libellé de l'élément et données justificatives"/>
+                                    <Button Grid.Column="2" Content="➕ Ajouter un élément" Command="{Binding AddSwotItemCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding SwotItems}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="130">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="140"/>
+                                        <DataGridTextColumn Header="Énoncé factuel" Binding="{Binding Statement}" Width="*"/>
+                                        <DataGridTemplateColumn Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteSwotItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Évaluation des besoins par score pondéré -->
+                        <Border Background="White" CornerRadius="8" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Évaluation et priorisation des besoins (Weighted Needs Assessment)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewNeedDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Description du besoin"/>
+                                    <TextBox Grid.Column="1" Text="{Binding NewNeedTargetGroup, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Groupe cible affecté"/>
+                                    <TextBox Grid.Column="2" Text="{Binding NewNeedUrgency, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Urgence (1-5)"/>
+                                    <TextBox Grid.Column="3" Text="{Binding NewNeedFeasibility, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Faisabilité (1-5)"/>
+                                    <TextBox Grid.Column="4" Text="{Binding NewNeedImpact, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Impact (1-5)"/>
+                                    <Button Grid.Column="5" Content="➕ Ajouter" Command="{Binding AddNeedAssessmentCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding NeedsAssessments}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Besoin" Binding="{Binding NeedDescription}" Width="*"/>
+                                        <DataGridTextColumn Header="Groupe cible" Binding="{Binding TargetGroupAffected}" Width="140"/>
+                                        <DataGridTextColumn Header="Score pondéré" Binding="{Binding WeightedScore, StringFormat='{}{0:F2}'}" Width="120"/>
+                                        <DataGridTemplateColumn Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteNeedAssessmentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 5: Problème Central & Options Stratégiques -->
+            <TabItem Header="🎯 6. Problème &amp; Options" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Formulation du problème central et options stratégiques" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,15"/>
+
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Text="Formulation du problème central (Core Problem Statement) étayée par des données probantes :" Style="{StaticResource FormFieldLabel}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="✨ Améliorer" Click="BtnEnhanceProblem_Click" Margin="0,0,4,0" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                    <Button Content="📝 Enrichir" Click="BtnEnrichProblem_Click" Margin="0,0,4,0" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                    <Button Content="🔄 Reformuler" Click="BtnReformulateProblem_Click" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBox x:Name="TxtCoreProblem" Text="{Binding Foundation.CoreProblemStatement, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource FormFieldTextBox}" Margin="0,0,0,15"/>
+
+                            <TextBlock Text="Matrice de décision des options stratégiques (Strategic Options Decision Matrix) :" Style="{StaticResource FormFieldLabel}"/>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding NewOptionTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Intitulé de l'option stratégique"/>
+                                <TextBox Grid.Column="1" Text="{Binding NewOptionDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Détails de l'option et faisabilité"/>
+                                <Button Grid.Column="2" Content="➕ Ajouter une option" Command="{Binding AddStrategicOptionCommand}" Style="{StaticResource PrimaryBtn}"/>
+                            </Grid>
+
+                            <DataGrid ItemsSource="{Binding StrategicOptions}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140" Margin="0,0,0,15">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Option" Binding="{Binding OptionTitle}" Width="160"/>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridCheckBoxColumn Header="Option retenue" Binding="{Binding IsSelected}" Width="120"/>
+                                    <DataGridTemplateColumn Width="130">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Retenir comme choix" Command="{Binding DataContext.SelectStrategicOptionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="#0284C7" Foreground="White" BorderThickness="0" Padding="6,2" Cursor="Hand"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="50">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="🗑️" Command="{Binding DataContext.DeleteStrategicOptionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Text="Justification et motifs du choix de cette orientation stratégique :" Style="{StaticResource FormFieldLabel}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="✨ Améliorer" Click="BtnEnhanceRationale_Click" Margin="0,0,4,0" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                    <Button Content="📝 Enrichir" Click="BtnEnrichRationale_Click" Background="#E0F2FE" Foreground="#0284C7" BorderThickness="0" Padding="8,2" FontSize="10" Cursor="Hand"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBox x:Name="TxtOptionRationale" Text="{Binding Foundation.SelectedStrategicOptionRationale, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource FormFieldTextBox}"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 6: Théorie du Changement -->
+            <TabItem Header="🔄 7. Théorie du Changement" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Composantes de la chaîne de résultats (Theory of Change Nodes)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0" SelectedValue="{Binding NewTocType}" SelectedValuePath="Tag" Height="36" Margin="0,0,8,0">
+                                        <ComboBoxItem Content="Intrant (Input)" Tag="Input"/>
+                                        <ComboBoxItem Content="Activité (Activity)" Tag="Activity" IsSelected="True"/>
+                                        <ComboBoxItem Content="Extrant (Output)" Tag="Output"/>
+                                        <ComboBoxItem Content="Effet (Outcome)" Tag="Outcome"/>
+                                        <ComboBoxItem Content="Impact" Tag="Impact"/>
+                                    </ComboBox>
+                                    <TextBox Grid.Column="1" Text="{Binding NewTocTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Titre principal"/>
+                                    <TextBox Grid.Column="2" Text="{Binding NewTocDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Détails du lien logique et hypothèses"/>
+                                    <Button Grid.Column="3" Content="➕ Ajouter un nœud" Command="{Binding AddTheoryOfChangeNodeCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding TheoryOfChangeNodes}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Niveau" Binding="{Binding NodeType}" Width="100"/>
+                                        <DataGridTextColumn Header="Titre" Binding="{Binding Title}" Width="200"/>
+                                        <DataGridTextColumn Header="Détails" Binding="{Binding Description}" Width="*"/>
+                                        <DataGridTemplateColumn Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteTheoryOfChangeNodeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Visualisation de la Théorie du Changement -->
+                        <local:TheoryOfChangeVisualView Height="260"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 7: Objectifs Stratégiques SMART -->
+            <TabItem Header="🎯 8. Objectifs Stratégiques" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Objectifs stratégiques globaux et spécifiques (SMART Objectives)" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,15"/>
+
+                            <TextBlock Text="Objectif stratégique global (Global Strategic Objective) :" Style="{StaticResource FormFieldLabel}"/>
+                            <TextBox Text="{Binding Foundation.GeneralStrategicObjective, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource FormFieldTextBox}" Margin="0,0,0,15"/>
+
+                            <TextBlock Text="Objectifs spécifiques dérivés (Specific Strategic Objectives) :" Style="{StaticResource FormFieldLabel}"/>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding NewObjectiveTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Titre de l'objectif spécifique"/>
+                                <TextBox Grid.Column="1" Text="{Binding NewObjectiveDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Description détaillée et justification"/>
+                                <Button Grid.Column="2" Content="➕ Ajouter un objectif" Command="{Binding AddStrategicObjectiveCommand}" Style="{StaticResource PrimaryBtn}"/>
+                            </Grid>
+
+                            <DataGrid ItemsSource="{Binding StrategicObjectives}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="170">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="70"/>
+                                    <DataGridTextColumn Header="Titre" Binding="{Binding Title}" Width="200"/>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridCheckBoxColumn Header="Spécifique (S)" Binding="{Binding IsSpecific}" Width="90"/>
+                                    <DataGridCheckBoxColumn Header="Mesurable (M)" Binding="{Binding IsMeasurable}" Width="100"/>
+                                    <DataGridTemplateColumn Width="60">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="🗑️" Command="{Binding DataContext.DeleteStrategicObjectiveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 8: Registre des Risques et Hypothèses -->
+            <TabItem Header="⚠️ 9. Risques &amp; Hypothèses" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <!-- Registre des Risques -->
+                        <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Registre des risques stratégiques et mesures d'atténuation (Strategic Risk Registry)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewRiskCategory, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Catégorie de risque"/>
+                                    <TextBox Grid.Column="1" Text="{Binding NewRiskDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Description du risque"/>
+                                    <TextBox Grid.Column="2" Text="{Binding NewRiskMitigation, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Mesure d'atténuation"/>
+                                    <TextBox Grid.Column="3" Text="{Binding NewRiskProbability, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Probabilité (1-5)"/>
+                                    <TextBox Grid.Column="4" Text="{Binding NewRiskImpact, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Impact (1-5)"/>
+                                    <Button Grid.Column="5" Content="➕ Ajouter" Command="{Binding AddRiskCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding Risks}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="140">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="60"/>
+                                        <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="100"/>
+                                        <DataGridTextColumn Header="Risque" Binding="{Binding Description}" Width="*"/>
+                                        <DataGridTextColumn Header="Criticité" Binding="{Binding RiskScore}" Width="70"/>
+                                        <DataGridTextColumn Header="Mesure d'atténuation" Binding="{Binding MitigationStrategy}" Width="*"/>
+                                        <DataGridTemplateColumn Width="50">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteRiskCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Registre des Hypothèses -->
+                        <Border Background="White" CornerRadius="8" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Registre des hypothèses critiques (Key Strategic Assumptions)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0" SelectedValue="{Binding NewAssumptionLevel}" SelectedValuePath="Tag" Height="36" Margin="0,0,8,0">
+                                        <ComboBoxItem Content="Activités ➔ Extrants" Tag="ActivityToOutput" IsSelected="True"/>
+                                        <ComboBoxItem Content="Extrants ➔ Effets" Tag="OutputToOutcome"/>
+                                        <ComboBoxItem Content="Effets ➔ Impact" Tag="OutcomeToImpact"/>
+                                    </ComboBox>
+                                    <TextBox Grid.Column="1" Text="{Binding NewAssumptionStatement, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" Style="{StaticResource FormFieldTextBox}" ToolTip="Énoncé de l'hypothèse critique"/>
+                                    <Button Grid.Column="2" Content="➕ Ajouter une hypothèse" Command="{Binding AddAssumptionCommand}" Style="{StaticResource PrimaryBtn}"/>
+                                </Grid>
+
+                                <DataGrid ItemsSource="{Binding Assumptions}" AutoGenerateColumns="False" CanUserAddRows="False" Background="Transparent" BorderThickness="1" BorderBrush="#E2E8F0" Height="130">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Niveau logique" Binding="{Binding AssociatedLevel}" Width="160"/>
+                                        <DataGridTextColumn Header="Hypothèse critique" Binding="{Binding Statement}" Width="*"/>
+                                        <DataGridTemplateColumn Width="50">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑️" Command="{Binding DataContext.DeleteAssumptionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Foreground="#EF4444" Cursor="Hand"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 9: Porte de Maturité pour le Cadrage -->
+            <TabItem Header="🚪 10. Porte de Maturité" FontSize="12" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Évaluation de la porte de maturité pour le passage au cadrage (Cadrage Readiness Gate)" 
+                                       FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,15"/>
+
+                            <!-- Rapport de statut de la porte -->
+                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="15" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <TextBlock Text="Statut de la porte :" FontWeight="Bold" FontSize="13" Foreground="#334155" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding ReadinessResult.Status}" FontWeight="ExtraBold" FontSize="13" Foreground="#0284C7"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="Points bloquants identifiés (Blocking Gaps) :" FontWeight="Bold" FontSize="12" Foreground="#EF4444" Margin="0,0,0,5"/>
+                                    <ItemsControl ItemsSource="{Binding ReadinessResult.BlockingGaps}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding StringFormat='• {0}'}" FontSize="12" Foreground="#991B1B" Margin="10,2,0,2"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Notification en cas de dérogation préalable -->
+                                    <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,10,0,0"
+                                            Visibility="{Binding ReadinessResult.IsOverridden, Converter={StaticResource BoolToVisConverter}}">
+                                        <TextBlock Text="{Binding ReadinessResult.OverrideReason, StringFormat='Cette porte a fait l\'objet d\'une dérogation administrative préalable : {0}'}" 
+                                                   Foreground="#92400E" FontWeight="SemiBold" FontSize="11"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Dérogation administrative motivée -->
+                            <TextBlock Text="Demande de dérogation administrative motivée (Administrative Override) :" Style="{StaticResource FormFieldLabel}"/>
+                            <TextBlock Text="En cas d'exception administrative ou d'atelier préparatoire urgent, veuillez consigner le motif de dérogation pour le journal d'audit :" FontSize="11" Foreground="#64748B" Margin="0,0,0,6"/>
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="190"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding OverrideReasonInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource FormFieldTextBox}" Margin="0,0,10,0"/>
+                                <Button Grid.Column="1" Content="Enregistrer la dérogation" Command="{Binding OverrideReadinessGateCommand}" Background="#D97706" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                            </Grid>
+
+                            <!-- Bouton de passage au cadrage -->
+                            <Button Content="🚀 Passer à l'étape suivante : Cadrage" Command="{Binding ProceedToCadrageCommand}" 
+                                    Height="45" Background="#10B981" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 10: Propagation vers les étapes aval -->
+            <TabItem Header="🔗 11. Propagation" FontSize="12" FontWeight="SemiBold">
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Alimenter les étapes suivantes à partir du socle stratégique" FontSize="16" FontWeight="Bold" Foreground="#1E293B"/>
+                            <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#64748B" Margin="0,4,0,12"
+                                       Text="Les objectifs stratégiques, le problème central et la théorie du changement sont proposés comme objectifs, nœud central et résultats/activités des étapes suivantes. Rien n'est appliqué sans votre validation ; les éléments que vous avez modifiés à la main sont protégés (décochés par défaut)."/>
+
+                            <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding StaleLinkCount}" Value="0">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Foreground="#92400E" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap">
+                                    <Run Text="⚠️"/> <Run Text="{Binding StaleLinkCount, Mode=OneWay}"/><Run Text=" élément(s) dérivé(s) ne correspondent plus au socle stratégique modifié. Relancez la propagation vers l'étape concernée pour les mettre à jour."/>
+                                </TextBlock>
+                            </Border>
+
+                            <WrapPanel>
+                                <Button Content="📋 Vers le Cadrage (objectifs)" Command="{Binding PreparePropagationCommand}" CommandParameter="Cadrage"
+                                        Padding="14,8" Margin="0,0,10,0" Background="#0284C7" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+                                <Button Content="🌳 Vers l'Arbre à problèmes" Command="{Binding PreparePropagationCommand}" CommandParameter="ProblemTree"
+                                        Padding="14,8" Margin="0,0,10,0" Background="#0284C7" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+                                <Button Content="📊 Vers le Cadre logique (résultats, activités)" Command="{Binding PreparePropagationCommand}" CommandParameter="CadreLogique"
+                                        Padding="14,8" Background="#0284C7" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="{Binding PropagationStatus}" TextWrapping="Wrap" FontSize="12" Foreground="#334155" Margin="0,0,0,10"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding PropagationProposals}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,8" Padding="10" CornerRadius="4" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Top" Margin="0,2,10,0"/>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock FontWeight="SemiBold" Foreground="#0F172A" TextWrapping="Wrap">
+                                                            <Run Text="{Binding SourceLabel, Mode=OneWay}"/>
+                                                            <Run Text="  →  " Foreground="#94A3B8"/>
+                                                            <Run Text="{Binding TargetLabel, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding DiffSummary}" FontSize="11" Foreground="#0369A1" Margin="0,2,0,4"/>
+                                                        <TextBlock FontSize="12" Foreground="#334155" TextWrapping="Wrap">
+                                                            <Run Text="Proposé : " FontWeight="SemiBold"/><Run Text="{Binding ProposedContent, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,2,0,0"
+                                                                   Visibility="{Binding CurrentContent, Converter={StaticResource StringToVisibilityConverter}}">
+                                                            <Run Text="Actuel : " FontWeight="SemiBold"/><Run Text="{Binding CurrentContent, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <Button Content="Ouvrir l'étape alimentée" Command="{Binding OpenPropagatedStageCommand}"
+                                Padding="14,8" Margin="0,0,10,0" Background="#E2E8F0" Foreground="#1E293B" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+                        <Button Content="Annuler" Command="{Binding CancelPropagationCommand}"
+                                Visibility="{Binding HasPropagationProposals, Converter={StaticResource BoolToVisConverter}}"
+                                Padding="14,8" Margin="0,0,10,0" Background="#E2E8F0" Foreground="#1E293B" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+                        <Button Content="✅ Appliquer la sélection" Command="{Binding ApplyPropagationCommand}"
+                                Visibility="{Binding HasPropagationProposals, Converter={StaticResource BoolToVisConverter}}"
+                                Padding="14,8" Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</UserControl>

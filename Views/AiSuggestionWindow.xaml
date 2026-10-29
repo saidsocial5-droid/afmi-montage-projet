@@ -1,0 +1,30 @@
+﻿<Window x:Class="AFMI_Montage_projet_2.Views.AiSuggestionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Assistant IA - Sélection" Height="350" Width="450"
+        WindowStartupLocation="CenterOwner" Background="#F8FAFC" ResizeMode="NoResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="15"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TxtHeader" Text="L'IA vous propose les éléments suivants. Cochez ceux que vous souhaitez intégrer à la description :" 
+                   TextWrapping="Wrap" FontWeight="SemiBold" Foreground="#334155"/>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="SpSuggestions">
+                <!-- Les CheckBoxes seront générées dynamiquement dans le code-behind -->
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Annuler" Click="BtnCancel_Click" Background="#E2E8F0" Foreground="#334155" Padding="15,8" Margin="0,0,10,0" BorderThickness="0" Cursor="Hand"/>
+            <Button Content="Intégrer à la description" Click="BtnIntegrate_Click" Background="#0284C7" Foreground="White" FontWeight="Bold" Padding="15,8" BorderThickness="0" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

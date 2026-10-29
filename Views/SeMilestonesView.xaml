@@ -1,0 +1,168 @@
+﻿<UserControl x:Class="AFMI_Montage_projet_2.Views.SeMilestonesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+             xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+
+    <Border Background="#F5F6F8" Padding="15">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Titre -->
+                <RowDefinition Height="Auto"/>
+                <!-- Contenu -->
+                <RowDefinition Height="*"/>
+                <!-- Statut -->
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+
+            <!-- Titre -->
+            <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="📅 Calendrier de Suivi &amp; Évaluation (S&amp;E)" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                        <TextBlock Text="Planifiez les échéances et jalons de reporting intermédiaires et finaux requis par vos bailleurs de fonds." 
+                                   Foreground="#64748B" FontSize="11" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="⚡ Générer le plan S&amp;E automatique" Command="{Binding AutoGeneratePlanCommand}"
+                            Width="220" Height="34" Background="#8B5CF6" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Contenu -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <!-- Liste des Jalons (6.5*) -->
+                    <ColumnDefinition Width="6.5*"/>
+                    <!-- Formulaire (3.5*) -->
+                    <ColumnDefinition Width="3.5*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Liste des Jalons -->
+                <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,15,0">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Jalons &amp; Rapports attendus" FontSize="13" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,10"/>
+
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding Milestones}" AutoGenerateColumns="False" 
+                                  SelectedItem="{Binding SelectedMilestone}" SelectionMode="Single"
+                                  IsReadOnly="True" BorderBrush="#E2E8F0" Background="White" RowHeaderWidth="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Échéance" Binding="{Binding TargetDate, StringFormat='dd/MM/yyyy'}" Width="90"/>
+                                <DataGridTextColumn Header="Titre / Rapport" Binding="{Binding Title}" Width="1.5*"/>
+                                <DataGridTextColumn Header="Fréquence" Binding="{Binding Frequency}" Width="90"/>
+                                <DataGridTextColumn Header="Responsable" Binding="{Binding ResponsibleRole}" Width="100"/>
+                                <DataGridTextColumn Header="Statut" Binding="{Binding Status}" Width="90"/>
+                                <DataGridTemplateColumn Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Éditer" Command="{Binding DataContext.SelectMilestoneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                    CommandParameter="{Binding}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+
+                <!-- Formulaire -->
+                <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="15">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Détails du Jalon de Suivi" FontSize="13" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,10"/>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Titre du Jalon" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Height="30" VerticalContentAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel>
+                                    <TextBlock Text="Date d'échéance cible" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <DatePicker SelectedDate="{Binding TargetDate}" Height="30"/>
+                                </StackPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                                        <TextBlock Text="Fréquence" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Height="30" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                        <TextBlock Text="Statut" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                        <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status}" Height="30" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel>
+                                    <TextBlock Text="Rôle Responsable" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <TextBox Text="{Binding ResponsibleRole, UpdateSourceTrigger=PropertyChanged}" Height="30" VerticalContentAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel>
+                                    <TextBlock Text="Livrable ou indicateur attendu" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <TextBox Text="{Binding ExpectedDeliverable, UpdateSourceTrigger=PropertyChanged}" Height="30" VerticalContentAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel>
+                                    <TextBlock Text="Description détaillée" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" Height="60" VerticalScrollBarVisibility="Auto"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Boutons actions -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+                            <Button Content="Nouveau" Command="{Binding ClearFormCommand}" Width="80" Height="32" Background="#94A3B8" Foreground="White" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand"/>
+                            <Button Content="Supprimer" Command="{Binding DeleteMilestoneCommand}" Width="90" Height="32" Background="#EF4444" Foreground="White" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand"
+                                    Visibility="{Binding SelectedMilestone, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <Button Content="Enregistrer" Command="{Binding SaveMilestoneCommand}" Width="110" Height="32" Background="#0284C7" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Pied de page -->
+            <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="15,0" Margin="0,15,0,0" CornerRadius="4">
+                <Grid VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#1E293B" FontWeight="Medium" FontSize="12" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>
+

@@ -1,0 +1,283 @@
+<Window x:Class="AFMI_Montage_projet_2.Views.NotebookLmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels"
+        mc:Ignorable="d"
+        Title="Liaison Google NotebookLM — Profil Institutionnel &amp; Base de Connaissances" 
+        Height="760" Width="1020"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8FAFC">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <!-- 0: Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- 1: Contenu à onglets -->
+            <RowDefinition Height="*"/>
+            <!-- 2: Pied de page / Statut -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 0. En-tête -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16,12" Margin="0,0,0,14" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📓" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Liaison Google NotebookLM &amp; Base de Connaissances" FontSize="18" FontWeight="Bold" Foreground="#1E1B4B"/>
+                        <Border Background="#EEF2FF" CornerRadius="12" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Google AI RAG Studio" Foreground="#4338CA" FontSize="11" FontWeight="Bold"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="Liez le profil certifié de l'Association avec votre carnet NotebookLM, exportez les packs documentaires et générez des synthèses de due diligence pour les bailleurs." 
+                               Foreground="#64748B" FontSize="12" Margin="32,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button Content="✕ Fermer" Click="CloseButton_Click" Background="Transparent" Foreground="#64748B" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Padding="8,4"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 1. Contenu principal (Onglets) -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+
+            <!-- ONGLET 1 : Carnet & Source Documentaire -->
+            <TabItem Header="🔗 1. Connexion &amp; Pack Source">
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Ligne 0 : Configuration du lien du carnet NotebookLM -->
+                    <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="🌐 Carnet NotebookLM de l'Association" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <Grid Grid.Row="1" Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Grid.Column="0" Text="{Binding NotebookLmUrl, UpdateSourceTrigger=PropertyChanged}" 
+                                         Padding="8,6" FontSize="12.5" Margin="0,0,8,0"
+                                         ToolTip="Lien de votre carnet Google NotebookLM (ex: https://notebooklm.google.com/notebook/...)"/>
+
+                                <Button Grid.Column="1" Content="💾 Sauvegarder Lien" Command="{Binding SaveUrlCommand}"
+                                        Background="#334155" Foreground="White" BorderThickness="0" Padding="12,6" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,8,0">
+                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                </Button>
+
+                                <Button Grid.Column="2" Content="🚀 Ouvrir NotebookLM" Command="{Binding OpenNotebookLmCommand}"
+                                        Background="#4338CA" Foreground="White" BorderThickness="0" Padding="14,6" FontWeight="Bold" Cursor="Hand">
+                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Ligne 1 : Aperçu & Actions d'export du Pack Source -->
+                    <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Barre d'actions du pack source -->
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="📄 Base de Connaissances Prête pour NotebookLM (Markdown)" Style="{StaticResource SectionTitleStyle}"/>
+                                    <TextBlock Text="Dossier intégral structuré spécialement pour alimenter l'indexation RAG de Google NotebookLM." Foreground="#64748B" FontSize="11.5"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <!-- Copier pour NotebookLM -->
+                                    <Button Content="📋 Copier la Source (Texte RAG)" Command="{Binding CopyKnowledgeBaseCommand}"
+                                            Background="#059669" Foreground="White" BorderThickness="0" Padding="14,8" FontWeight="Bold" Cursor="Hand" Margin="0,0,8,0">
+                                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                    </Button>
+
+                                    <!-- Exporter Fichier -->
+                                    <Button Content="💾 Exporter Fichier (.md / .pdf)" Command="{Binding ExportSourceFileCommand}"
+                                            Background="#0284C7" Foreground="White" BorderThickness="0" Padding="14,8" FontWeight="SemiBold" Cursor="Hand">
+                                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Aperçu textuel du pack markdown -->
+                            <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="10">
+                                <TextBox Text="{Binding SourceMarkdownPreview}" 
+                                         IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto" 
+                                         Background="Transparent" Foreground="#E2E8F0" BorderThickness="0"
+                                         FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11.5"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ONGLET 2 : Bibliothèque de Prompts Bailleurs -->
+            <TabItem Header="💡 2. Prompts Bailleurs Recommandés">
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="#F1F5F9" CornerRadius="6" Padding="12,8" Margin="0,0,0,10" BorderBrush="#CBD5E1" BorderThickness="1">
+                        <TextBlock Text="💡 Copiez ces questions d'un clic et collez-les dans le chat de NotebookLM pour obtenir instantanément des documents de soumission parfaitement calibrés." 
+                                   Foreground="#334155" FontSize="12"/>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Prompts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" CornerRadius="8" Padding="14" Margin="0,0,0,10" BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="💬" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13.5" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                                    <Border Background="#EEF2FF" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Category}" FontSize="10.5" FontWeight="SemiBold" Foreground="#4338CA"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="1" Content="📋 Copier Prompt" 
+                                                        Command="{Binding DataContext.CopyPromptCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#312E81" Foreground="White" BorderThickness="0" Padding="10,5" FontWeight="SemiBold" Cursor="Hand" FontSize="11.5">
+                                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style></Button.Resources>
+                                                </Button>
+                                            </Grid>
+
+                                            <Border Grid.Row="1" Background="#F8FAFC" CornerRadius="6" Padding="10" BorderBrush="#E2E8F0" BorderThickness="1">
+                                                <TextBlock Text="{Binding PromptText}" TextWrapping="Wrap" FontSize="12" Foreground="#334155"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ONGLET 3 : Guide d'Utilisation NotebookLM -->
+            <TabItem Header="📖 3. Guide &amp; Bonnes Pratiques">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
+                    <StackPanel>
+                        <!-- Étape 1 -->
+                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="1️⃣ Étape 1 : Créer votre carnet sur NotebookLM" FontSize="13.5" FontWeight="Bold" Foreground="#4338CA" Margin="0,0,0,6"/>
+                                <TextBlock Text="Rendez-vous sur https://notebooklm.google.com avec votre compte Google et créez un nouveau carnet intitulé : 'AFMI - Fiche Institutionnelle &amp; Capacités Bailleurs'." 
+                                           Foreground="#334155" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Étape 2 -->
+                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="2️⃣ Étape 2 : Ajouter la Base de Connaissances de l'AFMI" FontSize="13.5" FontWeight="Bold" Foreground="#4338CA" Margin="0,0,0,6"/>
+                                <TextBlock Text="Dans NotebookLM, cliquez sur '+ Ajouter des sources'. Vous avez deux options ultra-rapides :" Foreground="#334155" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Option A (Recommandée) : Cliquez sur le bouton vert '📋 Copier la Source' dans cette fenêtre, puis dans NotebookLM choisissez 'Texte copié' et collez (Ctrl+V)." Foreground="#475569" FontSize="11.5" Margin="10,0,0,3"/>
+                                <TextBlock Text="• Option B : Cliquez sur '💾 Exporter Fichier (.md)' puis glissez-déposez le fichier généré directement dans NotebookLM." Foreground="#475569" FontSize="11.5" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Étape 3 -->
+                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="3️⃣ Étape 3 : Sauvegarder le lien de votre Carnet" FontSize="13.5" FontWeight="Bold" Foreground="#4338CA" Margin="0,0,0,6"/>
+                                <TextBlock Text="Copiez l'URL de votre carnet depuis la barre d'adresse de votre navigateur (ex: https://notebooklm.google.com/notebook/...) et collez-la dans le champ 'Carnet NotebookLM de l'Association' puis cliquez sur 'Sauvegarder Lien'. Vous pourrez ainsi y accéder à tout moment en 1 clic !" 
+                                           Foreground="#334155" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Étape 4 -->
+                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="4️⃣ Étape 4 : Exploiter la puissance de l'IA (Audio Overview, Chat, Synthèses)" FontSize="13.5" FontWeight="Bold" Foreground="#4338CA" Margin="0,0,0,6"/>
+                                <TextBlock Text="NotebookLM se base exclusivement sur vos sources institutionnelles certifiées (zéro hallucination). Vous pouvez générer un 'Audio Overview' (podcast immersif à deux présentateurs pour présenter l'AFMI), poser des questions complexes de conformité ou rédiger des sections entières de projets." 
+                                           Foreground="#334155" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- 2. Pied de page / Barre de statut -->
+        <Border Grid.Row="2" Background="White" CornerRadius="6" Padding="12,8" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="ℹ️ " FontSize="12"/>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#475569" FontSize="12" FontWeight="Medium"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Google NotebookLM • Modèle Gemini 1.5/3.0 RAG" Foreground="#94A3B8" FontSize="11"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,182 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.FormulaireDynamiqueView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+             xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200"
+             DataContextChanged="UserControl_DataContextChanged">
+
+    <Border Background="#F8FAFC" Padding="15">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="36"/>
+            </Grid.RowDefinitions>
+
+            <!-- 1. En-tête et Barre d'outils Multi-lignes Responsive -->
+            <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Ligne A : Titre + Import/Création de Canevas -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📋 Canevas &amp; Formulaires Bailleurs" FontSize="18" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                <Border Background="#EFF6FF" CornerRadius="12" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Word • PDF • Excel • IA" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Importez des canevas bailleurs externes, créez des canevas sur-mesure, remplissez-les manuellement ou via l'IA, et exportez-les." 
+                                       Foreground="#64748B" FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Boutons Importation et Conception manuelle -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="📥 Importer Canevas" Command="{Binding ImporterCanvasCommand}"
+                                    Height="34" Padding="12,0" Margin="0,0,8,0" Background="#6366F1" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"
+                                    ToolTip="Importer un canevas bailleur depuis Word (.docx), PDF (.pdf) ou Excel (.xlsx)">
+                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                            </Button>
+
+                            <Button Content="🛠️ Créer Canevas Manuel" Command="{Binding CreerCanvasManuelCommand}"
+                                    Height="34" Padding="12,0" Background="#0284C7" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"
+                                    ToolTip="Créer un nouveau canevas avec sections, questions et boîtes de réponses personnalisées">
+                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="#F1F5F9" Height="1" Margin="0,0,0,12"/>
+
+                    <!-- Ligne B : Sélecteurs de Projet et Canevas + Actions -->
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Sélecteur Projet -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,6">
+                            <TextBlock Text="Projet :" Foreground="#475569" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox ItemsSource="{Binding AvailableProjects}" SelectedItem="{Binding SelectedProject}"
+                                      DisplayMemberPath="Title" Width="220" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Sélecteur Canevas -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,6">
+                            <TextBlock Text="Canevas :" Foreground="#475569" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedTemplate}"
+                                      DisplayMemberPath="Name" Width="220" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Bouton Associer si pas d'instance pour ce canevas/projet -->
+                        <Button Content="➕ Associer au Projet" Command="{Binding InstancierFormulaireCommand}"
+                                Height="32" Padding="14,0" Margin="0,0,10,6" Background="#16A34A" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"
+                                Visibility="{Binding HasInstance, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                                ToolTip="Associer ce canevas au projet sélectionné pour commencer la saisie">
+                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                        </Button>
+
+                        <!-- Boutons actifs si une instance existe -->
+                        <Button Content="✨ Remplissage Magique IA" Command="{Binding RemplirAutomatiquementCommand}"
+                                Height="32" Padding="14,0" Margin="0,0,8,6" Background="#8B5CF6" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"
+                                Visibility="{Binding HasInstance, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                ToolTip="Analyser l'intégralité du projet et pré-remplir automatiquement toutes les questions du canevas">
+                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                        </Button>
+
+                        <Button Content="💾 Enregistrer les réponses" Command="{Binding SauvegarderReponsesCommand}"
+                                Height="32" Padding="14,0" Margin="0,0,10,6" Background="#0EA5E9" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"
+                                Visibility="{Binding HasInstance, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                ToolTip="Enregistrer toutes les réponses dans la base de données">
+                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                        </Button>
+
+                        <!-- Bloc Exportation Word, PDF, Excel -->
+                        <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="6,3" Margin="0,0,10,6" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Exporter :" Foreground="#64748B" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="2,0,6,0"/>
+                                <Button Content="📄 Word" Command="{Binding ExporterWordCommand}"
+                                        Height="26" Padding="8,0" Margin="0,0,4,0" Background="#2563EB" Foreground="White" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"
+                                        ToolTip="Exporter ce canevas au format Word (.docx)">
+                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                                </Button>
+                                <Button Content="📕 PDF" Command="{Binding ExporterPdfCommand}"
+                                        Height="26" Padding="8,0" Margin="0,0,4,0" Background="#DC2626" Foreground="White" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"
+                                        ToolTip="Exporter ce canevas au format PDF (.pdf)">
+                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                                </Button>
+                                <Button Content="📊 Excel" Command="{Binding ExporterExcelCommand}"
+                                        Height="26" Padding="8,0" Background="#059669" Foreground="White" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"
+                                        ToolTip="Exporter ce canevas au format Excel (.xlsx)">
+                                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Bouton Dissocier -->
+                        <Button Content="Dissocier" Command="{Binding SupprimerFormulaireCommand}"
+                                Height="32" Padding="10,0" Margin="0,0,0,6" Background="#FEE2E2" Foreground="#DC2626" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"
+                                Visibility="{Binding HasInstance, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                ToolTip="Dissocier ce formulaire du projet">
+                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 2. Zone Formulaire Dynamique (Quand une instance est active) -->
+            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="25"
+                    Visibility="{Binding HasInstance, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border.Effect><DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/></Border.Effect>
+                <Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="DynamicFormContainer" Margin="0,0,10,0"/>
+                    </ScrollViewer>
+
+                    <!-- Overlay de chargement / IA -->
+                    <Border Background="#B3FFFFFF" CornerRadius="8" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <ProgressBar IsIndeterminate="True" Width="240" Height="6" Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding StatusMessage}" FontSize="14" Foreground="#475569" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 3. Écran d'attente (Quand aucune instance n'est encore associée) -->
+            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="40"
+                    Visibility="{Binding HasInstance, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                <Border.Effect><DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/></Border.Effect>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="📋 Aucun canevas actif pour ce projet" FontSize="18" FontWeight="Bold" Foreground="#475569" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock Text="Sélectionnez un projet et un canevas ci-dessus puis cliquez sur 'Associer au Projet', ou importez un nouveau canevas (Word, PDF, Excel) via le bouton en haut."
+                               Foreground="#64748B" FontSize="13" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="540" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="➕ Associer ce canevas au projet" Command="{Binding InstancierFormulaireCommand}"
+                                Height="36" Padding="16,0" Margin="0,0,10,0" Background="#16A34A" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                        </Button>
+                        <Button Content="📥 Importer un document externe" Command="{Binding ImporterCanvasCommand}"
+                                Height="36" Padding="16,0" Background="#6366F1" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 4. Barre de statut inférieure -->
+            <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="15,0" Margin="0,10,0,0" CornerRadius="4">
+                <Grid VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#1E293B" FontWeight="Medium" FontSize="12" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

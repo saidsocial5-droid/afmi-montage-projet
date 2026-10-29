@@ -1,0 +1,368 @@
+<Window x:Class="AFMI_Montage_projet_2.Views.AiTextEnhancementDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Assistant Rédactionnel IA - AFMI" 
+        Height="720" Width="960"
+        MinHeight="560" MinWidth="750"
+        WindowStartupLocation="CenterOwner" 
+        Background="#F8FAFC"
+        FontFamily="Segoe UI, Roboto, Arial, sans-serif">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        
+        <!-- Style des puces de mode -->
+        <Style x:Key="ModeChipStyle" TargetType="RadioButton">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#334155"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="6" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#0284C7"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0284C7"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0284C7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style des boutons d'action -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 0: En-tête -->
+            <RowDefinition Height="Auto"/>
+            <!-- 1: Barre des 3 actions principales (Enrichir, Détailler, Reformuler) -->
+            <RowDefinition Height="Auto"/>
+            <!-- 2: Paramètres et options (Ton, Longueur, Langue, Consigne libre) -->
+            <RowDefinition Height="Auto"/>
+            <!-- 3: Corps principal de comparaison et historique -->
+            <RowDefinition Height="*"/>
+            <!-- 4: Pied de page avec boutons d'action -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 0: EN-TÊTE -->
+        <Border Grid.Row="0" Background="#1E293B" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🤖" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Assistant Rédactionnel IA - AFMI" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <WrapPanel Margin="30,4,0,0">
+                        <Border Background="#334155" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtFieldLabel" Text="Champ : Général" Foreground="#38BDF8" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#334155" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtSemanticType" Text="Type : Générique" Foreground="#A7F3D0" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#334155" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtScopeLabel" Text="Cible : Texte complet" Foreground="#94A3B8" FontSize="11"/>
+                        </Border>
+                        <Border Background="#334155" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" x:Name="BorderProjectInfo">
+                            <TextBlock x:Name="TxtProjectTitle" Text="Projet : Non défini" Foreground="#FCD34D" FontSize="11"/>
+                        </Border>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Badge du Moteur IA -->
+                <Border Grid.Column="1" VerticalAlignment="Center" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="10,6">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtEngineName" Text="Moteur IA connecté" Foreground="#E2E8F0" FontSize="11" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 1: SÉLECTEUR DES 3 ACTIONS CARDINALES -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="20,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <WrapPanel Grid.Column="0">
+                    <RadioButton x:Name="RbEnrichir" Content="✨ Enrichir (Ctrl+Maj+E)" Style="{StaticResource ModeChipStyle}" Checked="ActionRadioButton_Checked"/>
+                    <RadioButton x:Name="RbDetailler" Content="📝 Détailler (Ctrl+Maj+D)" Style="{StaticResource ModeChipStyle}" Checked="ActionRadioButton_Checked"/>
+                    <RadioButton x:Name="RbReformuler" Content="🔄 Reformuler (Ctrl+Maj+R)" Style="{StaticResource ModeChipStyle}" Checked="ActionRadioButton_Checked"/>
+                </WrapPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ToggleButton x:Name="TbToggleHistory" Content="📜 Historique versions" Padding="10,6" FontSize="11" FontWeight="SemiBold"
+                                  Background="#F8FAFC" BorderBrush="#CBD5E1" Cursor="Hand" Checked="TbToggleHistory_Changed" Unchecked="TbToggleHistory_Changed"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2: PARAMÈTRES ET OPTIONS DU PROMPTING -->
+        <Border Grid.Row="2" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="20,8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Description de l'action choisie -->
+                <TextBlock Grid.Row="0" x:Name="TxtActionDescription" 
+                           Text="✨ Enrichir : Ajoute des arguments et précisions issus du contexte projet en conservant scrupuleusement l'existant." 
+                           Foreground="#475569" FontSize="12" Margin="0,0,0,6" FontStyle="Italic"/>
+
+                <!-- Ligne de personnalisation (Ton, Longueur, Langue, Consigne libre, Bouton Générer) -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="170"/>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Ton / Registre -->
+                    <ComboBox Grid.Column="0" x:Name="CbTone" Height="32" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11" ToolTip="Registre stylistique">
+                        <ComboBoxItem Content="Institutionnel bailleur" IsSelected="True"/>
+                        <ComboBoxItem Content="Technique"/>
+                        <ComboBoxItem Content="Simple et accessible"/>
+                    </ComboBox>
+
+                    <!-- Longueur cible -->
+                    <ComboBox Grid.Column="1" x:Name="CbLength" Height="32" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11" ToolTip="Longueur cible">
+                        <ComboBoxItem Content="Équivalent" IsSelected="True"/>
+                        <ComboBoxItem Content="Plus court"/>
+                        <ComboBoxItem Content="Plus long"/>
+                    </ComboBox>
+
+                    <!-- Langue de sortie -->
+                    <ComboBox Grid.Column="2" x:Name="CbLanguage" Height="32" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11" ToolTip="Langue de sortie">
+                        <ComboBoxItem Content="Même langue (Auto)" IsSelected="True"/>
+                        <ComboBoxItem Content="Français"/>
+                        <ComboBoxItem Content="العربية"/>
+                        <ComboBoxItem Content="English"/>
+                    </ComboBox>
+
+                    <!-- Consigne libre -->
+                    <TextBox Grid.Column="3" x:Name="TxtCustomInstruction" Height="32" Margin="0,0,8,0" Padding="8,4" 
+                             VerticalContentAlignment="Center" FontSize="11" Background="White" BorderBrush="#CBD5E1"
+                             ToolTip="Consigne optionnelle pour guider l'IA (ex: insister sur l'approche genre)"/>
+
+                    <!-- Bouton Relancer -->
+                    <Button Grid.Column="4" Content="🚀 Générer" Click="BtnGenerate_Click"
+                            Background="#0284C7" Foreground="White" Style="{StaticResource ActionButtonStyle}" Height="32" Padding="14,0"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- 3: CORPS DE COMPARAISON DIFF ET HISTORIQUE -->
+        <Grid Grid.Row="3" Margin="20,12,20,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Colonne Gauche : Texte Original -->
+            <Border Grid.Column="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="📄 Texte original" FontWeight="Bold" FontSize="13" Foreground="#475569"/>
+                        <TextBlock x:Name="TxtOriginalCount" Text="0 car. (0 mots)" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <TextBox Grid.Row="1" x:Name="TxtOriginal" TextWrapping="Wrap" AcceptsReturn="True" 
+                             IsReadOnly="True" Background="#F8FAFC" BorderBrush="#E2E8F0" Padding="10" 
+                             VerticalScrollBarVisibility="Auto" FontSize="13" Foreground="#334155"/>
+
+                    <!-- Panneau de contexte utilisé -->
+                    <Border Grid.Row="2" Background="#F1F5F9" CornerRadius="6" Padding="8" Margin="0,8,0,0" x:Name="BorderContextUsed">
+                        <StackPanel>
+                            <TextBlock Text="📚 Données du projet utilisées en contexte :" FontWeight="SemiBold" FontSize="11" Foreground="#0369A1" Margin="0,0,0,4"/>
+                            <ItemsControl x:Name="IcContextUsed">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" FontSize="11" Foreground="#475569" Margin="4,1,0,1"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Colonne Droite : Proposition IA (Onglets Diff visuel vs Édition directe) -->
+            <Border Grid.Column="2" Background="White" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="8" Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="✨ Proposition de l'IA" FontWeight="Bold" FontSize="13" Foreground="#0284C7"/>
+                            <!-- Bascule Vue Diff / Vue Édition -->
+                            <RadioButton x:Name="RbTabDiff" Content="Aperçu Différentiel" Margin="12,0,6,0" FontSize="11" Checked="ViewTab_Checked"/>
+                            <RadioButton x:Name="RbTabEdit" Content="Édition directe" FontSize="11" Checked="ViewTab_Checked"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtEnhancedCount" Text="0 car. (0 mots)" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- Vue 1 : Diff visuel avec surbrillance -->
+                    <RichTextBox Grid.Row="1" x:Name="RtbDiffView" IsReadOnly="True" Background="#F8FAFC" BorderBrush="#E2E8F0" 
+                                 Padding="10" VerticalScrollBarVisibility="Auto" FontSize="13"/>
+
+                    <!-- Vue 2 : Zone de texte modifiable -->
+                    <TextBox Grid.Row="1" x:Name="TxtEnhanced" TextWrapping="Wrap" AcceptsReturn="True" Visibility="Collapsed"
+                             Background="White" BorderBrush="#CBD5E1" Padding="10" 
+                             VerticalScrollBarVisibility="Auto" FontSize="13" Foreground="#0F172A"
+                             TextChanged="TxtEnhanced_TextChanged"/>
+
+                    <!-- Indicateur de Chargement / Spinner -->
+                    <Border Grid.Row="1" x:Name="LoadingOverlay" Background="#F0F9FF" Opacity="0.95" CornerRadius="6" Visibility="Collapsed">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="🤖" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock Text="L'IA applique les règles RBM et vérifie les invariants..." FontSize="13" FontWeight="SemiBold" Foreground="#0369A1" HorizontalAlignment="Center"/>
+                            <ProgressBar IsIndeterminate="True" Width="220" Height="6" Margin="0,15,0,0" Foreground="#0284C7"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Alertes de Fidélité et Marqueurs [à compléter] -->
+                    <Border Grid.Row="2" x:Name="BorderFidelityAlerts" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,8,0,0" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="⚠️ Contrôle de fidélité :" FontWeight="Bold" FontSize="11" Foreground="#B45309" Margin="0,0,0,2"/>
+                            <ItemsControl x:Name="IcFidelityWarnings">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" FontSize="11" Foreground="#92400E" Margin="4,1,0,1"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Tiroir / Popin Historique des versions (Superposé quand affiché) -->
+        <Border Grid.Row="3" x:Name="BorderHistoryDrawer" Background="White" BorderBrush="#94A3B8" BorderThickness="1" CornerRadius="8" Margin="40,10,40,10" Padding="14" Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="📜 Historique des versions de ce champ" FontWeight="Bold" FontSize="14" Foreground="#1E293B"/>
+                    <Button Content="✕ Fermer" HorizontalAlignment="Right" Click="BtnCloseHistory_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" Foreground="#64748B"/>
+                </Grid>
+
+                <DataGrid Grid.Row="1" x:Name="DgVersionHistory" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Date" Binding="{Binding CreatedAt, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="120"/>
+                        <DataGridTextColumn Header="Action" Binding="{Binding ActionType}" Width="90"/>
+                        <DataGridTextColumn Header="Texte final" Binding="{Binding FinalText}" Width="*"/>
+                        <DataGridTemplateColumn Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Restaurer" Click="BtnRestoreVersion_Click" Padding="6,2" Background="#E0F2FE" Foreground="#0369A1" BorderThickness="0" Cursor="Hand"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Grid.Row="2" x:Name="TxtHistoryEmpty" Text="Aucune version antérieure enregistrée pour ce champ." Foreground="#94A3B8" FontStyle="Italic" Margin="0,10,0,0" Visibility="Collapsed"/>
+            </Grid>
+        </Border>
+
+        <!-- 4: PIED DE PAGE AVEC ACTIONS -->
+        <Border Grid.Row="4" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Message de statut ou durée -->
+                <TextBlock Grid.Column="0" x:Name="TxtStatusMessage" Text="" Foreground="#EF4444" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+
+                <!-- Boutons d'action -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Rejeter / Annuler" Click="BtnCancel_Click" 
+                            Background="#F1F5F9" Foreground="#475569" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+                    <Button Content="📋 Copier" Click="BtnCopy_Click" 
+                            Background="#E2E8F0" Foreground="#334155" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+                    <Button Content="➕ Insérer à la suite" Click="BtnAppend_Click" 
+                            Background="#E0F2FE" Foreground="#0369A1" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+                    <Button Content="✅ Accepter &amp; Remplacer" Click="BtnReplace_Click" 
+                            Background="#0284C7" Foreground="White" FontWeight="Bold" Style="{StaticResource ActionButtonStyle}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

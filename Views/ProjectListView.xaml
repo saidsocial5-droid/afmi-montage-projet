@@ -1,0 +1,217 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.ProjectListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:converters="clr-namespace:AFMI_Montage_projet_2.Converters"
+             xmlns:helpers="clr-namespace:AFMI_Montage_projet_2.Helpers"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Background="#F5F6F8">
+        <Grid.RowDefinitions>
+            <!-- En-tete -->
+            <RowDefinition Height="80"/>
+            <!-- Contenu principal -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tete -->
+        <Border Grid.Row="0" Background="#1E293B" Padding="20,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="AFMI - Gestionnaire de Projets" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                    <TextBlock Text="Conception et montage de dossiers pour bailleurs de fonds" Foreground="#94A3B8" FontSize="12"/>
+                </StackPanel>
+
+                <!-- Boutons de gestion de compte -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Bouton Radar des Projets -->
+                    <Button Content="📡 Radar des Projets" Command="{Binding OpenProjectRadarCommand}"
+                            Background="#0284C7" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand" Margin="0,0,8,0"
+                            Visibility="{Binding IsProjectRadarEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Bouton Profil de l'Association -->
+                    <Button Content="🏛️ Profil de l'Association" Command="{Binding OpenOrganizationProfileCommand}"
+                            Background="#4338CA" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand" Margin="0,0,8,0">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Bouton Espace d'équipe (ADR 23) -->
+                    <Button Content="👥 Espace d'équipe" Command="{Binding OpenTeamWorkspaceCommand}"
+                            Background="#7C3AED" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand" Margin="0,0,8,0"
+                            ToolTip="Connexion Google des membres, version officielle des projets, propositions et validation">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Bouton Synchronisation Mobile -->
+                    <Button Command="{Binding SyncToCloudCommand}"
+                            Background="#10B981" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand" Margin="0,0,8,0">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄 Synchroniser Mobile"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Bouton Mon Compte -->
+                    <Button Content="&#x1F464; Mon compte" Command="{Binding OpenMyAccountCommand}"
+                            Background="#334155" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand" Margin="0,0,8,0">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+                    <!-- Bouton Gestion des Membres (Admin seulement) -->
+                    <Button Content="&#x1F465; G&#x00E9;rer les membres" Command="{Binding OpenUserManagementCommand}"
+                            Background="#475569" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand" Margin="0,0,8,0"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+                    <!-- Deconnexion -->
+                    <Button Content="&#x1F6AA; D&#x00E9;connexion" Command="{Binding LogoutCommand}"
+                            Background="#EF4444" Foreground="White" BorderThickness="0" Padding="12,7" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Contenu principal -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="7*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Creer un projet (Gauche) -->
+            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,10,0">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="1" Color="#CCCCCC"/>
+                </Border.Effect>
+                
+                <StackPanel>
+                    <TextBlock Text="Nouveau Projet" FontSize="16" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="Titre du projet :" Foreground="#64748B" Margin="0,0,0,5" FontSize="13"/>
+                    <TextBox Text="{Binding NewProjectTitle, UpdateSourceTrigger=PropertyChanged}" 
+                             Height="35" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"
+                             FontSize="13" BorderBrush="#CBD5E1" BorderThickness="1"/>
+                    
+                    <Button Content="Cr&#x00E9;er le projet" Command="{Binding CreateProjectCommand}"
+                            Height="38" Background="#0EA5E9" Foreground="White" FontWeight="SemiBold"
+                            BorderThickness="0" Cursor="Hand" Margin="0,10,0,0">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                        </Button.Resources>
+                    </Button>
+                    
+                    <TextBlock Text="Note : Vous pourrez configurer le budget, le cadre logique et les bailleurs apr&#x00E8;s la cr&#x00E9;ation du projet." 
+                               Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" Margin="0,20,0,0" LineHeight="16"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Liste des projets (Droite) -->
+            <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="20" Margin="10,0,0,0">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" Direction="-90" RenderingBias="Quality" ShadowDepth="1" Color="#CCCCCC"/>
+                </Border.Effect>
+                
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Projets R&#x00E9;cents" FontSize="16" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,15"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProjectInList}"
+                             BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="15,10" Margin="0,0,0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" helpers:CollaborativeUI.IsCollaborativeText="True" helpers:CollaborativeUI.TextPropertyName="Title" FontWeight="Bold" FontSize="14" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                <TextBlock Text="Porteur : " Foreground="#64748B" FontSize="11"/>
+                                                <TextBlock Text="{Binding LeadOrganization}" Foreground="#334155" FontSize="11" FontWeight="SemiBold" Margin="0,0,15,0"/>
+                                                <TextBlock Text="Cr&#x00E9;&#x00E9; le : " Foreground="#64748B" FontSize="11"/>
+                                                <TextBlock Text="{Binding CreatedAt, StringFormat={}{0:dd/MM/yyyy}}" Foreground="#334155" FontSize="11"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="Ouvrir" Command="{Binding DataContext.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}"
+                                                    Width="70" Height="28" Background="#0EA5E9" Foreground="White" BorderThickness="0" Margin="0,0,5,0" Cursor="Hand">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="3"/></Style>
+                                                </Button.Resources>
+                                            </Button>
+                                            <Button Content="Supprimer" Command="{Binding DataContext.DeleteProjectCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}"
+                                                    Width="70" Height="28" Background="#EF4444" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="3"/></Style>
+                                                </Button.Resources>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+
+                    <TextBlock Grid.Row="1" Text="Aucun projet trouv&#x00E9;. Cr&#x00E9;ez votre premier projet dans le panneau de gauche."
+                               Foreground="#94A3B8" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="20"
+                               Visibility="{Binding Projects.Count, Converter={StaticResource CountToVisibilityConverter}, FallbackValue=Collapsed}"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+
+
+

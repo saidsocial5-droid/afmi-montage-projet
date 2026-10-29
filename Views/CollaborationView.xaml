@@ -1,0 +1,211 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.CollaborationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200"
+             Background="White">
+    <UserControl.Resources>
+        <local:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    </UserControl.Resources>
+    <Grid Margin="15">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="15" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="15" />
+            <ColumnDefinition Width="420" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Panneau latéral : Salles de réunions -->
+        <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="15" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="15" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Espace Collaboratif" FontSize="18" FontWeight="Bold" Foreground="#1E293B" />
+
+                <StackPanel Grid.Row="2">
+                    <Button Content="Générer Salle Jitsi" Command="{Binding GenerateJitsiRoomCommand}" 
+                            Background="#0284C7" Foreground="White" Padding="8" BorderThickness="0" Cursor="Hand" Margin="0,0,0,8"/>
+                    <Button Content="Générer Salle Google Meet" Command="{Binding GenerateGoogleMeetPlaceholderCommand}" 
+                            Background="#16A34A" Foreground="White" Padding="8" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+
+                <ListBox Grid.Row="4" ItemsSource="{Binding MeetingRooms}" SelectedItem="{Binding SelectedRoom}" 
+                         Background="Transparent" BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" CornerRadius="4" Padding="10" Margin="0,0,0,5" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding RoomName}" FontWeight="Bold" Foreground="#334155" />
+                                        <TextBlock Text="{Binding Platform}" FontSize="11" Foreground="#64748B" />
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat=dd/MM/yyyy HH:mm}" FontSize="11" Foreground="#94A3B8" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="❌" Command="{Binding DataContext.DeleteRoomCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand" Foreground="#EF4444"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Zone WebView2 (Affichage Jitsi / Google Meet) -->
+        <Border Grid.Column="2" Background="#F1F5F9" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+            <wv2:WebView2 Source="{Binding CurrentRoomUrl, FallbackValue='https://meet.jit.si/', TargetNullValue='https://meet.jit.si/'}" />
+        </Border>
+
+        <!-- Zone Prise de Notes & Résumé IA -->
+        <Border Grid.Column="4" Background="#F8FAFC" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- En-tête Prise de notes & Actions -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="📝 Prise de notes (Brouillon)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" />
+                            <Border Background="#EEF2FF" CornerRadius="10" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="✨ Assistance IA Vocale" FontSize="10" FontWeight="Bold" Foreground="#4F46E5"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Prise de notes automatique depuis les discussions vocales" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="🗑️ Vider" Command="{Binding ClearMeetingNotesCommand}"
+                            Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Cursor="Hand" FontSize="11"
+                            ToolTip="Effacer le brouillon" VerticalAlignment="Top"/>
+                </Grid>
+
+                <!-- Barre d'outils : Prise de notes automatique à partir des discussions vocales -->
+                <Border Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,8,0,4">
+                    <StackPanel Orientation="Vertical">
+                        <!-- Mode normal : non en enregistrement -->
+                        <Grid Visibility="{Binding IsVoiceRecording, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Bouton Écouter le micro -->
+                            <Button Grid.Column="0" Command="{Binding StartVoiceRecordingCommand}"
+                                    Background="#4F46E5" Foreground="White" BorderThickness="0" Padding="8,6" Margin="0,0,5,0"
+                                    Cursor="Hand" ToolTip="Démarrer l'écoute microphone pour transcrire la discussion vocale">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                </Button.Resources>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="🎙️ Écouter la réunion" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Bouton Importer Audio -->
+                            <Button Grid.Column="1" Command="{Binding ImportAudioFileCommand}"
+                                    Background="#F8FAFC" Foreground="#334155" BorderBrush="#CBD5E1" BorderThickness="1" Padding="8,6" Margin="0,0,5,0"
+                                    Cursor="Hand" ToolTip="Importer un fichier audio de discussion (WAV, MP3, M4A, OGG...)">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                </Button.Resources>
+                                <TextBlock Text="📁 Importer audio" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </Button>
+
+                            <!-- Bouton Structurer par IA -->
+                            <Button Grid.Column="2" Command="{Binding StructureNotesWithAiCommand}"
+                                    Background="#F8FAFC" Foreground="#4F46E5" BorderBrush="#CBD5E1" BorderThickness="1" Padding="8,6"
+                                    Cursor="Hand" ToolTip="Structurer et synthétiser les notes actuelles avec l'IA">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                </Button.Resources>
+                                <TextBlock Text="✨ Structurer" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Mode enregistrement vocal actif -->
+                        <Grid Visibility="{Binding IsVoiceRecording, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,8,0">
+                                <TextBlock Text="🔴" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock Text="Écoute :" FontSize="11" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding RecordingDurationText}" FontSize="12" FontWeight="Bold" Foreground="#1E293B" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="1" Text="Discussion en cours..." FontSize="10" Foreground="#64748B" FontStyle="Italic" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                            <Button Grid.Column="2" Command="{Binding StopVoiceRecordingAndGenerateNotesCommand}"
+                                    Background="#DC2626" Foreground="White" BorderThickness="0" Padding="10,6"
+                                    Cursor="Hand" FontWeight="Bold">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                </Button.Resources>
+                                <TextBlock Text="⏹️ Arrêter &amp; Générer notes" FontSize="11"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Statut IA pendant le traitement -->
+                        <Border Margin="0,6,0,0" Padding="6" Background="#FEF3C7" CornerRadius="4"
+                                Visibility="{Binding IsProcessingVoiceNotes, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="🤖" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding VoiceStatusMessage}" FontWeight="SemiBold" Foreground="#92400E" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                
+                <TextBox Grid.Row="3" Text="{Binding MeetingNotes, UpdateSourceTrigger=PropertyChanged}" 
+                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                         Padding="10" Background="White" BorderBrush="#CBD5E1" 
+                         ToolTip="Tapez ou dictez vos notes ici. L'assistance IA peut également prendre des notes automatiquement depuis la discussion vocale..." />
+
+                <Button Grid.Row="5" Content="✨ Générer un Compte-Rendu IA" Command="{Binding GenerateMeetingSummaryCommand}" 
+                        IsEnabled="{Binding IsGeneratingSummary, Converter={StaticResource InverseBooleanConverter}, FallbackValue=True}"
+                        Background="#8B5CF6" Foreground="White" Padding="12" BorderThickness="0" Cursor="Hand" FontWeight="Bold">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                    </Button.Resources>
+                </Button>
+                
+                <TextBlock Grid.Row="7" Text="📋 Résumé Officiel" FontSize="15" FontWeight="Bold" Foreground="#1E293B" />
+                
+                <TextBox Grid.Row="9" Text="{Binding MeetingSummary, UpdateSourceTrigger=PropertyChanged}" 
+                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                         Padding="10" Background="#F1F5F9" BorderBrush="#CBD5E1" IsReadOnly="True" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,170 @@
+﻿<UserControl x:Class="AFMI_Montage_projet_2.Views.AnalyseDocumentsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100"
+             Background="White">
+
+    <UserControl.Resources>
+        <!-- Information proposée à l'intégration (case à cocher) -->
+        <DataTemplate x:Key="ProposalTemplate">
+            <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,5">
+                <CheckBox IsChecked="{Binding IsSelected}" VerticalContentAlignment="Top">
+                    <StackPanel Margin="4,0,0,0">
+                        <TextBlock FontSize="12" TextWrapping="Wrap">
+                            <Run Text="{Binding TargetLabel, Mode=OneWay}" Foreground="#7C3AED" FontWeight="SemiBold"/>
+                            <Run Text=" — "/>
+                            <Run Text="{Binding Title, Mode=OneWay}" Foreground="#1E293B" FontWeight="SemiBold"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap"
+                                   Visibility="{Binding Detail, Converter={StaticResource StringToVisibilityConverter}}"/>
+                    </StackPanel>
+                </CheckBox>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <TabControl Margin="10" BorderThickness="0" Background="Transparent">
+
+        <!-- Onglet 1 : documents et liens -->
+        <TabItem Header="📄 Documents &amp; liens" FontWeight="SemiBold">
+            <Grid Margin="5,10,5,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="15" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Liste des documents -->
+                <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="Documents d'appui" FontSize="18" FontWeight="Bold" Foreground="#1E293B" />
+                            <TextBlock Text="Appels à projets, études, monographies, rapports, pages web ou PDF en ligne." FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,10"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                            <Button Content="➕ Document" Command="{Binding BrowseFileCommand}"
+                                    Background="#0284C7" Foreground="White" Padding="10,6" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                            <Button Content="🔗 Lien web" Command="{Binding AddUrlCommand}"
+                                    Background="#0F766E" Foreground="White" Padding="10,6" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+
+                        <ListBox Grid.Row="2" ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}"
+                                 Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" CornerRadius="4" Padding="10" Margin="0,0,0,5" BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding FileName}" FontWeight="Bold" Foreground="#334155" TextWrapping="Wrap" />
+                                                <TextBlock FontSize="11" Foreground="#64748B">
+                                                    <Run Text="{Binding DocumentType, Mode=OneWay}"/>
+                                                    <Run Text="•"/>
+                                                    <Run Text="{Binding UploadedAt, StringFormat=dd/MM/yyyy, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock FontSize="11" Foreground="#16A34A" Text="✔ analysé"
+                                                           Visibility="{Binding InsightsJson, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="❌" Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand" Foreground="#EF4444" VerticalAlignment="Top"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+
+                <!-- Analyse du document sélectionné -->
+                <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="18" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="2*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding SelectedDocument.FileName, TargetNullValue='Sélectionnez ou ajoutez un document'}" FontSize="17" FontWeight="Bold" Foreground="#1E293B" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="🔍 Analyser" Command="{Binding AnalyzeDocumentCommand}" CommandParameter="{Binding SelectedDocument}"
+                                        Background="#8B5CF6" Foreground="White" Padding="12,6" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"
+                                        ToolTip="Extraction du texte, analyse structurée (IA si disponible, sinon automatique) et vérification des chiffres dans la source"/>
+                                <Button Content="↻ Réanalyser" Command="{Binding ReanalyzeDocumentCommand}" CommandParameter="{Binding SelectedDocument}"
+                                        Background="#EDE9FE" Foreground="#5B21B6" Padding="10,6" BorderThickness="0" Cursor="Hand"
+                                        ToolTip="Forcer une nouvelle analyse même si le contenu n'a pas changé"/>
+                                <ProgressBar IsIndeterminate="True" Width="80" Height="6" Margin="12,0,0,0" VerticalAlignment="Center"
+                                             Visibility="{Binding IsAnalyzing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding StatusMessage}" Margin="0,8,0,0" Foreground="#0369A1" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap"
+                                       Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                        </StackPanel>
+
+                        <!-- Résultat structuré + propositions -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <DockPanel Grid.Column="0">
+                                <TextBlock DockPanel.Dock="Top" Text="Analyse du document" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
+                                <TextBox Text="{Binding SelectedDocument.AiSummary, Mode=OneWay}" TextWrapping="Wrap" IsReadOnly="True"
+                                         VerticalScrollBarVisibility="Auto" Padding="10" Background="#F8FAFC" BorderBrush="#E2E8F0" FontSize="12"/>
+                            </DockPanel>
+
+                            <DockPanel Grid.Column="2">
+                                <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <TextBlock Text="À intégrer au projet" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Tout" Command="{Binding SelectAllProposalsCommand}" CommandParameter="true" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" Padding="4,0"/>
+                                        <Button Content="Aucun" Command="{Binding SelectAllProposalsCommand}" CommandParameter="false" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" Padding="4,0"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Button DockPanel.Dock="Bottom" Content="✅ Intégrer au projet" Command="{Binding IntegrateSelectedCommand}"
+                                        Background="#16A34A" Foreground="White" FontWeight="Bold" Padding="12,7" BorderThickness="0" Cursor="Hand" Margin="0,8,0,0"
+                                        Visibility="{Binding HasProposals, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <Border BorderBrush="#E2E8F0" BorderThickness="1" Background="#FAFAFA" Padding="8">
+                                    <Grid>
+                                        <TextBlock Text="Analysez un document pour voir les informations exploitables : sources, données chiffrées, problèmes, besoins, bénéficiaires, exigences du bailleur…"
+                                                   FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"
+                                                   Visibility="{Binding HasProposals, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding Proposals}" ItemTemplate="{StaticResource ProposalTemplate}"/>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
+                            </DockPanel>
+                        </Grid>
+
+                        <!-- Synthèse des exigences -->
+                        <TextBlock Grid.Row="2" Text="Synthèse des exigences des appels à projets (contrôlées dans l'Audit : plafond, durée, cofinancement, date limite)" FontSize="13" FontWeight="SemiBold" Foreground="#0F766E" Margin="0,12,0,6" TextWrapping="Wrap"/>
+                        <TextBox Grid.Row="3" Text="{Binding GlobalRequirementsSummary, Mode=OneWay}" TextWrapping="Wrap" IsReadOnly="True"
+                                 VerticalScrollBarVisibility="Auto" Padding="10" Background="#F0FDFA" BorderBrush="#14B8A6" BorderThickness="1" FontSize="12"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </TabItem>
+
+        <!-- Onglet 2 : projets similaires -->
+        <TabItem Header="🌍 Projets similaires &amp; idées" FontWeight="SemiBold">
+            <local:SimilarProjectsView DataContext="{Binding SimilarProjects}" Margin="5,10,5,5"/>
+        </TabItem>
+    </TabControl>
+</UserControl>

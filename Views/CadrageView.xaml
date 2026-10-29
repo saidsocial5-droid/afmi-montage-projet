@@ -1,0 +1,743 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.CadrageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+             xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+
+    <Grid Background="#F5F6F8">
+        <Grid.RowDefinitions>
+            <!-- Bandeau de navigation / Titre du projet -->
+            <RowDefinition Height="60"/>
+            <!-- Contenu des onglets -->
+            <RowDefinition Height="*"/>
+            <!-- Pied de page avec actions et messages -->
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
+        <!-- Bandeau de navigation -->
+        <Border Grid.Row="0" Background="#1E293B" Padding="15,5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Retour à  la liste -->
+                <Button Grid.Column="0" Content="â† Retour aux projets" 
+                        Command="{Binding DataContext.NavigateToProjectListCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Background="Transparent" Foreground="#38BDF8" FontWeight="SemiBold"
+                        BorderThickness="0" Cursor="Hand" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                <!-- Titre du projet en cours -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" Foreground="White" FontSize="16" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Module : Cadrage du Projet" Foreground="#94A3B8" FontSize="11"/>
+                </StackPanel>
+
+                <!-- Enregistrer -->
+                <Button Grid.Column="2" Content="Enregistrer les modifications" Command="{Binding SaveProjectCommand}"
+                        Background="#10B981" Foreground="White" FontWeight="Bold" Width="200" Height="34"
+                        BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Contenu sous forme d'onglets (TabControl) -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="15,15,15,5">
+            <TabControl.Resources>
+                <!-- Style simple pour les onglets pour un rendu moderne -->
+                <Style TargetType="TabItem">
+                    <Setter Property="Header" Value="{Binding Header}"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Foreground" Value="#64748B"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="15,8"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border x:Name="Border" Background="{TemplateBinding Background}" BorderBrush="#0EA5E9" 
+                                        BorderThickness="0,0,0,2" Padding="{TemplateBinding Padding}" Margin="0,0,5,0">
+                                    <ContentPresenter x:Name="ContentSite" ContentSource="Header" RecognizesAccessKey="True"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Foreground" Value="#0EA5E9"/>
+                                        <Setter TargetName="Border" Property="BorderThickness" Value="0,0,0,3"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="False">
+                                        <Setter TargetName="Border" Property="BorderThickness" Value="0"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <!-- Onglet 0 : Idéation & Brainstorming -->
+            <TabItem Header="✨ Brainstorming (IA)">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="15" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Génération d'idées (Web + Documents)" FontWeight="Bold" FontSize="14" Foreground="#1E293B" Margin="0,0,0,5"/>
+                                <TextBlock Text="Utilise l'IA pour analyser les documents importés dans le module 'Analyse des documents' et effectue une recherche sur Internet pour proposer de nouvelles idées inspirantes." Foreground="#64748B" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="✨ Lancer l'idéation" Command="{Binding GenerateIdeationCommand}" Background="#8B5CF6" Foreground="White" FontWeight="Bold" Padding="15,8" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                </Button.Resources>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBox Text="{Binding BrainstormingResult}" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" FontFamily="Consolas" FontSize="13" Foreground="#334155"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Onglet 1 : Fiche d'identité -->
+            <TabItem Header="Fiche d'identité">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Titre du projet -->
+                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,20">
+                                <Grid Margin="0,0,0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Titre officiel du projet *" Foreground="#475569" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button Content="✨ Suggérer par l'IA" Command="{Binding GenererTitreIaCommand}" Background="Transparent" BorderThickness="0" Foreground="#3B82F6" Cursor="Hand" FontSize="11" Margin="0,0,10,0" ToolTip="Générer des titres basés sur les objectifs et la justification"/>
+                                        <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="Title" Background="Transparent" BorderThickness="0" Foreground="#0284C7" Cursor="Hand" FontWeight="SemiBold" FontSize="11" Margin="0,0,10,0" ToolTip="Enrichir le titre du projet"/>
+                                        <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="Title" Background="Transparent" BorderThickness="0" Foreground="#0284C7" Cursor="Hand" FontWeight="SemiBold" FontSize="11" ToolTip="Reformuler le titre du projet"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="5"/>
+                            </StackPanel>
+
+                            <!-- Porteur de projet -->
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,20">
+                                <TextBlock Text="organisation porteuse" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding LeadOrganization, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="5"/>
+                            </StackPanel>
+
+                            <!-- Zone d'intervention -->
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="10,0,0,20">
+                                <TextBlock Text="Zone d'intervention (Pays / région / Ville)" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding InterventionZone, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="5"/>
+                            </StackPanel>
+
+                            <!-- Date de début -->
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,20">
+                                <TextBlock Text="Date de début estimée" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <DatePicker SelectedDate="{Binding StartDate}" Height="35" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Date de fin -->
+                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="10,0,0,20">
+                                <TextBlock Text="Date de fin estimée" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <DatePicker SelectedDate="{Binding EndDate}" Height="35" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Budget Global -->
+                            <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,10,20">
+                                <TextBlock Text="Budget global total" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding TotalBudget, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="5"/>
+                                    <ComboBox Grid.Column="1" SelectedValue="{Binding Currency}" SelectedValuePath="Content" Height="35" Margin="5,0,0,0">
+                                        <ComboBoxItem Content="EUR"/>
+                                        <ComboBoxItem Content="USD"/>
+                                        <ComboBoxItem Content="XoF"/>
+                                        <ComboBoxItem Content="MAD"/>
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Apport propre (Association) -->
+                            <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,10,20">
+                                <TextBlock Text="Apport propre de l'association" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding LocalContribution, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="5"/>
+                            </StackPanel>
+
+                            <!-- Cofinancement attendu -->
+                            <StackPanel Grid.Row="4" Grid.Column="1" Margin="10,0,0,20">
+                                <TextBlock Text="Cofinancement(s) externe(s)" Foreground="#475569" FontWeight="Medium" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding PartnerContribution, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="5"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet 2 : Contexte & Justification -->
+            <TabItem Header="Contexte &amp; Justification">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+
+                        <StackPanel>
+                            <!-- Contexte général -->
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Contexte général du projet" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererBackgroundCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererBackgroundCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="Background" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir avec les données du projet"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="Background" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Reformuler selon les normes bailleurs"/>
+                                    <Button Content="🔍 Détailler" Command="{Binding DetaillerFieldCommand}" CommandParameter="Background" Background="Transparent" Foreground="#475569" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Détailler en étapes concrètes"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Décrivez le cadre géographique, social, économique et institutionnel dans lequel s'insère le projet." Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding Background, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" Padding="5" Margin="0,0,0,20"/>
+
+                            <!-- Justification du projet -->
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Justification du projet" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererJustificationCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererJustificationCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="Justification" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir la justification"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="Justification" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Reformuler la justification"/>
+                                    <Button Content="🔍 Détailler" Command="{Binding DetaillerFieldCommand}" CommandParameter="Justification" Background="Transparent" Foreground="#475569" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Détailler la justification"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Pourquoi ce projet est-il indispensable ? Quels besoins urgents comble-t-il et comment justifier cette intervention ?" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding Justification, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet 3 : objectifs & Approche -->
+            <TabItem Header="objectifs &amp; Approche">
+                <Grid Margin="0,10,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Objectif Général (Gauche, Haut) -->
+                    <Border Grid.Row="0" Grid.Column="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,10,15">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+
+                        <StackPanel>
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Objectif Général" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererGeneralObjectiveCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererGeneralObjectiveCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="GeneralObjective" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir l'objectif général"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="GeneralObjective" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler l'objectif général"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="L'impact global à  long terme auquel le projet contribue (ex: Améliorer la santé maternelle)." 
+                                       Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16"/>
+                            <TextBox Text="{Binding GeneralObjective, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="80" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Approche du projet (Gauche, Bas) -->
+                    <Border Grid.Row="1" Grid.Column="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,10,0">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+
+                        <StackPanel>
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Approche &amp; Méthodologie" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererProjectApproachCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererProjectApproachCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="ProjectApproach" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir l'approche"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="ProjectApproach" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler l'approche"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Quelle démarche stratégique adoptez-vous pour mener à  bien le projet ? (ex: participation communautaire)." 
+                                       Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16"/>
+                            <TextBox Text="{Binding ProjectApproach, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="150" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- objectifs Spécifiques (Droite, prend toute la hauteur) -->
+                    <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Background="White" CornerRadius="8" Padding="20" Margin="10,0,0,0">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                                                                                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Objectifs Spécifiques (OS)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Les effets concrets et mesurables attendus à la fin du projet (généralement entre 2 et 4 objectifs)." Foreground="#64748B" FontSize="11" TextWrapping="Wrap" LineHeight="16"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererObjectiveCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererObjectivesCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="NewObjectiveDescription" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir l'objectif"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="NewObjectiveDescription" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler l'objectif"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Formulaire Ajout oS -->
+                            <Grid Grid.Row="1" Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding NewObjectiveDescription, UpdateSourceTrigger=PropertyChanged}" 
+                                         Height="35" VerticalContentAlignment="Center" Padding="5" Tag="Saisir un nouvel objectif spécifique..."/>
+                                <Button Grid.Column="1" Content="Ajouter" Command="{Binding AddObjectiveCommand}" 
+                                         Width="80" Height="35" Background="#0EA5E9" Foreground="White" FontWeight="Bold" 
+                                         BorderThickness="0" Margin="5,0,0,0" Cursor="Hand">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="4"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </Grid>
+
+                            <!-- Liste des oS -->
+                            <ListBox Grid.Row="2" ItemsSource="{Binding Objectives}" BorderThickness="0" Background="Transparent"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <Border Grid.Column="0" Background="#E0F2FE" CornerRadius="4" Width="40" Height="25" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding Code}" Foreground="#0369A1" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                
+                                                <TextBlock Grid.Column="1" Text="{Binding Description}" Foreground="#334155" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                                
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="📝 Enrichir" 
+                                                            Command="{Binding DataContext.EnrichirObjectiveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:CadrageView}}}" 
+                                                            CommandParameter="{Binding}"
+                                                            Foreground="#0284C7" Background="#E0F2FE" Padding="6,3" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Margin="0,0,4,0" ToolTip="Enrichir cet objectif">
+                                                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                                                    </Button>
+                                                    <Button Content="🔄 Reformuler" 
+                                                            Command="{Binding DataContext.ReformulerObjectiveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:CadrageView}}}" 
+                                                            CommandParameter="{Binding}"
+                                                            Foreground="#0284C7" Background="#E0F2FE" Padding="6,3" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Margin="0,0,4,0" ToolTip="Reformuler cet objectif">
+                                                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                                                    </Button>
+                                                    <Button Content="🗑️ Supprimer" 
+                                                            Command="{Binding DataContext.DeleteObjectiveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:CadrageView}}}" 
+                                                            CommandParameter="{Binding}"
+                                                            Foreground="#EF4444" Background="#FEE2E2" Padding="8,4" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="4"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Onglet 4 : Impacts & Alignement -->
+            <TabItem Header="Impacts &amp; Alignement">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+
+                        <StackPanel>
+                            <!-- Impacts du projet -->
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Impacts du projet à  long terme" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererProjectImpactsCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererProjectImpactsCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="ProjectImpacts" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir les impacts"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="ProjectImpacts" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler les impacts"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Quels sont les effets indirects attendus du projet ? (Changements systémiques, Autonomisation, etc.)." Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding ProjectImpacts, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" Padding="5" Margin="0,0,0,20"/>
+
+                            <!-- Alignement stratégique -->
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Lien vers les stratégies nationales et internationales" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererStrategicAlignmentCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererStrategicAlignmentCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="StrategicAlignment" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir l'alignement stratégique"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="StrategicAlignment" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler l'alignement stratégique"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Comment ce projet s'aligne-t-il avec les priorités politiques locales (ex: plans nationaux) ou les ODD internationaux ?" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding StrategicAlignment, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet 5 : Pérennité & Forces -->
+            <TabItem Header="Pérennité &amp; Forces">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                    <Border Background="White" CornerRadius="8" Padding="25" Margin="0,10,0,10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+
+                        <StackPanel>
+                            <!-- Durabilité à  long terme -->
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="La durabilité à  long terme du projet (Pérennité)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererSustainabilityCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererSustainabilityCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="Sustainability" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir la durabilité"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="Sustainability" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler la durabilité"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Comment le projet continuera-t-il à  fonctionner apràos le financement du bailleur ? (Pérennité financiàore, technique et sociale)." Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding Sustainability, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" Padding="5" Margin="0,0,0,20"/>
+
+                            <!-- Forces organisationnelles -->
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Forces organisationnelles de l'association" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="🏛️ Importer Profil ONG" Command="{Binding ImporterDepuisProfilOngCommand}" Background="#EEF2FF" Foreground="#4338CA" BorderThickness="1" BorderBrush="#C7D2FE" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,10,0" Padding="8,2" ToolTip="Importer automatiquement l'identité, les réalisations et les capacités réelles de l'association"/>
+                                    <Button Content="✨ Suggérer" Command="{Binding SuggererOrganizationalStrengthsCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="✨ Générer" Command="{Binding GenererOrganizationalStrengthsCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0"/>
+                                    <Button Content="📝 Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="OrganizationalStrengths" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" Margin="0,0,10,0" ToolTip="Enrichir les forces organisationnelles"/>
+                                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="OrganizationalStrengths" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" FontSize="12" ToolTip="Reformuler les forces organisationnelles"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Quels sont les atouts, l'expérience passée, l'ancrage local et les compétences de votre structure qui garantissent la réussite du projet ?" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding OrganizationalStrengths, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" Padding="5"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- onglet 6 : Analyse SWoT -->
+            <TabItem Header="Analyse SWoT">
+                <Grid Margin="0,10,0,10">
+                    <Grid.RowDefinitions>
+                        <!-- En-tête avec bouton IA global -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Matrice 2x2 -->
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- En-tête -->
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="Matrice d'Analyse SWoT" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,3"/>
+                                <TextBlock Text="Analysez les facteurs internes (Forces, Faiblesses) et externes (OPPORTUNITÉS, Menaces) qui impactent la réussite du projet." 
+                                           Foreground="#64748B" FontSize="11" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="✨ Générer le SWOT par l'IA" Command="{Binding GenererSwotIaCommand}"
+                                    Width="180" Height="34" Background="#8B5CF6" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Grille SWoT 2x2 -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- FoRCES (Top-Left) - Vert -->
+                        <Border Grid.Row="0" Grid.Column="0" Background="White" BorderBrush="#DCFCE7" BorderThickness="4,1,1,1" CornerRadius="8" Padding="15" Margin="0,0,8,8">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="8" Color="#E2E8F0" ShadowDepth="1"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <Border Background="#16A34A" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="S" Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                        </Border>
+                                        <TextBlock Text="Forces (Strengths) - Interne" FontWeight="Bold" Foreground="#15803D" FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="Suggérer" Command="{Binding SuggererSwotStrengthsCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Générer" Command="{Binding GenererSwotStrengthsCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="SwotStrengths" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="SwotStrengths" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11"/></StackPanel>
+                                </Grid>
+                                <TextBox Grid.Row="1" Text="{Binding SwotStrengths, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="5" BorderThickness="0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- FAIBLESSES (Top-Right) - Rouge/Rose -->
+                        <Border Grid.Row="0" Grid.Column="1" Background="White" BorderBrush="#FEE2E2" BorderThickness="4,1,1,1" CornerRadius="8" Padding="15" Margin="8,0,0,8">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="8" Color="#E2E8F0" ShadowDepth="1"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <Border Background="#DC2626" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="W" Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                        </Border>
+                                        <TextBlock Text="Faiblesses (Weaknesses) - Interne" FontWeight="Bold" Foreground="#B91C1C" FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="Suggérer" Command="{Binding SuggererSwotWeaknessesCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Générer" Command="{Binding GenererSwotWeaknessesCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="SwotWeaknesses" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="SwotWeaknesses" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11"/></StackPanel>
+                                </Grid>
+                                <TextBox Grid.Row="1" Text="{Binding SwotWeaknesses, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="5" BorderThickness="0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- OPPORTUNITÉS (Bottom-Left) - Bleu -->
+                        <Border Grid.Row="1" Grid.Column="0" Background="White" BorderBrush="#E0F2FE" BorderThickness="4,1,1,1" CornerRadius="8" Padding="15" Margin="0,8,8,0">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="8" Color="#E2E8F0" ShadowDepth="1"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <Border Background="#0284C7" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="o" Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                        </Border>
+                                        <TextBlock Text="OPPORTUNITÉS (OPPORTUNITÉS) - Externe" FontWeight="Bold" Foreground="#0369A1" FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="Suggérer" Command="{Binding SuggererSwotOpportunitiesCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Générer" Command="{Binding GenererSwotOpportunitiesCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="SwotOpportunities" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="SwotOpportunities" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11"/></StackPanel>
+                                </Grid>
+                                <TextBox Grid.Row="1" Text="{Binding SwotOpportunities, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="5" BorderThickness="0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- MENACES (Bottom-Right) - orange/Jaune -->
+                        <Border Grid.Row="1" Grid.Column="1" Background="White" BorderBrush="#FFEDD5" BorderThickness="4,1,1,1" CornerRadius="8" Padding="15" Margin="8,8,0,0">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="8" Color="#E2E8F0" ShadowDepth="1"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <Border Background="#D97706" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="T" Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                        </Border>
+                                        <TextBlock Text="Menaces (Threats) - Externe" FontWeight="Bold" Foreground="#B45309" FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="Suggérer" Command="{Binding SuggererSwotThreatsCommand}" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Générer" Command="{Binding GenererSwotThreatsCommand}" Background="Transparent" Foreground="#10B981" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Enrichir" Command="{Binding EnrichirFieldCommand}" CommandParameter="SwotThreats" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11" Margin="0,0,5,0"/><Button Content="Reformuler" Command="{Binding ReformulerFieldCommand}" CommandParameter="SwotThreats" Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" FontWeight="Bold" FontSize="11"/></StackPanel>
+                                </Grid>
+                                <TextBox Grid.Row="1" Text="{Binding SwotThreats, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="5" BorderThickness="0"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Pied de page -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="15,0">
+            <Grid VerticalAlignment="Center">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#059669" FontWeight="Medium" FontSize="13" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

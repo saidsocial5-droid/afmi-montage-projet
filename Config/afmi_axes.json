@@ -1,0 +1,32 @@
+[
+  {
+    "Id": 1,
+    "Title": "Axe 1: Renforcement des capacités de gouvernance / المحور 1: تعزيز قدرات الحكامة",
+    "Description": "Renforcement du partenariat (organes statutaires, comités techniques, planification concertée) et Gouvernance des acteurs locaux (appui aux AGS, coopératives et ONG locales dans le montage, gestion et conduite de projets en partenariat).",
+    "IsCompleted": true
+  },
+  {
+    "Id": 2,
+    "Title": "Axe 2: Gestion des ressources naturelles / المحور 2: تدبير الموارد الطبيعية",
+    "Description": "Aménagement et gestion des parcours (projets sylvo-pastoraux, chartes pastorales), gestion forestière adaptative et participative, conservation de la biodiversité (cèdre, singe magot, sites sensibles), gestion de l'eau et ressources hydrauliques.",
+    "IsCompleted": true
+  },
+  {
+    "Id": 3,
+    "Title": "Axe 3: Énergie et habitat / المحور 3: الطاقة والسكن",
+    "Description": "Gestion durable des sources d'énergie (bois de chauffe rationnel, plantations énergétiques, énergies solaires/renouvelables), économies d'énergie et isolation thermique du bâti pour réduire la pression sur les forêts.",
+    "IsCompleted": true
+  },
+  {
+    "Id": 4,
+    "Title": "Axe 4: Diversification et amélioration des revenus / المحور 4: تنويع وتحسين الدخل",
+    "Description": "Organisation des filières économiques et accompagnement des producteurs, valorisation et labellisation des produits du terroir (safran, produits forestiers non ligneux), promotion de l'écotourisme (Réseau Cèdre).",
+    "IsCompleted": true
+  },
+  {
+    "Id": 5,
+    "Title": "Axe 5: Communication et mise en réseau / المحور 5: التواصل والتشبيك",
+    "Description": "Information et sensibilisation locale (campagnes et ateliers scolaires/populations), communication événementielle et externe (Journée de la poésie Amazigh, site web), vie en réseau (RMFM, RAFM, RIFM).",
+    "IsCompleted": true
+  }
+]

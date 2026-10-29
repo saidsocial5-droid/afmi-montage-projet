@@ -1,0 +1,232 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.IndicateursView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+             xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+
+    <UserControl.Resources>
+        <!-- Style pour le DataGrid -->
+        <Style x:Key="ModernDataGridStyle" TargetType="DataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="RowBackground" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#F8FAFC"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#F1F5F9"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+        </Style>
+
+        <!-- Style pour les en-têtes de colonnes du DataGrid -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+
+        <!-- Style pour les cellules -->
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#F5F6F8" Padding="15">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- En-tête des actions -->
+                <RowDefinition Height="Auto"/>
+                <!-- Grille des indicateurs -->
+                <RowDefinition Height="*"/>
+                <!-- Barre de statut -->
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+
+            <!-- En-tête des actions -->
+            <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="🎯 Plan de Suivi des Indicateurs" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                    <TextBlock Text="Centralisez et pilotez l'ensemble des indicateurs de suivi-évaluation (Baseline, Cibles, Sources et Fréquences) de votre projet." 
+                               Foreground="#64748B" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Suggérer via IA -->
+                    <Button Content="🤖 Suggérer via l'IA" Command="{Binding SuggereIndicateursIaCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}, FallbackValue=True}"
+                            Width="150" Height="34" Margin="0,0,10,0" Background="#8B5CF6" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Enrichir via IA -->
+                    <Button Content="📝 Enrichir" Command="{Binding EnrichirIndicateursCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}, FallbackValue=True}"
+                            Width="110" Height="34" Margin="0,0,10,0" Background="#0284C7" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" ToolTip="Enrichir tous les indicateurs avec les données du projet">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Reformuler via IA -->
+                    <Button Content="🔄 Reformuler" Command="{Binding ReformulerIndicateursCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}, FallbackValue=True}"
+                            Width="120" Height="34" Margin="0,0,10,0" Background="#0284C7" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" ToolTip="Reformuler selon les normes SMART des bailleurs">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Ajouter indicateur global -->
+                    <Button Content="➕ Ajouter global" Command="{Binding AddGlobalIndicatorCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}, FallbackValue=True}"
+                            Width="120" Height="34" Margin="0,0,10,0" Background="#16A34A" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <!-- Sauvegarder -->
+                    <Button Content="💾 Sauvegarder tout" Command="{Binding SaveIndicatorsCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}, FallbackValue=True}"
+                            Width="140" Height="34" Background="#0EA5E9" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Grille des indicateurs -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" Color="#E2E8F0" ShadowDepth="1"/>
+            </Border.Effect>
+            <Grid>
+                <!-- DataGrid principal -->
+                <DataGrid ItemsSource="{Binding Indicators}" Style="{StaticResource ModernDataGridStyle}" HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <!-- Code -->
+                        <DataGridTextColumn Header="Code" Binding="{Binding Code}" IsReadOnly="True" Width="85"/>
+
+                        <!-- Description -->
+                        <DataGridTemplateColumn Header="Description de l'Indicateur" Width="2.5*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Padding="2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Baseline -->
+                        <DataGridTextColumn Header="Référence (Baseline)" Binding="{Binding Baseline}" Width="1.2*"/>
+
+                        <!-- Target -->
+                        <DataGridTextColumn Header="Cible (Target)" Binding="{Binding Target}" Width="1.2*"/>
+
+                        <!-- Source de vérification -->
+                        <DataGridTextColumn Header="Source de Vérification" Binding="{Binding VerificationSource}" Width="1.8*"/>
+
+                        <!-- Fréquence de collecte -->
+                        <DataGridTemplateColumn Header="Fréquence" Width="1.2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Frequency}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <ComboBox SelectedValue="{Binding Frequency, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content">
+                                        <ComboBoxItem Content="Mensuelle"/>
+                                        <ComboBoxItem Content="Trimestrielle"/>
+                                        <ComboBoxItem Content="Semestrielle"/>
+                                        <ComboBoxItem Content="Annuelle"/>
+                                        <ComboBoxItem Content="Fin de projet"/>
+                                    </ComboBox>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Responsable -->
+                        <DataGridTextColumn Header="Responsable" Binding="{Binding ResponsibleRole}" Width="1.5*"/>
+
+                        <!-- Supprimer -->
+                        <DataGridTemplateColumn Width="50">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="✕" 
+                                            Command="{Binding DataContext.DeleteIndicatorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Background="Transparent" Foreground="#EF4444" FontWeight="Bold" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Indicateur de chargement (IsBusy) -->
+                <Border Background="#80FFFFFF" CornerRadius="8" Visibility="{Binding IsBusy, Converter={StaticResource CountToVisibilityConverter}, FallbackValue=Collapsed}">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <ProgressBar IsIndeterminate="True" Width="200" Height="6" Margin="0,0,0,10"/>
+                        <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#475569" FontWeight="Medium"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Barre de statut -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="15,0" Margin="0,15,0,0" CornerRadius="4">
+            <Grid VerticalAlignment="Center">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#1E293B" FontWeight="Medium" FontSize="12" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Border>
+</UserControl>
+

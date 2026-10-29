@@ -1,0 +1,298 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.Strategic.TerritoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#334155"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
+        </Style>
+        <Style x:Key="Field" TargetType="TextBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        <Style x:Key="Area" TargetType="TextBox" BasedOn="{StaticResource Field}">
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="MinHeight" Value="58"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        </Style>
+        <Style x:Key="Section" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+        </Style>
+        <Style x:Key="Btn" TargetType="Button">
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#E2E8F0"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Barre d'actions -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16,12" Margin="0,10,0,10" BorderBrush="#E2E8F0" BorderThickness="1">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="🗺️ Territoire d'intervention &amp; bénéficiaires" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                        <TextBlock FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,3,0,0"
+                                   Text="Source unique de la zone d'intervention et du public cible : le cadrage, le socle stratégique et les parties prenantes en sont mis à jour à l'enregistrement."/>
+                        <TextBlock FontSize="12" Foreground="#0369A1" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   Visibility="{Binding ZoneLabel, Converter={StaticResource StringToVisibilityConverter}}">
+                            <Run Text="Zone du projet :"/> <Run Text="{Binding ZoneLabel, Mode=OneWay}"/>
+                        </TextBlock>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                        <Button Content="🤖 Proposer avec l'IA" Command="{Binding SuggestWithAiCommand}" Style="{StaticResource Btn}" Background="#DCFCE7" Foreground="#166534"
+                                ToolTip="Complète les rubriques vides et propose des groupes de bénéficiaires (recherche Internet si le moteur Gemini est configuré)"/>
+                        <Button Content="🎯 Alimenter l'analyse des besoins" Command="{Binding FeedNeedsCommand}" Style="{StaticResource Btn}"
+                                ToolTip="Ajoute les besoins des bénéficiaires et les problèmes de la zone à l'analyse des besoins (étape suivante)"/>
+                        <Button Content="💾 Enregistrer" Command="{Binding SaveCommand}" Style="{StaticResource Btn}" Background="#0284C7" Foreground="White" Margin="0"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#0369A1" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                <ProgressBar IsIndeterminate="True" Height="4" Margin="0,6,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- 1. Localisation -->
+                <Border Style="{StaticResource Section}">
+                    <StackPanel>
+                        <TextBlock Text="1. Localisation" Style="{StaticResource SectionTitle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Pays" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Country, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                                <TextBlock Text="Milieu (rural, montagne, oasis…)" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.AreaType, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Région" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Region, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                                <TextBlock Text="Superficie" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Surface, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Province / préfecture" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Province, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                                <TextBlock Text="Altitude" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Altitude, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="Communes concernées" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.Communes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                        <TextBlock Text="Localités, douars, sites d'intervention" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.Localities, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. Milieu naturel -->
+                <Border Style="{StaticResource Section}">
+                    <StackPanel>
+                        <TextBlock Text="2. Milieu naturel" Style="{StaticResource SectionTitle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Climat" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Climate, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                                <TextBlock Text="Écosystèmes (forêts, parcours, zones humides…)" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Ecosystems, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Ressources naturelles" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.NaturalResources, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                                <TextBlock Text="Ressources en eau" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.WaterResources, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 3. Population et économie -->
+                <Border Style="{StaticResource Section}">
+                    <StackPanel>
+                        <TextBlock Text="3. Population et économie" Style="{StaticResource SectionTitle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Population (source, année)" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Population, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Ménages" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Households, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Taux de pauvreté / vulnérabilité" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.PovertyRate, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="Profil social (langues, structure par âge, genre, organisation sociale)" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.SocialProfile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                        <TextBlock Text="Principales activités économiques et sources de revenus" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.MainLivelihoods, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                        <TextBlock Text="Accès aux services et infrastructures (routes, eau potable, électricité, santé, écoles)" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.InfrastructureAccess, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 4. Problèmes et potentialités -->
+                <Border Style="{StaticResource Section}">
+                    <StackPanel>
+                        <TextBlock Text="4. Problèmes, vulnérabilités et potentialités" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="Un problème par ligne : ils alimentent l'analyse des besoins puis l'arbre à problèmes." FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Problèmes environnementaux" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.EnvironmentalIssues, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                                <TextBlock Text="Problèmes sociaux" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.SocialIssues, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                                <TextBlock Text="Problèmes économiques" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.EconomicIssues, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Vulnérabilités climatiques" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.ClimateVulnerabilities, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                                <TextBlock Text="Acteurs institutionnels et organisations locales" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.InstitutionalActors, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                                <TextBlock Text="Atouts et opportunités du territoire" Style="{StaticResource Label}"/>
+                                <TextBox Text="{Binding Profile.Opportunities, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 5. Bénéficiaires -->
+                <Border Style="{StaticResource Section}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="5. Bénéficiaires directs et indirects" Style="{StaticResource SectionTitle}"/>
+                                <TextBlock Text="{Binding TotalsText}" FontSize="12" Foreground="#0369A1" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                <Button Content="➕ Groupe direct" Command="{Binding AddBeneficiaryCommand}" CommandParameter="Direct" Style="{StaticResource Btn}"/>
+                                <Button Content="➕ Groupe indirect" Command="{Binding AddBeneficiaryCommand}" CommandParameter="Indirect" Style="{StaticResource Btn}" Margin="0"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,6,0,8"
+                                   Text="Direct : bénéficie des activités (formations, équipements, revenus…). Indirect : bénéficie des retombées (familles, population de la zone, filière). Les groupes directs sont reportés dans les parties prenantes."/>
+                        <DataGrid ItemsSource="{Binding Beneficiaries}" SelectedItem="{Binding SelectedBeneficiary}" AutoGenerateColumns="False"
+                                  CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="120" MaxHeight="420"
+                                  RowHeaderWidth="0" Background="White" BorderBrush="#E2E8F0" CellEditEnding="DataGrid_CellEditEnding">
+                            <DataGrid.Columns>
+                                <DataGridComboBoxColumn Header="Type" SelectedItemBinding="{Binding BeneficiaryType}" Width="85">
+                                    <DataGridComboBoxColumn.ElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding DataContext.BeneficiaryTypeOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.ElementStyle>
+                                    <DataGridComboBoxColumn.EditingElementStyle>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="ItemsSource" Value="{Binding DataContext.BeneficiaryTypeOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                        </Style>
+                                    </DataGridComboBoxColumn.EditingElementStyle>
+                                </DataGridComboBoxColumn>
+                                <DataGridTextColumn Header="Groupe" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="2*"/>
+                                <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="*"/>
+                                <DataGridTextColumn Header="Effectif" Binding="{Binding EstimatedCount, TargetNullValue=''}" Width="70"/>
+                                <DataGridTextColumn Header="Unité" Binding="{Binding CountUnit}" Width="85"/>
+                                <DataGridTextColumn Header="% femmes" Binding="{Binding WomenPercent, TargetNullValue=''}" Width="70"/>
+                                <DataGridTextColumn Header="% jeunes" Binding="{Binding YouthPercent, TargetNullValue=''}" Width="70"/>
+                                <DataGridTextColumn Header="Besoins" Binding="{Binding Needs}" Width="2*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap"/></Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Bénéfices attendus" Binding="{Binding ExpectedBenefits}" Width="2*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap"/></Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Critères de sélection" Binding="{Binding SelectionCriteria}" Width="*"/>
+                                <DataGridTemplateColumn Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="🗑" ToolTip="Retirer ce groupe" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                    Command="{Binding DataContext.RemoveBeneficiaryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 6. Sources et synthèse -->
+                <Border Style="{StaticResource Section}">
+                    <StackPanel>
+                        <TextBlock Text="6. Sources et synthèse du diagnostic" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="Sources (RGPH, monographie communale, PCD, études, enquêtes de terrain)" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.Sources, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}"/>
+                        <TextBlock Text="Synthèse du diagnostic territorial" Style="{StaticResource Label}"/>
+                        <TextBox Text="{Binding Profile.Synthesis, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Area}" MinHeight="110"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,312 @@
+<Window x:Class="AFMI_Montage_projet_2.Views.TeamWorkspaceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+        xmlns:helpers="clr-namespace:AFMI_Montage_projet_2.Helpers"
+        Title="Espace d'équipe AFMI" Height="760" Width="1060" MinWidth="820" MinHeight="560"
+        WindowStartupLocation="CenterOwner" Background="#F8FAFC">
+
+    <Window.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#E2E8F0"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+        </Style>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="18"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#64748B"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête : identité et poste -->
+        <Border Grid.Row="0" Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="👥 Espace d'équipe" FontSize="22" FontWeight="Bold" Foreground="#1E293B"/>
+                    <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0">
+                        <Run Text="Chaque membre se connecte avec son propre compte Google. Tout est stocké sur le Google Drive de"/>
+                        <Run Text="{Binding OwnerEmail, Mode=OneWay}" FontWeight="SemiBold"/>
+                        <Run Text="; les décisions appartiennent aux administrateurs ("/><Run Text="{Binding AdminsText, Mode=OneWay}"/><Run Text=")."/>
+                    </TextBlock>
+                    <StackPanel Visibility="{Binding IsSignedIn, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,8,0,0">
+                        <TextBlock FontWeight="SemiBold" Foreground="#0F172A">
+                            <Run Text="{Binding UserName, Mode=OneWay}"/>
+                            <Run Text="—"/>
+                            <Run Text="{Binding UserEmail, Mode=OneWay}"/>
+                            <Run Text="•"/>
+                            <Run Text="{Binding RoleLabel, Mode=OneWay}" Foreground="#2563EB"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding StationLabel}" Foreground="#047857" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                    <Button Content="🔑 Se connecter avec Google" Command="{Binding SignInCommand}" Style="{StaticResource PrimaryButton}" Margin="0"
+                            Visibility="{Binding IsSignedIn, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                    <Button Content="Se déconnecter" Command="{Binding SignOutCommand}" Style="{StaticResource SecondaryButton}" Margin="0"
+                            Visibility="{Binding IsSignedIn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Padding="0,10,0,0">
+
+            <!-- 1. Accès et version officielle -->
+            <TabItem Header="🔐 Accès &amp; version officielle">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+
+                        <!-- Problème d'accès à l'espace -->
+                        <Border Style="{StaticResource Card}" Background="#FEF2F2" BorderBrush="#FECACA"
+                                Visibility="{Binding WorkspaceError, Converter={StaticResource StringToVisibilityConverter}}">
+                            <TextBlock Text="{Binding WorkspaceError}" Foreground="#991B1B" TextWrapping="Wrap"/>
+                        </Border>
+
+                        <!-- Code d'accès (premier démarrage d'un membre) -->
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Code d'accès de l'équipe" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="Le code d'accès relie l'application au projet Google de l'association. Un administrateur le copie ci-dessous et le transmet en privé ; le membre le colle une seule fois sur son poste, puis se connecte avec SON compte Google."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding AccessCodeInput, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,8,0"
+                                             Tag="Coller ici le code d'accès reçu de l'administrateur"
+                                             helpers:AiTextAssistant.IsExcluded="True"/>
+                                    <Button Grid.Column="1" Content="Enregistrer le code" Command="{Binding ApplyAccessCodeCommand}" Style="{StaticResource PrimaryButton}"/>
+                                    <Button Grid.Column="2" Content="📋 Copier le code pour un membre" Command="{Binding CopyAccessCodeCommand}" Style="{StaticResource SecondaryButton}" Margin="0"
+                                            Visibility="{Binding CanManageTeam, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </Grid>
+                                <TextBlock Text="✔ Code d'accès configuré sur ce poste." Foreground="#047857" Margin="0,8,0,0"
+                                           Visibility="{Binding HasClientCredentials, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Poste officiel : publication -->
+                        <Border Style="{StaticResource Card}" Visibility="{Binding IsOfficialStation, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Publier la version officielle" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="Les projets de ce poste sont envoyés sur le Drive de l'association pour que les membres les consultent. Les comptes, mots de passe, réglages, clés et journaux ne sont jamais publiés. La publication est aussi automatique après chaque proposition intégrée, et toutes les 10 minutes si vous modifiez directement un projet."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="⬆ Publier maintenant" Command="{Binding PublishCommand}" Style="{StaticResource PrimaryButton}"/>
+                                    <TextBlock Text="{Binding OfficialVersionText}" VerticalAlignment="Center" Foreground="#475569"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Poste membre : mise à jour -->
+                        <Border Style="{StaticResource Card}" Visibility="{Binding IsMemberStation, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Recevoir la version officielle" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="Remplace les projets de ce poste par la dernière version publiée par l'association (sauvegarde automatique avant). Vous travaillez ensuite librement dans vos projets ; vos modifications deviennent des propositions depuis l'onglet « Mes contributions »."/>
+                                <TextBlock Text="{Binding NewVersionText}" Foreground="#B45309" FontWeight="SemiBold" Margin="0,0,0,8"
+                                           Visibility="{Binding NewVersionText, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="⬇ Mettre à jour mes projets" Command="{Binding RefreshFromOfficialCommand}" Style="{StaticResource PrimaryButton}"/>
+                                    <TextBlock Text="{Binding OfficialVersionText}" VerticalAlignment="Center" Foreground="#475569"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 2. Contributions du membre -->
+            <TabItem Header="📤 Mes contributions" Visibility="{Binding IsWorkspaceReady, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <Border Style="{StaticResource Card}" Background="#FFFBEB" BorderBrush="#FDE68A"
+                                Visibility="{Binding CanContribute, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                            <TextBlock TextWrapping="Wrap" Foreground="#92400E"
+                                       Text="Les propositions s'envoient depuis un poste membre, avec le rôle « Membre (contributeur) ». Sur le poste officiel, les administrateurs modifient directement les projets."/>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Visibility="{Binding CanContribute, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Envoyer mes modifications" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="Modifiez les projets comme d'habitude (textes, objectifs, activités, budget, risques…), puis détectez vos modifications : chacune devient une proposition soumise à la décision d'un administrateur."/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Button Content="🔍 Détecter mes modifications" Command="{Binding DetectChangesCommand}" Style="{StaticResource SecondaryButton}"/>
+                                    <Button Content="📤 Envoyer la sélection" Command="{Binding SubmitChangesCommand}" Style="{StaticResource PrimaryButton}"/>
+                                    <TextBlock Text="{Binding ChangesSummary}" VerticalAlignment="Center" Foreground="#475569" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{Binding DetectedChanges}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,6">
+                                                <CheckBox IsChecked="{Binding IsSelected}" VerticalContentAlignment="Top">
+                                                    <StackPanel Margin="4,0,0,0">
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Detail}" Foreground="#64748B" FontSize="12" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                </CheckBox>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Visibility="{Binding CanContribute, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Proposer une idée ou un texte" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Hint}" Text="Suggestion libre adressée aux administrateurs (remarque, paragraphe à intégrer, piste d'amélioration)."/>
+                                <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedNoteProject}" DisplayMemberPath="Title" Margin="0,0,0,8" Padding="8,5"/>
+                                <TextBox Text="{Binding NoteText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                                         MinHeight="110" VerticalScrollBarVisibility="Auto" Padding="8,6" Tag="Votre suggestion…"/>
+                                <Button Content="Envoyer la suggestion" Command="{Binding SendNoteCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Mes propositions" Style="{StaticResource CardTitle}"/>
+                                    <Button Content="↻" Command="{Binding LoadMyProposalsCommand}" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Right" Padding="10,4" Margin="0"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding MyProposals}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                                        <TextBlock FontSize="12" Foreground="#64748B">
+                                                            <Run Text="{Binding Kind, Mode=OneWay}"/>
+                                                            <Run Text="•"/>
+                                                            <Run Text="{Binding Date, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding ReviewNotes}" FontSize="12" Foreground="#92400E" TextWrapping="Wrap"
+                                                                   Visibility="{Binding ReviewNotes, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding StatusLabel}" Foreground="{Binding StatusColor}" FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 3. Validation -->
+            <TabItem Header="✅ Validation" Visibility="{Binding IsWorkspaceReady, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <local:ApprovalInboxView/>
+            </TabItem>
+
+            <!-- 4. Équipe -->
+            <TabItem Header="👥 Équipe" Visibility="{Binding IsWorkspaceReady, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <Border Style="{StaticResource Card}" Visibility="{Binding CanManageTeam, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Inviter un membre" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="Le dossier de l'équipe est partagé avec ce compte Google (Google envoie un e-mail). Le compte doit aussi être ajouté comme « utilisateur test » dans Google Cloud tant que l'application n'est pas publiée."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewMemberEmail, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,8,0"
+                                             Tag="Adresse Google du membre (ex. prenom.nom@gmail.com)"
+                                             helpers:AiTextAssistant.IsExcluded="True"/>
+                                    <ComboBox Grid.Column="1" ItemsSource="{Binding Roles}" SelectedItem="{Binding NewMemberRole}" Margin="0,0,8,0" Padding="8,5"/>
+                                    <Button Grid.Column="2" Content="Inviter" Command="{Binding InviteMemberCommand}" Style="{StaticResource PrimaryButton}" Margin="0"/>
+                                </Grid>
+                                <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
+                                           Text="Member : consulte et propose. Reviewer : consulte seulement. Admin : peut aussi approuver ou rejeter les propositions."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Membres de l'équipe" Style="{StaticResource CardTitle}"/>
+                                <ItemsControl ItemsSource="{Binding Members}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="220"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Email}" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                                        <TextBlock Text="{Binding Name}" FontSize="12" Foreground="#64748B"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding RoleLabel}" VerticalAlignment="Center" Foreground="#2563EB"/>
+                                                    <Button Grid.Column="2" Content="Retirer" Style="{StaticResource SecondaryButton}" Margin="0" Padding="10,4"
+                                                            Command="{Binding DataContext.RemoveMemberCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding DataContext.CanManageTeam, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Barre d'état -->
+        <Border Grid.Row="2" Background="White" CornerRadius="6" Padding="12,8" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <ProgressBar IsIndeterminate="True" Width="80" Height="6" Margin="0,0,10,0" VerticalAlignment="Center"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#1D4ED8" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="960"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

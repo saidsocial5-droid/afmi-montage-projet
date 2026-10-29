@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    
+    <!-- Polices par défaut (Repli) -->
+    <FontFamily x:Key="BaseFontFamily">pack://application:,,,/Fonts/#Inter, Segoe UI, Roboto, Arial, sans-serif</FontFamily>
+    <FontFamily x:Key="HeadingFontFamily">pack://application:,,,/Fonts/#Inter, Segoe UI, Arial, sans-serif</FontFamily>
+    <FontFamily x:Key="ArabicFontFamily">pack://application:,,,/Fonts/#Cairo, Tahoma, Arial, sans-serif</FontFamily>
+
+    <!-- Tailles -->
+    <sys:Double x:Key="BaseFontSize">14</sys:Double>
+    <sys:Double x:Key="HeadingFontSize">18</sys:Double>
+    <sys:Double x:Key="SmallFontSize">12</sys:Double>
+
+</ResourceDictionary>

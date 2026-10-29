@@ -1,0 +1,141 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.SimilarProjectsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:helpers="clr-namespace:AFMI_Montage_projet_2.Helpers"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1100">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Requête -->
+        <Border Grid.Row="0" Background="#F8FAFC" CornerRadius="8" Padding="14" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="Projets similaires : s'inspirer de ce qui a été fait ailleurs" FontSize="16" FontWeight="Bold" Foreground="#1E293B"/>
+                <TextBlock FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,3,0,10"
+                           Text="Sources : Banque mondiale et registre IATI (projets publiés par l'UE, l'AFD, la GIZ, le PNUD, le FEM…), sans clé d'accès ; recherche web IA en complément si le moteur Gemini est configuré (résultats à vérifier)."/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding Keywords, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,10,0" VerticalContentAlignment="Center"
+                             Tag="Mots-clés en anglais (ex. forest rangeland women)" helpers:AiTextAssistant.IsExcluded="True"/>
+                    <CheckBox Grid.Column="1" Content="Maroc uniquement" IsChecked="{Binding MoroccoOnly}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <CheckBox Grid.Column="2" Content="+ recherche web IA" IsChecked="{Binding UseAiWebSearch}" IsEnabled="{Binding AiWebSearchAvailable}" VerticalAlignment="Center" Margin="0,0,12,0"
+                              ToolTip="Disponible avec le moteur cloud Gemini (Google Search) activé dans les paramètres IA"/>
+                    <Button Grid.Column="3" Content="🔎 Rechercher" Command="{Binding SearchCommand}" Background="#0284C7" Foreground="White" FontWeight="SemiBold" Padding="14,7" BorderThickness="0" Cursor="Hand"/>
+                </Grid>
+                <TextBlock Text="{Binding StatusMessage}" Margin="0,8,0,0" Foreground="#0369A1" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding SourcesSummary}" Margin="0,2,0,0" Foreground="#64748B" FontSize="11" TextWrapping="Wrap"
+                           Visibility="{Binding SourcesSummary, Converter={StaticResource StringToVisibilityConverter}}"/>
+                <ProgressBar IsIndeterminate="True" Height="4" Margin="0,6,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Résultats -->
+            <DockPanel Grid.Column="0">
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                    <TextBlock Text="Résultats (cochez les projets dont s'inspirer)" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                    <Button Content="💡 Extraire des idées" Command="{Binding ExtractIdeasCommand}" HorizontalAlignment="Right"
+                            Background="#7C3AED" Foreground="White" FontWeight="SemiBold" Padding="12,5" BorderThickness="0" Cursor="Hand"/>
+                </Grid>
+                <ListBox ItemsSource="{Binding Results}" BorderBrush="#E2E8F0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Top" Margin="0,2,8,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Title}" FontWeight="Bold" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                        <TextBlock FontSize="11" Foreground="#475569" TextWrapping="Wrap">
+                                            <Run Text="{Binding Source, Mode=OneWay}" Foreground="#7C3AED"/>
+                                            <Run Text="•"/>
+                                            <Run Text="{Binding Organisation, Mode=OneWay}"/>
+                                            <Run Text="•"/>
+                                            <Run Text="{Binding Country, Mode=OneWay}"/>
+                                            <Run Text="•"/>
+                                            <Run Text="{Binding Period, Mode=OneWay}"/>
+                                            <Run Text="•"/>
+                                            <Run Text="{Binding BudgetLabel, Mode=OneWay}"/>
+                                            <Run Text="•"/>
+                                            <Run Text="{Binding Status, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="⚠ Résultat de recherche IA : vérifiez l'existence et les chiffres en ouvrant le lien." FontSize="11" Foreground="#B45309"
+                                                   Visibility="{Binding NeedsVerification, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        <TextBlock Text="{Binding ShortDescription}" FontSize="12" Foreground="#334155" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="8,0,0,0" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding RelevanceLabel}" FontWeight="Bold" Foreground="#0284C7" HorizontalAlignment="Right" ToolTip="Pertinence : part des termes du projet retrouvés"/>
+                                        <Button Content="↗ Ouvrir" Command="{Binding DataContext.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                Background="Transparent" Foreground="#0284C7" BorderThickness="0" Cursor="Hand" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <!-- Idées à intégrer -->
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Text="Idées et enseignements à intégrer" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
+                <Button DockPanel.Dock="Bottom" Content="✅ Intégrer au projet" Command="{Binding IntegrateCommand}" Margin="0,8,0,0"
+                        Background="#16A34A" Foreground="White" FontWeight="Bold" Padding="12,7" BorderThickness="0" Cursor="Hand"
+                        Visibility="{Binding HasProposals, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <Border BorderBrush="#E2E8F0" BorderThickness="1" Background="#FAFAFA" Padding="8">
+                    <Grid>
+                        <TextBlock FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"
+                                   Text="Après « Extraire des idées » : leçons apprises, activités (vers la théorie du changement), risques, partenaires et approches alternatives, à cocher avant intégration."
+                                   Visibility="{Binding HasProposals, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Proposals}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,5">
+                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalContentAlignment="Top">
+                                                <StackPanel Margin="4,0,0,0">
+                                                    <TextBlock FontSize="12" TextWrapping="Wrap">
+                                                        <Run Text="{Binding TargetLabel, Mode=OneWay}" Foreground="#7C3AED" FontWeight="SemiBold"/>
+                                                        <Run Text=" — "/>
+                                                        <Run Text="{Binding Title, Mode=OneWay}" Foreground="#1E293B" FontWeight="SemiBold"/>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap"
+                                                               Visibility="{Binding Detail, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </CheckBox>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</UserControl>

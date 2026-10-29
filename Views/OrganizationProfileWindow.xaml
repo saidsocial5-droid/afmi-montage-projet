@@ -1,0 +1,15 @@
+<Window x:Class="AFMI_Montage_projet_2.Views.OrganizationProfileWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AFMI_Montage_projet_2.Views"
+        mc:Ignorable="d"
+        Title="Fiche Institutionnelle de l'Organisation &amp; Capacités Bailleurs (AFMI)" 
+        Height="820" Width="1160"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8FAFC">
+    <Grid>
+        <local:OrganizationProfileView />
+    </Grid>
+</Window>

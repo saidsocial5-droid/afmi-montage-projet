@@ -1,0 +1,97 @@
+<UserControl x:Class="AFMI_Montage_projet_2.Views.Strategic.TheoryOfChangeVisualView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="380" d:DesignWidth="800">
+    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="15">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Titre -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                <TextBlock Text="Schéma de la Théorie du Changement (Theory of Change Pipeline)" 
+                           FontSize="15" FontWeight="Bold" Foreground="#1E293B"/>
+                <TextBlock Text="Enchaînement logique : Entrées ➔ Activités ➔ Extrants ➔ Résultats ➔ Impact à long terme" 
+                           FontSize="11" Foreground="#64748B"/>
+            </StackPanel>
+
+            <!-- 5 colonnes représentant la chaîne causale -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Col 1: Entrées (Inputs) -->
+                <Border Grid.Column="0" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <StackPanel>
+                        <Border Background="#475569" CornerRadius="4" Padding="6,4" HorizontalAlignment="Stretch">
+                            <TextBlock Text="1. Entrées (Inputs)" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Ressources financières, humaines et matérielles mobilisées." FontSize="10" Foreground="#64748B" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Grid.Column="1" Text="➔" FontSize="20" Foreground="#94A3B8" VerticalAlignment="Center" Margin="5,0"/>
+
+                <!-- Col 2: Activités (Activities) -->
+                <Border Grid.Column="2" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <StackPanel>
+                        <Border Background="#D97706" CornerRadius="4" Padding="6,4" HorizontalAlignment="Stretch">
+                            <TextBlock Text="2. Activités" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Formations, ateliers, aménagements, distributions." FontSize="10" Foreground="#78350F" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Grid.Column="3" Text="➔" FontSize="20" Foreground="#94A3B8" VerticalAlignment="Center" Margin="5,0"/>
+
+                <!-- Col 3: Extrants (Outputs) -->
+                <Border Grid.Column="4" Background="#E0E7FF" BorderBrush="#6366F1" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <StackPanel>
+                        <Border Background="#4F46E5" CornerRadius="4" Padding="6,4" HorizontalAlignment="Stretch">
+                            <TextBlock Text="3. Extrants (Outputs)" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Produits et services directs livrés par les activités." FontSize="10" Foreground="#3730A3" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Grid.Column="5" Text="➔" FontSize="20" Foreground="#94A3B8" VerticalAlignment="Center" Margin="5,0"/>
+
+                <!-- Col 4: Résultats (Outcomes) -->
+                <Border Grid.Column="6" Background="#DCFCE7" BorderBrush="#10B981" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <StackPanel>
+                        <Border Background="#059669" CornerRadius="4" Padding="6,4" HorizontalAlignment="Stretch">
+                            <TextBlock Text="4. Résultats (Outcomes)" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Changements de comportements, capacités accrues, bénéfices directs." FontSize="10" Foreground="#065F46" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Grid.Column="7" Text="➔" FontSize="20" Foreground="#94A3B8" VerticalAlignment="Center" Margin="5,0"/>
+
+                <!-- Col 5: Impact à long terme -->
+                <Border Grid.Column="8" Background="#FEE2E2" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <StackPanel>
+                        <Border Background="#DC2626" CornerRadius="4" Padding="6,4" HorizontalAlignment="Stretch">
+                            <TextBlock Text="5. Impact Global" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Transformation durable, résilience économique et sociale." FontSize="10" Foreground="#991B1B" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

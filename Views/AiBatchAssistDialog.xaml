@@ -1,0 +1,233 @@
+<Window x:Class="AFMI_Montage_projet_2.Views.AiBatchAssistDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Assistant IA en Mode Lot (Batch) - AFMI" 
+        Height="700" Width="960"
+        MinHeight="560" MinWidth="750"
+        WindowStartupLocation="CenterOwner" 
+        Background="#F8FAFC"
+        FontFamily="Segoe UI, Roboto, Arial, sans-serif">
+
+    <Window.Resources>
+        <!-- Style des boutons d'action -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 0: En-tête -->
+            <RowDefinition Height="Auto"/>
+            <!-- 1: Barre de configuration du lot (Périmètre + Action + Lancer) -->
+            <RowDefinition Height="Auto"/>
+            <!-- 2: Barre de progression du lot -->
+            <RowDefinition Height="Auto"/>
+            <!-- 3: Corps d'examen élément par élément -->
+            <RowDefinition Height="*"/>
+            <!-- 4: Pied de page d'actions -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 0: EN-TÊTE -->
+        <Border Grid.Row="0" Background="#1E293B" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="⚡" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Assistant Rédactionnel en Mode Lot (Batch)" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="Traitez simultanément une section entière ou tout le projet avec passage en revue écran par écran." Foreground="#94A3B8" FontSize="11" Margin="30,2,0,0"/>
+                </StackPanel>
+
+                <Border Grid.Column="1" VerticalAlignment="Center" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="10,6">
+                    <TextBlock x:Name="TxtBatchScopeInfo" Text="Projet sélectionné" Foreground="#E2E8F0" FontSize="11" FontWeight="SemiBold"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 1: CONFIGURATION DU LOT -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="20,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Section cible :" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12" Margin="0,0,8,0" Foreground="#334155"/>
+                <ComboBox Grid.Column="1" x:Name="CbBatchScope" Height="32" VerticalContentAlignment="Center" FontSize="11" Margin="0,0,16,0">
+                    <ComboBoxItem Content="Tous les Indicateurs SMART" IsSelected="True"/>
+                    <ComboBoxItem Content="Toutes les Activités"/>
+                    <ComboBoxItem Content="Tous les Résultats attendus"/>
+                    <ComboBoxItem Content="Tous les Objectifs Spécifiques"/>
+                    <ComboBoxItem Content="Toutes les Justifications budgétaires"/>
+                    <ComboBoxItem Content="Tous les Risques et Hypothèses"/>
+                    <ComboBoxItem Content="Section Cadrage (Titre, Contexte, Objectif G.)"/>
+                </ComboBox>
+
+                <TextBlock Grid.Column="2" Text="Action IA :" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12" Margin="0,0,8,0" Foreground="#334155"/>
+                <ComboBox Grid.Column="3" x:Name="CbBatchAction" Height="32" VerticalContentAlignment="Center" FontSize="11" Margin="0,0,16,0">
+                    <ComboBoxItem Content="✨ Enrichir" IsSelected="True"/>
+                    <ComboBoxItem Content="📝 Détailler"/>
+                    <ComboBoxItem Content="🔄 Reformuler"/>
+                </ComboBox>
+
+                <Button Grid.Column="6" Content="🚀 Charger &amp; Analyser le lot" Click="BtnStartBatch_Click" 
+                        Background="#0284C7" Foreground="White" Style="{StaticResource ActionButtonStyle}" Height="32" Padding="16,0"/>
+            </Grid>
+        </Border>
+
+        <!-- 2: BARRE DE PROGRESSION DU LOT -->
+        <Border Grid.Row="2" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="20,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" x:Name="TxtProgressCounter" Text="Élément 0 sur 0" FontWeight="Bold" FontSize="12" Foreground="#0369A1" Margin="0,0,15,0" VerticalAlignment="Center"/>
+                <ProgressBar Grid.Column="1" x:Name="PbBatchProgress" Height="8" Minimum="0" Maximum="100" Value="0" Foreground="#0284C7" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" x:Name="TxtProgressPercent" Text="0 %" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="15,0,0,0" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- 3: CORPS D'EXAMEN ÉLÉMENT PAR ÉLÉMENT -->
+        <Grid Grid.Row="3" Margin="20,12,20,12">
+            <!-- État initial quand le lot n'est pas encore lancé -->
+            <Border x:Name="BorderWelcome" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="30" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel MaxWidth="500">
+                    <TextBlock Text="⚡ Mode Lot Rédactionnel" FontSize="18" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock Text="Sélectionnez une section ci-dessus (ex: tous les indicateurs ou toutes les activités), choisissez l'action IA souhaitée, puis cliquez sur 'Charger &amp; Analyser'. Vous pourrez ensuite examiner, corriger et valider chaque proposition une par une en toute sécurité."
+                               FontSize="13" Foreground="#64748B" TextWrapping="Wrap" TextAlignment="Center" LineHeight="1.5"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Écran d'examen actif -->
+            <Grid x:Name="GridItemReview" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Bandeau d'information sur l'élément en cours -->
+                <Border Grid.Row="0" Background="#E0F2FE" BorderBrush="#BAE6FD" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtCurrentItemCode" Text="[IND1]" FontWeight="Bold" FontSize="13" Foreground="#0369A1" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="TxtCurrentItemTitle" Text="Intitulé de l'élément" FontSize="13" Foreground="#0C4A6E" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" x:Name="TxtCurrentItemType" Text="Type : Indicateur" FontSize="11" Foreground="#0284C7" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Comparaison Original vs Proposition -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Texte Original -->
+                    <Border Grid.Column="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="📄 Texte actuel dans le projet" FontWeight="Bold" FontSize="12" Foreground="#475569" Margin="0,0,0,8"/>
+                            <TextBox Grid.Row="1" x:Name="TxtItemOriginal" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True" 
+                                     Background="#F8FAFC" BorderBrush="#E2E8F0" Padding="10" FontSize="13" Foreground="#334155" VerticalScrollBarVisibility="Auto"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Proposition IA -->
+                    <Border Grid.Column="2" Background="White" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="8" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="✨ Proposition de l'IA (modifiable)" FontWeight="Bold" FontSize="12" Foreground="#0284C7"/>
+                                <TextBlock x:Name="TxtItemProposalStatus" Text="" FontSize="11" Foreground="#10B981" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <TextBox Grid.Row="1" x:Name="TxtItemProposal" TextWrapping="Wrap" AcceptsReturn="True" 
+                                     Background="White" BorderBrush="#CBD5E1" Padding="10" FontSize="13" Foreground="#0F172A" VerticalScrollBarVisibility="Auto"/>
+
+                            <Border Grid.Row="1" x:Name="LoadingItemOverlay" Background="#F0F9FF" Opacity="0.95" CornerRadius="6" Visibility="Collapsed">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="🤖 Génération de la proposition..." FontSize="13" FontWeight="SemiBold" Foreground="#0369A1" HorizontalAlignment="Center"/>
+                                    <ProgressBar IsIndeterminate="True" Width="180" Height="4" Margin="0,10,0,0" Foreground="#0284C7"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- 4: PIED DE PAGE D'ACTIONS -->
+        <Border Grid.Row="4" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="Fermer" Click="BtnClose_Click" 
+                        Background="#F1F5F9" Foreground="#475569" Style="{StaticResource ActionButtonStyle}" HorizontalAlignment="Left"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" x:Name="PanelReviewActions" Visibility="Collapsed">
+                    <Button Content="⏭️ Ignorer / Suivant" Click="BtnSkipItem_Click" 
+                            Background="#F1F5F9" Foreground="#475569" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+                    <Button Content="🔄 Régénérer cet élément" Click="BtnRegenerateItem_Click" 
+                            Background="#E0F2FE" Foreground="#0369A1" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+                    <Button Content="✅ Appliquer &amp; Suivant" Click="BtnApplyItem_Click" 
+                            Background="#0284C7" Foreground="White" FontWeight="Bold" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+                    <Button Content="⚡ Tout Appliquer" Click="BtnApplyAll_Click" 
+                            Background="#059669" Foreground="White" FontWeight="Bold" Style="{StaticResource ActionButtonStyle}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

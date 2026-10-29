@@ -1,0 +1,27 @@
+﻿<Application x:Class="AFMI_Montage_projet_2.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AFMI_Montage_projet_2"
+             xmlns:converters="clr-namespace:AFMI_Montage_projet_2.Converters"
+             StartupUri="Views/LoginWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Theme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        <!-- Convertisseurs booléens et visibilité globaux -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <converters:InverseCountToVisibilityConverter x:Key="InverseCountToVisibilityConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter"/>
+            </ResourceDictionary>
+    </Application.Resources>
+</Application>
+
+

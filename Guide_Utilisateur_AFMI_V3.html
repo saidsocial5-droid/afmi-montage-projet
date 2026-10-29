@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide d'Utilisation - AFMI Montage Projet V3</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 10px; }
+        h2 { color: #0369a1; margin-top: 30px; }
+        h3 { color: #075985; }
+        p { margin-bottom: 15px; }
+        .feature-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .success-box {
+            background-color: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guide d'Utilisation - AFMI Projets V3</h1>
+        <p><strong>Plateforme Collaborative Intégrée pour le Montage et le Suivi de Projets Associatifs</strong></p>
+        
+        <h2>1. Introduction</h2>
+        <p>Bienvenue dans la version 3 d'AFMI Projets. Ce logiciel a évolué d'un simple outil de reporting vers une <strong>plateforme collaborative de bout en bout</strong>. Avec la philosophie "Zéro Ressaisie", vos données circulent de la conception (Cadre Logique, Arbre à Problèmes) jusqu'à l'exécution (Comptes Rendus, Budget) sans effort.</p>
+
+        <h2>2. Gestion des Comptes et Sécurité</h2>
+        <div class="feature-box">
+            <strong>Authentification & Rôles :</strong> Chaque utilisateur possède un profil. Lors de l'ouverture d'un projet, vous pouvez y être assigné en tant qu'<strong>Admin</strong>, <strong>Chargé de projet</strong> ou <strong>Partenaire/Bénéficiaire</strong>. Seuls les Admins peuvent approuver les budgets et valider les étapes du cadre logique.
+        </div>
+
+        <h2>3. Conception Collaborative (Phases de Montage)</h2>
+        <h3>3.1 L'Arbre à Problèmes et Cadre Logique</h3>
+        <p>Le montage du projet est désormais participatif. N'importe quel membre du projet peut <strong>proposer</strong> une Activité, un Objectif, ou un Nœud de problème.</p>
+        <ul>
+            <li><strong>Propositions :</strong> Les éléments proposés portent un badge 🟡 "En attente" et le nom de l'auteur.</li>
+            <li><strong>Approbation (Admin) :</strong> L'administrateur reçoit une notification (Cloche 🔔 en haut à gauche). Il peut valider la proposition via le bouton "✓ Approuver".</li>
+            <li><strong>Anonymisation :</strong> L'admin peut choisir "Approuver et Anonymiser" si l'idée est retenue mais doit être détachée de son auteur initial.</li>
+        </ul>
+
+        <h2>4. Planification Budgétaire Connectée</h2>
+        <p>Fini les tableaux Excel déconnectés ! Le budget prévisionnel est directement lié aux activités du Cadre Logique.</p>
+        <div class="success-box">
+            Dans le menu <strong>Budget Prévisionnel</strong>, lorsque vous ajoutez une dépense (ex: Location de salle), vous pouvez sélectionner l'<strong>Activité liée</strong> via un menu déroulant. Cela permet un suivi analytique automatique de vos coûts par action.
+        </div>
+
+        <h2>5. Exécution et Tableaux de Bord</h2>
+        <h3>5.1 Comptes Rendus d'Activités</h3>
+        <p>Allez dans l'onglet <strong>📝 Comptes Rendus d'Activités</strong> pour documenter le travail de terrain.</p>
+        <ul>
+            <li>Sélectionnez l'activité concernée.</li>
+            <li>Saisissez votre rapport narratif et estimez le <strong>taux d'exécution en %</strong>.</li>
+            <li>Une fois soumis, le rapport passe en attente de validation par l'Admin.</li>
+        </ul>
+
+        <h3>5.2 Tableau de Bord Global</h3>
+        <p>L'onglet <strong>📈 Tableau de Bord</strong> compile toutes les données en temps réel :</p>
+        <ul>
+            <li><strong>Taux d'exécution global :</strong> Calculé automatiquement à partir de la moyenne des activités (sur la base des rapports approuvés).</li>
+            <li><strong>Budget consommé :</strong> Estimation automatique croisant le budget alloué par activité avec son taux d'avancement.</li>
+            <li><strong>Reste à financer :</strong> Affichage de l'écart financier de manière dynamique.</li>
+        </ul>
+
+        <h2>6. L'Assistant IA Toujours à vos Côtés</h2>
+        <p>À tout moment, cliquez sur <strong>🤖 Agent Conseil IA</strong> ou <strong>💬 Assistant IA Chat</strong> pour obtenir de l'aide sur la formulation de vos objectifs, générer des indicateurs de suivi ou identifier les risques potentiels. L'IA analyse votre projet et vous conseille !</p>
+
+        <br>
+        <p style="text-align:center; color:#94a3b8; font-size:12px;">© 2026 - AFMI Logiciels de Gestion. Document généré automatiquement.</p>
+    </div>
+</body>
+</html>
