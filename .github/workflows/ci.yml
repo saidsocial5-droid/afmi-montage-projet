@@ -1,0 +1,41 @@
+# Vérification continue d'AFMI Montage Projet (ADR 27)
+#
+# À chaque envoi sur une branche et à chaque pull request : compilation et tests complets sur Windows.
+# Une erreur est ainsi détectée avant l'étiquette « vX.Y.Z », qui déclenche seule la publication (release.yml).
+
+name: Compilation et tests
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: SDK .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Compilation
+        run: dotnet build "AFMI Montage projet 2.csproj" -c Release
+
+      - name: Tests
+        run: dotnet test AFMI_Montage_Projet.Tests -c Release --logger "console;verbosity=normal"
