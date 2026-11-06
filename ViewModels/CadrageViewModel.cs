@@ -222,7 +222,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     dbProject.StartDate = StartDate;
                     dbProject.EndDate = EndDate;
                     dbProject.TotalBudget = TotalBudget;
-                    dbProject.Currency = Currency ?? "EUR";
+                    dbProject.Currency = string.IsNullOrWhiteSpace(Currency) ? Project.DefaultCurrency : Currency;
                     dbProject.LocalContribution = LocalContribution;
                     dbProject.PartnerContribution = PartnerContribution;
                     dbProject.LeadOrganization = LeadOrganization?.Trim() ?? string.Empty;
@@ -416,7 +416,7 @@ namespace AFMI_Montage_projet_2.ViewModels
 
                 db.SaveChanges();
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(CadrageViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
 
             // Réindexer également les éléments en mémoire pour cohérence instantanée
             for (int i = 0; i < Objectives.Count; i++)

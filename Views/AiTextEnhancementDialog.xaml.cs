@@ -355,7 +355,7 @@ namespace AFMI_Montage_projet_2.Views
                     elapsedMs: _lastResponse?.ExecutionDurationMs ?? 0,
                     projectId: _projectId);
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiTextEnhancementDialog), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         private void BtnCopy_Click(object sender, RoutedEventArgs e)

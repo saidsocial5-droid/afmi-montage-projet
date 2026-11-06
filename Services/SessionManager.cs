@@ -36,7 +36,7 @@ namespace AFMI_Montage_projet_2.Services
                 var encSecret = SettingsService.GetSetting("Google_ClientSecret", "");
                 var secret = "";
                 if (!string.IsNullOrEmpty(encSecret)) {
-                    try { secret = EncryptionHelper.Unprotect(encSecret); } catch { }
+                    try { secret = EncryptionHelper.Unprotect(encSecret); } catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(SessionManager), $"Erreur ignorée : {swallowedEx.Message}"); }
                 }
 
                 if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(secret)) return;
@@ -58,7 +58,7 @@ namespace AFMI_Montage_projet_2.Services
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(SessionManager), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
     }
 }

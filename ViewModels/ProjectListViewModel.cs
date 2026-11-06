@@ -189,7 +189,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     workspaceId = await manager.InitializeWorkspaceAsync();
                     Services.SettingsService.SaveSetting("Google_WorkspaceId", workspaceId);
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectListViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 if (string.IsNullOrEmpty(workspaceId))
                 {

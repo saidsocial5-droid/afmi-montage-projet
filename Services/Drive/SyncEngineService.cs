@@ -56,7 +56,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Sync Export Error: {ex.Message}");
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(SyncEngineService), "Échec de l'export de synchronisation", ex);
                 return false;
             }
         }
@@ -171,7 +171,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Download Sync Error: {ex.Message}");
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(SyncEngineService), "Échec du téléchargement de synchronisation", ex);
                 return false;
             }
         }
@@ -225,7 +225,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error parsing contribution {file.Name}: {ex.Message}");
+                        global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(SyncEngineService), $"Contribution illisible : {file.Name}", ex);
                     }
                 }
 
@@ -233,7 +233,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Sync Import Error: {ex.Message}");
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(SyncEngineService), "Échec de l'import de synchronisation", ex);
                 return -1;
             }
         }

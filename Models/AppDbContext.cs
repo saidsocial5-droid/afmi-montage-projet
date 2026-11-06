@@ -1145,7 +1145,7 @@ namespace AFMI_Montage_projet_2.Models
                             IdeaTitle = p.Title,
                             TargetZone = p.InterventionZone,
                             EstimatedBudget = p.TotalBudget,
-                            Currency = string.IsNullOrWhiteSpace(p.Currency) ? "EUR" : p.Currency,
+                            Currency = Project.CurrencyOf(p),
                             CoreProblemStatement = p.Justification,
                             GeneralStrategicObjective = p.GeneralObjective,
                             CreatedAt = DateTime.UtcNow,

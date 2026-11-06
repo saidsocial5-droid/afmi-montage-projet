@@ -25,7 +25,7 @@ namespace AFMI_Montage_projet_2.Services.Radar
             {
                 QuestPDF.Settings.License = LicenseType.Community;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(NotebookLmService), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         /// <summary>

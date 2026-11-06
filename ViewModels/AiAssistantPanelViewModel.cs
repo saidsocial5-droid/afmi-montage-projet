@@ -110,7 +110,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 Messages.Add(new ChatMessage
                 {
                     Sender = "Assistant IA",
-                    Content = result.ResponseText,
+                    Content = result.IsSuccess ? result.ResponseText : $"⚠️ Le moteur IA n'a pas pu répondre : {result.ErrorMessage}",
                     EngineUsed = result.EngineName,
                     BgColor = result.EngineName.Contains("Cloud") ? "#EFF6FF" : "#F8FAFC",
                     Alignment = "Left"

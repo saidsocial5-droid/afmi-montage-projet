@@ -20,7 +20,14 @@ namespace AFMI_Montage_projet_2.Models
         public DateTime? EndDate { get; set; }
 
         public decimal TotalBudget { get; set; }
-        public string Currency { get; set; } = "EUR";
+        public string Currency { get; set; } = DefaultCurrency;
+
+        /// <summary>Monnaie d'un nouveau projet ; seul endroit où elle est fixée (ne jamais coder une monnaie en dur ailleurs).</summary>
+        public const string DefaultCurrency = "EUR";
+
+        /// <summary>Monnaie du projet, ou la monnaie par défaut si elle n'est pas renseignée.</summary>
+        public static string CurrencyOf(Project? project) =>
+            project == null || string.IsNullOrWhiteSpace(project.Currency) ? DefaultCurrency : project.Currency;
 
         public decimal LocalContribution { get; set; }
         public decimal PartnerContribution { get; set; }

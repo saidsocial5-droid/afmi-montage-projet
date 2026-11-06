@@ -164,7 +164,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 try {
                     await _pairingService.DeletePairingSessionAsync(_workspaceId, _currentPayload.QrId);
                     AFMI_Montage_projet_2.Security.AuditLogger.Log("Couplage expiré", $"Le QR Code {_currentPayload.QrId} a expiré sans être utilisé.");
-                } catch { }
+                } catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(PairingViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
         }
 
@@ -175,7 +175,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             {
                 try {
                     await _pairingService.DeletePairingSessionAsync(_workspaceId, _currentPayload.QrId);
-                } catch { }
+                } catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(PairingViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
             _timer?.Stop();
             _pollTimer?.Stop();

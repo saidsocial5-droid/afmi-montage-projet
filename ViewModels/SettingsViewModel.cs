@@ -149,7 +149,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             GoogleClientId = SettingsService.GetSetting("Google_ClientId", "");
             var encSecret = SettingsService.GetSetting("Google_ClientSecret", "");
             if (!string.IsNullOrEmpty(encSecret)) {
-                try { GoogleClientSecret = EncryptionHelper.Unprotect(encSecret); } catch { }
+                try { GoogleClientSecret = EncryptionHelper.Unprotect(encSecret); } catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(SettingsViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
             WorkspaceId = SettingsService.GetSetting("Google_WorkspaceId", "");
             if (SessionManager.CurrentDriveService != null)
@@ -299,7 +299,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                         SettingsService.SaveSetting("Google_WorkspaceId", WorkspaceId);
                         CloudStatusMessage = "Connecté et espace de travail prêt !";
                     }
-                    catch { }
+                    catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(SettingsViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
                 }
             }
             else
@@ -415,7 +415,9 @@ namespace AFMI_Montage_projet_2.ViewModels
                     {
                         Version = version,
                         FileId = uploadedExeId,
-                        ReleaseNotes = releaseNotes
+                        ReleaseNotes = releaseNotes,
+                        // Vérifiée par chaque poste avant de lancer l'installateur
+                        Sha256 = AFMI_Montage_projet_2.Services.Updates.GitHubUpdateService.ComputeSha256(openFileDialog.FileName)
                     };
                     string json = System.Text.Json.JsonSerializer.Serialize(updateInfo);
                     
@@ -513,7 +515,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 LinkedDevices.Clear();
                 foreach (var d in devices) LinkedDevices.Add(d);
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(SettingsViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         [RelayCommand]

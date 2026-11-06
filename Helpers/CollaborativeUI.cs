@@ -65,7 +65,7 @@ namespace AFMI_Montage_projet_2.Helpers
                                 textBlock.Foreground = Brushes.Orange;
                             }
                         }
-                        catch { }
+                        catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(CollaborativeUI), $"Erreur ignorée : {swallowedEx.Message}"); }
                     }
                     else
                     {

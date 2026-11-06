@@ -116,7 +116,7 @@ namespace AFMI_Montage_projet_2.Services.Collab
                         File.Delete(_currentRecordingFilePath);
                     }
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(VoiceNoteAssistantService), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
         }
 
@@ -140,15 +140,25 @@ namespace AFMI_Montage_projet_2.Services.Collab
             string provider = config?.Provider ?? "Gemini";
             string model = config?.SelectedModel ?? "gemini-2.0-flash";
 
+            // L'enregistrement d'une réunion ne quitte le poste qu'avec le consentement cloud explicite,
+            // sous le plafond mensuel, comme tout appel routé (ADR 27) ; sinon : dictée Windows locale ci-dessous
+            bool cloudAllowed = AiRouterService.IsCloudUseAllowed(config, out string cloudRefusal);
+            if (!cloudAllowed && !string.IsNullOrWhiteSpace(apiKey))
+                AppLogger.Info(nameof(VoiceNoteAssistantService), $"Audio non envoyé au cloud : {cloudRefusal}");
+
             // Si Gemini est configuré, envoyer directement l'audio multimodal
-            if (!string.IsNullOrWhiteSpace(apiKey) && provider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
+            if (cloudAllowed && !string.IsNullOrWhiteSpace(apiKey) && provider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
             {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 try
                 {
-                    return await ProcessWithGeminiAudioAsync(audioFilePath, apiKey, model);
+                    var result = await ProcessWithGeminiAudioAsync(audioFilePath, apiKey, model);
+                    AiRouterService.LogExternalCall("Cloud (Gemini audio)", $"Notes vocales : {Path.GetFileName(audioFilePath)}", watch.ElapsedMilliseconds, result.Success, result.ErrorMessage);
+                    return result;
                 }
                 catch (Exception ex)
                 {
+                    AiRouterService.LogExternalCall("Cloud (Gemini audio)", $"Notes vocales : {Path.GetFileName(audioFilePath)}", watch.ElapsedMilliseconds, false, ex.Message);
                     // Si Gemini audio échoue et qu'on a une transcription locale de secours
                     if (!string.IsNullOrWhiteSpace(fallbackTranscript))
                     {
@@ -159,15 +169,18 @@ namespace AFMI_Montage_projet_2.Services.Collab
             }
 
             // Si OpenAI est configuré, transcrire via Whisper puis structurer
-            if (!string.IsNullOrWhiteSpace(apiKey) && provider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
+            if (cloudAllowed && !string.IsNullOrWhiteSpace(apiKey) && provider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
             {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 try
                 {
                     string transcript = await TranscribeWithOpenAiWhisperAsync(audioFilePath, apiKey);
+                    AiRouterService.LogExternalCall("Cloud (OpenAI Whisper)", $"Transcription : {Path.GetFileName(audioFilePath)}", watch.ElapsedMilliseconds, true);
                     return await StructureTranscriptWithAiAsync(transcript);
                 }
                 catch (Exception ex)
                 {
+                    AiRouterService.LogExternalCall("Cloud (OpenAI Whisper)", $"Transcription : {Path.GetFileName(audioFilePath)}", watch.ElapsedMilliseconds, false, ex.Message);
                     if (!string.IsNullOrWhiteSpace(fallbackTranscript))
                     {
                         return await StructureTranscriptWithAiAsync(fallbackTranscript);
@@ -188,7 +201,8 @@ namespace AFMI_Montage_projet_2.Services.Collab
                 $"* **Taille de l'audio :** {fileInfo.Length / 1024:N0} Ko\n" +
                 $"* **Date :** {DateTime.Now:dd/MM/yyyy à HH:mm}\n\n" +
                 $"> [!NOTE]\n" +
-                $"> Pour activer la transcription et la structuration automatique par l'IA en temps réel, veuillez renseigner votre clé d'API (Gemini ou OpenAI) dans les **Paramètres IA** du logiciel.",
+                $"> Pour activer la transcription automatique par l'IA, renseignez une clé d'API (Gemini ou OpenAI) **et** autorisez l'envoi vers le cloud dans les **Paramètres IA** du logiciel." +
+                (cloudAllowed || string.IsNullOrWhiteSpace(apiKey) ? "" : $"\n>\n> Audio non envoyé : {cloudRefusal}"),
                 string.Empty);
         }
 
@@ -203,7 +217,8 @@ namespace AFMI_Montage_projet_2.Services.Collab
                 model = "gemini-2.0-flash";
             }
 
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
+            // Clé dans l'en-tête x-goog-api-key, jamais dans l'URL (qui finit dans les journaux des proxys)
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
 
             byte[] audioBytes = await File.ReadAllBytesAsync(audioFilePath);
             string base64Audio = Convert.ToBase64String(audioBytes);
@@ -267,7 +282,9 @@ Adopte cette structure :
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(url, content);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+            request.Headers.Add("x-goog-api-key", apiKey);
+            var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
                 string errorBody = await response.Content.ReadAsStringAsync();
@@ -393,7 +410,7 @@ Rédige une prise de notes claire et immédiatement exploitable selon ce schéma
                     _speechEngine = null;
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(VoiceNoteAssistantService), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         private static string GetMimeType(string path)
@@ -421,7 +438,7 @@ Rédige une prise de notes claire et immédiatement exploitable selon ce schéma
                 {
                     mciSendString("close recsound", null, 0, IntPtr.Zero);
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(VoiceNoteAssistantService), $"Erreur ignorée : {swallowedEx.Message}"); }
                 _isRecording = false;
             }
             _httpClient.Dispose();

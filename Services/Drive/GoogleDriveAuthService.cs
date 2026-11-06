@@ -48,7 +48,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Google Auth Error: {ex.Message}");
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(GoogleDriveAuthService), "Échec de l'authentification Google", ex);
                 return null;
             }
         }

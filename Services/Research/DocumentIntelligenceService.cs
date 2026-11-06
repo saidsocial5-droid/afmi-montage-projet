@@ -263,7 +263,7 @@ namespace AFMI_Montage_projet_2.Services.Research
                     var i = JsonSerializer.Deserialize<DocumentInsights>(d.InsightsJson);
                     if (i != null && i.IsCallForProposals) calls.Add((d, i));
                 }
-                catch (JsonException) { }
+                catch (JsonException swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(DocumentIntelligenceService), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
             if (calls.Count == 0) return;
 
@@ -289,7 +289,7 @@ namespace AFMI_Montage_projet_2.Services.Research
                     var insights = JsonSerializer.Deserialize<DocumentInsights>(json);
                     if (insights != null && insights.IsCallForProposals) result.Add(insights);
                 }
-                catch (JsonException) { }
+                catch (JsonException swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(DocumentIntelligenceService), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
             return result;
         }

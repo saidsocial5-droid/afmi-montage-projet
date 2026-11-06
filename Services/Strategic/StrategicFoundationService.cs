@@ -55,7 +55,7 @@ namespace AFMI_Montage_projet_2.Services.Strategic
                     IdeaTitle = project?.Title ?? string.Empty,
                     TargetZone = project?.InterventionZone ?? string.Empty,
                     EstimatedBudget = project?.TotalBudget ?? 0m,
-                    Currency = project?.Currency ?? "EUR",
+                    Currency = Project.CurrencyOf(project),
                     CoreProblemStatement = project?.Justification ?? string.Empty,
                     GeneralStrategicObjective = project?.GeneralObjective ?? string.Empty,
                     CreatedBy = userEmail,

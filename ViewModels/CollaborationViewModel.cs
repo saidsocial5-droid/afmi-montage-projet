@@ -342,7 +342,7 @@ Génère un compte-rendu clair avec :
                 }
                 else
                 {
-                    MeetingSummary = $"Erreur lors de la génération du résumé : {result.ResponseText}";
+                    MeetingSummary = $"Erreur lors de la génération du résumé : {result.ErrorMessage}";
                 }
             }
             catch (Exception ex)

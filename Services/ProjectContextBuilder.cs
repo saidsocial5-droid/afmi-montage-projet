@@ -168,7 +168,7 @@ namespace AFMI_Montage_projet_2.Services
         private const int MaxDocumentSummaryLength = 3000;
 
         private static string CurrencyOf(Project? project) =>
-            project == null || string.IsNullOrWhiteSpace(project.Currency) ? "EUR" : project.Currency;
+            Project.CurrencyOf(project);
 
         private static string Trunc(string? text) =>
             string.IsNullOrWhiteSpace(text) ? string.Empty

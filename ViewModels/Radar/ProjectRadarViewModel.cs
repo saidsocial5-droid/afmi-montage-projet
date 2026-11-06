@@ -198,7 +198,7 @@ namespace AFMI_Montage_projet_2.ViewModels.Radar
                 string savedSort = SettingsService.GetSetting("Radar_Filter_Sort", "Plus récent");
                 if (AvailableSortOptions.Contains(savedSort)) SelectedSortOption = savedSort;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         private void SaveFilterPreferences()
@@ -209,7 +209,7 @@ namespace AFMI_Montage_projet_2.ViewModels.Radar
                 SettingsService.SaveSetting("Radar_Filter_Score", SelectedScoreFilter);
                 SettingsService.SaveSetting("Radar_Filter_Sort", SelectedSortOption);
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         public async void LoadInitialData()

@@ -14,9 +14,15 @@ namespace AFMI_Montage_Projet.Tests
     {
         public static string DataDirectory { get; private set; } = string.Empty;
 
+        /// <summary>Adresse Ollama des tests : port 9 (discard) en boucle locale, toujours fermé.</summary>
+        public const string UnreachableOllamaUrl = "http://127.0.0.1:9";
+
         [ModuleInitializer]
         internal static void Initialize()
         {
+            // Même culture de formatage que l'application, quelle que soit la langue du poste ou du serveur d'intégration
+            AFMI_Montage_projet_2.Helpers.AppCulture.Apply();
+
             DataDirectory = Path.Combine(Path.GetTempPath(), "AFMI_Tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(DataDirectory);
             Environment.SetEnvironmentVariable(AppDbContext.DataDirectoryOverrideVariable, DataDirectory);
@@ -25,6 +31,11 @@ namespace AFMI_Montage_Projet.Tests
             {
                 db.SeedDefaultData();
             }
+
+            // Jamais d'IA réelle dans les tests : Ollama pointe vers un port fermé (connexion refusée aussitôt),
+            // ce qui rend déterministes les tests qui passent par le repli sans IA, avec ou sans Ollama sur le poste.
+            AFMI_Montage_projet_2.Services.LocalSettingsService.SaveSettings(
+                new AFMI_Montage_projet_2.Services.LocalSettings { OllamaUrl = UnreachableOllamaUrl });
 
             AppDomain.CurrentDomain.ProcessExit += (_, _) =>
             {

@@ -293,14 +293,14 @@ namespace AFMI_Montage_projet_2.Services.Radar
                         }
                     }
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarConfigService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 var defaultAxes = GetDefaultAfmiAxes();
                 try
                 {
                     SaveAxes(defaultAxes);
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarConfigService), $"Erreur ignorée : {swallowedEx.Message}"); }
                 return defaultAxes;
             }
         }
@@ -356,7 +356,7 @@ namespace AFMI_Montage_projet_2.Services.Radar
                         if (profile != null) return profile;
                     }
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarConfigService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 return new AfmiProfile();
             }
@@ -408,11 +408,11 @@ namespace AFMI_Montage_projet_2.Services.Radar
                     string json = JsonSerializer.Serialize(data, JsonOptions);
                     File.WriteAllText(targetPath, json);
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarConfigService), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
             finally
             {
-                try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+                try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectRadarConfigService), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
         }
 

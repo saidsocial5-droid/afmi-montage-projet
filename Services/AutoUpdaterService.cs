@@ -14,6 +14,9 @@ namespace AFMI_Montage_projet_2.Services
         public string Version { get; set; } = string.Empty;
         public string FileId { get; set; } = string.Empty;
         public string ReleaseNotes { get; set; } = string.Empty;
+
+        /// <summary>Empreinte SHA-256 (hexadécimal) de l'installateur, calculée par l'administrateur à la publication. Obligatoire.</summary>
+        public string Sha256 { get; set; } = string.Empty;
     }
 
     public class AutoUpdaterService
@@ -104,6 +107,19 @@ namespace AFMI_Montage_projet_2.Services
                 
                 await request.DownloadAsync(fileStream);
                 fileStream.Close();
+
+                // Empreinte obligatoire, comme sur le canal GitHub : un installateur altéré n'est jamais lancé
+                if (string.IsNullOrWhiteSpace(updateInfo.Sha256))
+                {
+                    File.Delete(tempFile);
+                    throw new InvalidOperationException("Installateur refusé : version.json ne contient pas d'empreinte SHA-256. Republiez la mise à jour depuis les Paramètres.");
+                }
+                string actualHash = Updates.GitHubUpdateService.ComputeSha256(tempFile);
+                if (!string.Equals(actualHash, updateInfo.Sha256.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Delete(tempFile);
+                    throw new InvalidOperationException("Installateur refusé : son empreinte SHA-256 ne correspond pas à celle publiée par l'administrateur.");
+                }
 
                 // Launch installer silently
                 ProcessStartInfo psi = new ProcessStartInfo

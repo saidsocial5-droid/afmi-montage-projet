@@ -40,7 +40,7 @@ namespace AFMI_Montage_projet_2.Services
             {
                 QuestPDF.Settings.License = LicenseType.Community;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(CanvasService), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         #region 1. Import Canvas from Document (Word, PDF, Excel)

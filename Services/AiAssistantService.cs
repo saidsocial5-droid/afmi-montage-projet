@@ -38,6 +38,9 @@ namespace AFMI_Montage_projet_2.Services
             var router = new AiRouterService();
             // La recherche Internet doit être transmise au routeur (elle était ignorée auparavant)
             var routingResult = await router.GenerateResponseAsync(prompt, systemInstruction, enableSearch: enableSearch);
+            // Échec du moteur : exception (les appelants l'affichent), jamais un message d'erreur renvoyé comme réponse
+            if (!routingResult.IsSuccess)
+                throw new InvalidOperationException(routingResult.ErrorMessage);
             return routingResult.ResponseText;
         }
 
@@ -105,8 +108,9 @@ namespace AFMI_Montage_projet_2.Services
         private static async Task<string> CallGeminiAsync(string apiKey, string model, string prompt, string systemInstruction, bool enableSearch)
         {
             // Gemini API
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
-            
+            // Clé dans l'en-tête x-goog-api-key, jamais dans l'URL (qui finit dans les journaux des proxys)
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
+
             // Si une consigne système est fournie, on la concatène au prompt pour Gemini Pro
             string fullPrompt = string.IsNullOrEmpty(systemInstruction) 
                 ? prompt 
@@ -154,7 +158,9 @@ namespace AFMI_Montage_projet_2.Services
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await HttpClient.PostAsync(url, content);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+            request.Headers.Add("x-goog-api-key", apiKey);
+            var response = await HttpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
                 string errorBody = await response.Content.ReadAsStringAsync();
@@ -168,7 +174,7 @@ namespace AFMI_Montage_projet_2.Services
                     }
                 }
                 catch (Exception ex) when (ex.Message.StartsWith("Erreur Gemini")) { throw; }
-                catch {}
+                catch (Exception parseEx) { AppLogger.Info(nameof(AiAssistantService), $"Corps d'erreur Gemini illisible : {parseEx.Message}"); }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
@@ -227,7 +233,7 @@ namespace AFMI_Montage_projet_2.Services
                     }
                 }
                 catch (Exception ex) when (ex.Message.StartsWith("Erreur OpenAI")) { throw; }
-                catch {}
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiAssistantService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
@@ -284,7 +290,7 @@ namespace AFMI_Montage_projet_2.Services
                     }
                 }
                 catch (Exception ex) when (ex.Message.StartsWith("Erreur Claude")) { throw; }
-                catch {}
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiAssistantService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
@@ -338,7 +344,7 @@ namespace AFMI_Montage_projet_2.Services
                     }
                 }
                 catch (Exception ex) when (ex.Message.StartsWith("Erreur DeepSeek")) { throw; }
-                catch {}
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiAssistantService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
