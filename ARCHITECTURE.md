@@ -117,9 +117,10 @@ F:\Aplication\AFMI Montage projet 2
 │   ├── RiskAiService.cs                 # خدمة تقييم المخاطر وتدابير الحماية
 │   ├── SettingsService.cs               # إدارة تفضيلات وإعدادات النظام
 │   ├── TextAssistService.cs             # خدمة المساعد التحريري الشامل الميداني
-│   ├── TextEnhancementService.cs        # معالجة وتحسين الصياغة النصية
+│   ├── TextEnhancementMode.cs           # أنماط التحسين القديمة (تُحوَّل إلى TextAssistActionType)
 │   ├── ThemeManager.cs                  # إدارة ألوان وسمات الواجهة (Dark/Light/Eco)
-│   ├── UpdateManager.cs                 # فحص وإدارة التحديثات البرمجية
+│   ├── AutoUpdaterService.cs            # قناة التحديث القديمة عبر Google Drive (احتياطية)
+│   ├── Updates/GitHubUpdateService.cs   # التحديث من إصدارات GitHub (القناة الرئيسية، ADR 26)
 │   ├── Collab/                          # خدمات التعاون والمزامنة اللامركزية
 │   │   ├── AuthService.cs               # توثيق المستخدمين والتحقق من الهوية
 │   │   ├── ContributionService.cs       # إدارة المقترحات التشاركية والتصويت
@@ -182,7 +183,7 @@ F:\Aplication\AFMI Montage projet 2
 │   ├── RisquesViewModel.cs              # إدارة مصفوفة المخاطر وتدابير السلامة ESG
 │   ├── SeMilestonesViewModel.cs         # محطات وخطط التتبع والتقييم (S&E)
 │   ├── SettingsViewModel.cs             # الإعدادات العامة ومفاتيح الذكاء الاصطناعي
-│   ├── TeamManagementViewModel.cs       # إدارة صلاحيات وأعضاء الفريق
+│   ├── TeamWorkspaceViewModel.cs        # فضاء الفريق: الأعضاء والأدوار والمقترحات (ADR 23)
 │   └── UserAccountViewModel.cs          # الملف الشخصي للمستخدم الحالي
 ├── Views/                               # واجهات المستخدم XAML بنمط WPF Modern Fluent
 │   ├── ActivityReportsView.xaml
@@ -220,7 +221,7 @@ F:\Aplication\AFMI Montage projet 2
 │   ├── RisquesView.xaml
 │   ├── SeMilestonesView.xaml
 │   ├── SettingsView.xaml
-│   ├── TeamManagementView.xaml
+│   ├── TeamWorkspaceWindow.xaml
 │   ├── UserAccountWindow.xaml / UserManagementWindow.xaml
 │   ├── Radar/                           # واجهات وحوارات رادار المشاريع
 │   │   ├── AddEditFeedDialog.xaml       # حوار إضافة/تعديل خلاصة RSS
