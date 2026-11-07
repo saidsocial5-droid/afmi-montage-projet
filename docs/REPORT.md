@@ -246,3 +246,11 @@
 
 تم استيفاء جميع المتطلبات الواردة في التكليف بدقة متناهية مع الامتثال الصارم لأنماط المشروع وأعلى معايير هندسة البرمجيات التنموية. التطبيق جاهز تماماً للاستخدام، البناء نظيف بدون أخطاء (0 Errors)، وجميع الاختبارات الوحدوية (63/63) تعمل بنجاح تام، مع واجهة فرنسية متكاملة واحترافية.
 
+
+---
+
+## 🧹 تنظيف المستودع (نوفمبر 2026)
+
+- حُذف `Services/TextEnhancementService.cs`: لم يكن التطبيق يستدعيه (الصياغة تمر عبر `TextAssistService`). نُقل التعدادان `TextEnhancementMode` و`AiEnhancementAction` إلى `Services/TextEnhancementMode.cs` لأن `AiTextAssistant` و`AiTextEnhancementDialog` و`StrategicPlanningView` ما زالت تستعملهما، وحُذفت من `TextEnhancementTests.cs` الاختبارات الخاصة بالخدمة المحذوفة.
+- حُذف `Models/PendingContribution.cs` (غير مستعمل) والدليلان القديمان `Guide_Utilisateur_AFMI_V3.html` و`Guide_Utilisation_AFMI.pdf` (غير مرجعيين في البناء ولا المثبّت).
+- `ARCHITECTURE.md` و`CLAUDE.md`: تصحيح قناة التحديث (GitHub أولاً ثم Google Drive احتياطياً) والإشارة إلى الملفات الحالية بدل المحذوفة.
