@@ -130,7 +130,26 @@ namespace AFMI_Montage_projet_2.Services
                     db.AiLogs.Add(log);
                     db.SaveChanges();
                 }
-                catch { }
+                catch (Exception logEx)
+                {
+                    AppLogger.Warn(nameof(AiRouterService), "Impossible d'enregistrer l'appel IA dans AiLog.", logEx);
+                }
+            }
+
+            // Échec : aucune réponse exploitable. Le texte reste vide (jamais de message d'erreur déguisé en réponse) ;
+            // l'appelant lit ErrorMessage et active son repli sans IA (ADR 27).
+            if (!isSuccess)
+            {
+                AppLogger.Warn(nameof(AiRouterService), $"Appel IA en échec ({taskType}) : {errorMessage}");
+                return new RoutingResult
+                {
+                    ResponseText = string.Empty,
+                    EngineName = selectedEngine.EngineName,
+                    IsSuccess = false,
+                    RoutingMessage = routingLogMessage,
+                    ErrorMessage = string.IsNullOrWhiteSpace(errorMessage) ? "Le moteur IA n'a renvoyé aucune réponse." : errorMessage,
+                    ResponseLanguage = responseLanguage
+                };
             }
 
             // Réponse dans une autre langue que celle attendue (fréquent avec les modèles locaux) : traduction automatique
@@ -185,6 +204,44 @@ namespace AFMI_Montage_projet_2.Services
             return Language.AppLanguages.All.Contains(setting) ? setting : Language.LanguageGuard.InferExpectedLanguage(prompt, systemInstruction);
         }
 
+        /// <summary>
+        /// Règle de consentement cloud partagée par tous les envois hors du poste, y compris ceux qui ne passent pas par
+        /// GenerateResponseAsync (audio des notes vocales) : cloud préféré, consentement explicite et plafond mensuel non atteint.
+        /// </summary>
+        public static bool IsCloudUseAllowed(AppConfig? config, out string reason)
+        {
+            if (config == null) { reason = "L'IA n'est pas configurée."; return false; }
+            if (config.UseLocalByDefault) { reason = "Le moteur local est sélectionné par défaut dans les paramètres IA."; return false; }
+            if (!config.CloudOptInGranted) { reason = "L'envoi de données vers le cloud n'a pas été autorisé dans les paramètres IA."; return false; }
+            int used = new AiRouterService().GetCloudCallsCountThisMonth();
+            if (used >= config.MonthlyRequestLimit) { reason = $"Limite mensuelle de {config.MonthlyRequestLimit} requêtes cloud atteinte."; return false; }
+            reason = string.Empty;
+            return true;
+        }
+
+        /// <summary>Journalise dans AiLog un appel IA effectué hors du routeur (même format que les appels routés).</summary>
+        public static void LogExternalCall(string engineName, string summary, long elapsedMs, bool isSuccess, string errorMessage = "")
+        {
+            try
+            {
+                using var db = new AppDbContext();
+                db.AiLogs.Add(new AiLog
+                {
+                    EngineUsed = engineName,
+                    PromptSummary = summary.Length > 100 ? summary.Substring(0, 100) + "..." : summary,
+                    ResponseTimeMs = elapsedMs,
+                    IsSuccess = isSuccess,
+                    ErrorMessage = errorMessage,
+                    Timestamp = DateTime.UtcNow
+                });
+                db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Warn(nameof(AiRouterService), "Impossible d'enregistrer l'appel IA dans AiLog.", ex);
+            }
+        }
+
         private bool IsInternetAvailable()
         {
             try
@@ -193,8 +250,9 @@ namespace AFMI_Montage_projet_2.Services
                 var reply = ping.Send("8.8.8.8", 1500); // Google DNS
                 return reply.Status == IPStatus.Success;
             }
-            catch
+            catch (Exception ex)
             {
+                AppLogger.Info(nameof(AiRouterService), $"Test de connexion Internet impossible : {ex.Message}");
                 return false;
             }
         }
@@ -211,8 +269,9 @@ namespace AFMI_Montage_projet_2.Services
                     .AsEnumerable() // Ramener en mémoire pour filtrer proprement par date en SQLite
                     .Count(log => log.Timestamp >= startOfMonth && log.EngineUsed.Contains("Cloud") && log.IsSuccess);
             }
-            catch
+            catch (Exception ex)
             {
+                AppLogger.Warn(nameof(AiRouterService), "Comptage des requêtes cloud du mois impossible.", ex);
                 return 0;
             }
         }
@@ -243,6 +302,9 @@ namespace AFMI_Montage_projet_2.Services
         public string EngineName { get; set; } = string.Empty;
         public bool IsSuccess { get; set; }
         public string RoutingMessage { get; set; } = string.Empty;
+
+        /// <summary>Cause de l'échec quand IsSuccess est faux (ResponseText est alors vide).</summary>
+        public string ErrorMessage { get; set; } = string.Empty;
 
         /// <summary>Vrai si la réponse s'appuie sur une recherche Internet réelle (Gemini + Google Search).</summary>
         public bool SearchUsed { get; set; }

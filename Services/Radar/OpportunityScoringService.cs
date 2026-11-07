@@ -425,7 +425,7 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict avec le schéma suivant
                     {
                         return new DateTime(y, month, d, 23, 59, 59, DateTimeKind.Utc);
                     }
-                    catch { }
+                    catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(OpportunityScoringService), $"Erreur ignorée : {swallowedEx.Message}"); }
                 }
             }
 
@@ -460,7 +460,7 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict avec le schéma suivant
                     {
                         return new DateTime(y, month, d, 23, 59, 59, DateTimeKind.Utc);
                     }
-                    catch { }
+                    catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(OpportunityScoringService), $"Erreur ignorée : {swallowedEx.Message}"); }
                 }
             }
 

@@ -15,6 +15,9 @@ namespace AFMI_Montage_projet_2
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Formatage des nombres et dates indépendant de la langue de Windows (ADR 27)
+            Helpers.AppCulture.Apply();
+
             const string appName = "AFMI_Montage_Projet_SingleInstance_Mutex";
             _mutex = new System.Threading.Mutex(true, appName, out bool createdNew);
             if (!createdNew)
@@ -77,7 +80,7 @@ namespace AFMI_Montage_projet_2
                 _mutex?.ReleaseMutex();
                 _mutex?.Dispose();
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(App), $"Erreur ignorée : {swallowedEx.Message}"); }
             AppLogger.Info("App", $"Fermeture (code {e.ApplicationExitCode})");
             base.OnExit(e);
         }

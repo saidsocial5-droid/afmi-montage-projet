@@ -64,7 +64,7 @@ namespace AFMI_Montage_projet_2.Services
                 }
                 db.SaveChanges();
             }
-            catch (Exception) { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(NotificationService), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
     }
 }

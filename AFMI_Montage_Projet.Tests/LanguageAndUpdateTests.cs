@@ -149,19 +149,20 @@ namespace AFMI_Montage_Projet.Tests
         [Fact]
         public void Release_IsParsed_WithInstallerAndDigest()
         {
+            // Version volontairement très élevée : le test reste valable quelle que soit la version de l'application
             const string json = @"{
-  ""tag_name"": ""v1.9.21"", ""name"": ""AFMI Montage Projet 1.9.21"", ""body"": ""Traduction et mises à jour"",
-  ""html_url"": ""https://github.com/afmi/app/releases/tag/v1.9.21"", ""published_at"": ""2026-11-02T10:00:00Z"",
+  ""tag_name"": ""v99.0.0"", ""name"": ""AFMI Montage Projet 99.0.0"", ""body"": ""Traduction et mises à jour"",
+  ""html_url"": ""https://github.com/afmi/app/releases/tag/v99.0.0"", ""published_at"": ""2026-11-02T10:00:00Z"",
   ""assets"": [
-    { ""name"": ""AFMIMontageProjet_Setup_v1.9.21.exe"", ""size"": 123456789, ""digest"": ""sha256:ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"",
-      ""browser_download_url"": ""https://github.com/afmi/app/releases/download/v1.9.21/AFMIMontageProjet_Setup_v1.9.21.exe"" },
-    { ""name"": ""AFMIMontageProjet_Setup_v1.9.21.exe.sha256"", ""size"": 100, ""browser_download_url"": ""https://github.com/afmi/app/releases/download/v1.9.21/x.sha256"" },
-    { ""name"": ""notes.pdf"", ""size"": 10, ""browser_download_url"": ""https://github.com/afmi/app/releases/download/v1.9.21/notes.pdf"" }
+    { ""name"": ""AFMIMontageProjet_Setup_v99.0.0.exe"", ""size"": 123456789, ""digest"": ""sha256:ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"",
+      ""browser_download_url"": ""https://github.com/afmi/app/releases/download/v99.0.0/AFMIMontageProjet_Setup_v99.0.0.exe"" },
+    { ""name"": ""AFMIMontageProjet_Setup_v99.0.0.exe.sha256"", ""size"": 100, ""browser_download_url"": ""https://github.com/afmi/app/releases/download/v99.0.0/x.sha256"" },
+    { ""name"": ""notes.pdf"", ""size"": 10, ""browser_download_url"": ""https://github.com/afmi/app/releases/download/v99.0.0/notes.pdf"" }
   ]
 }";
             var release = GitHubUpdateService.ParseRelease(json);
 
-            Assert.Equal(new Version(1, 9, 21), release.Version);
+            Assert.Equal(new Version(99, 0, 0), release.Version);
             Assert.NotNull(release.Installer);
             Assert.Equal("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789", release.Installer!.Sha256);
             Assert.NotNull(release.ChecksumFile);

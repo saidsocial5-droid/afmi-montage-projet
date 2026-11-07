@@ -119,7 +119,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 OnPropertyChanged(nameof(HasUnreadNotifications));
                 OnPropertyChanged(nameof(UnreadNotificationsCount));
             }
-            catch (Exception) { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectWorkspaceViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         [RelayCommand]
@@ -141,7 +141,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 db.SaveChanges();
                 LoadNotifications();
             }
-            catch (Exception) { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProjectWorkspaceViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         [RelayCommand]

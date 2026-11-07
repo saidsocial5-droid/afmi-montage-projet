@@ -36,7 +36,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(DpapiDataStore), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         /// <summary>Vrai si un jeton OAuth est mémorisé pour cette clé (la reconnexion ne demandera pas le navigateur).</summary>

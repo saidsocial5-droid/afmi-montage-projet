@@ -79,7 +79,7 @@ namespace AFMI_Montage_projet_2.Services.Strategic
         private static string ObjectiveContent(StrategicObjective obj) =>
             string.IsNullOrWhiteSpace(obj.Description) ? obj.Title : $"{obj.Title} - {obj.Description}";
 
-        private static string Currency(Project? p) => string.IsNullOrWhiteSpace(p?.Currency) ? "EUR" : p!.Currency;
+        private static string Currency(Project? p) => Project.CurrencyOf(p);
 
         /// <summary>
         /// Génère l'aperçu des propositions dérivées du socle stratégique pour l'étape cible.

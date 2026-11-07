@@ -112,7 +112,7 @@ Consignes impératives :
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(OrganizationAiService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
             // Fallback
             return $"Forte de son expérience depuis {profile.CreationDate} dans {string.Join(", ", profile.GeographicZones)}, l'organisation {profile.OrganizationName} ({profile.Acronym}) réunit une gouvernance transparente et une gestion financière certifiée par commissariat aux comptes. Dotée d'une équipe permanente pluridisciplinaire et d'un ancrage territorial reconnu, l'association a mené à bien des programmes d'envergure avec des partenaires tels que {string.Join(", ", profile.PreferredDonors)}. Sa capacité opérationnelle éprouvée et son expertise technique ({profile.TechnicalExpertiseSummary}) garantissent une mise en œuvre rigoureuse, mesurable et pérenne de tout projet de développement.";
@@ -154,7 +154,7 @@ Objectif : Fournir un texte percutant, fluide, structuré, employant la terminol
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(OrganizationAiService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
             return currentContent;
         }

@@ -588,7 +588,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(FormulaireDynamiqueViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
 
             IsBusy = true;
             StatusMessage = $"L'Agent IA rédige la réponse pour la question...";
@@ -690,7 +690,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                         }
                     }
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(FormulaireDynamiqueViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
             }
 
             // 4. Parser avec JsonDocument flexible (autorise virgules de fin, commentaires, types variés)

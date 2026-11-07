@@ -120,6 +120,10 @@ namespace AFMI_Montage_projet_2.Services.Strategic
                 var result = await _routerService.GenerateResponseAsync(currentPrompt, enrichedSystemInstruction, taskType: "StructuredRbm", enableSearch: enableSearch && attempt == 1);
                 lastRawResponse = result.ResponseText;
 
+                // Moteur indisponible : inutile de « réparer » un JSON vide, l'appelant passe à son repli sans IA
+                if (!result.IsSuccess)
+                    throw new StructuredAiException($"Moteur IA indisponible : {result.ErrorMessage}", string.Empty, jsonSchemaExample, attempt);
+
                 string sanitized = SanitizeJsonOutput(lastRawResponse);
 
                 try

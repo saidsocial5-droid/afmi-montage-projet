@@ -530,7 +530,7 @@ namespace AFMI_Montage_projet_2.Helpers
                     layer.Add(new AiButtonAdorner(tb));
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiTextAssistant), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         public static void DetachAdorner(TextBoxBase tb)
@@ -549,7 +549,7 @@ namespace AFMI_Montage_projet_2.Helpers
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiTextAssistant), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         private static void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -876,7 +876,7 @@ namespace AFMI_Montage_projet_2.Helpers
                     }
                 }
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiTextAssistant), $"Erreur ignorée : {swallowedEx.Message}"); }
 
             return "Champ de saisie";
         }

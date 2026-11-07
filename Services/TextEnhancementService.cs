@@ -79,9 +79,9 @@ namespace AFMI_Montage_projet_2.Services
                     return new TextEnhancementResult
                     {
                         IsSuccess = false,
-                        ErrorMessage = string.IsNullOrWhiteSpace(routingResult.RoutingMessage)
-                            ? "Impossible de contacter le moteur IA. Vérifiez votre connexion Internet ou la configuration d'Ollama local dans les Paramètres."
-                            : routingResult.RoutingMessage,
+                        ErrorMessage = !string.IsNullOrWhiteSpace(routingResult.ErrorMessage)
+                            ? routingResult.ErrorMessage
+                            : "Impossible de contacter le moteur IA. Vérifiez votre connexion Internet ou la configuration d'Ollama local dans les Paramètres.",
                         EngineUsed = routingResult.EngineName
                     };
                 }

@@ -18,18 +18,18 @@ namespace AFMI_Montage_projet_2.Services.Radar
     /// </summary>
     public class ProfileSourceAnalysisService
     {
-        private static readonly HttpClient HttpClient = new()
+        // Tout accès web passe par SafeHttpFetcher (ADR 25) : contrôle SSRF à la connexion et à chaque redirection, taille limitée
+        private readonly SafeHttpFetcher _fetcher;
+
+        private static readonly System.Collections.Generic.Dictionary<string, string> BrowserHeaders = new()
         {
-            Timeout = TimeSpan.FromSeconds(25)
+            ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            ["Accept-Language"] = "fr-FR,fr;q=0.9,ar;q=0.8,en;q=0.7"
         };
 
-        static ProfileSourceAnalysisService()
+        public ProfileSourceAnalysisService(SafeHttpFetcher? fetcher = null)
         {
-            if (!HttpClient.DefaultRequestHeaders.Contains("User-Agent"))
-            {
-                HttpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                HttpClient.DefaultRequestHeaders.Add("Accept-Language", "fr-FR,fr;q=0.9,ar;q=0.8,en;q=0.7");
-            }
+            _fetcher = fetcher ?? new SafeHttpFetcher();
         }
 
         #region Extraction Web & Réseaux Sociaux
@@ -56,13 +56,17 @@ namespace AFMI_Montage_projet_2.Services.Radar
 
             try
             {
-                var response = await HttpClient.GetAsync(url);
-                if (!response.IsSuccessStatusCode)
+                SafeFetchResponse response;
+                try
                 {
-                    return (false, string.Empty, $"Erreur HTTP {(int)response.StatusCode} ({response.ReasonPhrase})");
+                    response = await _fetcher.FetchWithRetryAsync(url, headers: BrowserHeaders);
+                }
+                catch (SafeFetchException fetchEx)
+                {
+                    return (false, string.Empty, fetchEx.Message);
                 }
 
-                string html = await response.Content.ReadAsStringAsync();
+                string html = RssParser.DecodeText(response.Body, response.Charset);
                 string extracted = ExtractTextAndMetadataFromHtml(html, url);
 
                 if (string.IsNullOrWhiteSpace(extracted) || extracted.Length < 30)
@@ -219,7 +223,7 @@ namespace AFMI_Montage_projet_2.Services.Radar
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"AI Call Error: {ex.Message}");
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(ProfileSourceAnalysisService), "Échec de l'appel IA (repli heuristique)", ex);
             }
 
             // Fallback intelligent heuristique si IA indisponible ou JSON non lisible
@@ -354,7 +358,7 @@ Règles de mergeMode :
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing AI JSON proposals: {ex.Message}");
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(ProfileSourceAnalysisService), "Propositions IA JSON illisibles", ex);
             }
 
             return results;

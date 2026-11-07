@@ -346,7 +346,7 @@ namespace AFMI_Montage_projet_2.Views
                     await ApplyItemUpdateAsync(item, proposal);
                     _appliedCount++;
                 }
-                catch { }
+                catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(AiBatchAssistDialog), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 _currentIndex++;
                 UpdateProgressDisplay();

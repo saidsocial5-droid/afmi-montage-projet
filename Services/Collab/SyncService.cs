@@ -498,7 +498,7 @@ namespace AFMI_Montage_projet_2.Services.Collab
                 _timer?.Dispose();
                 _timer = new PeriodicTimer(TimeSpan.FromSeconds(delaySeconds));
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(SyncService), $"Erreur ignorée : {swallowedEx.Message}"); }
         }
 
         private void NotifyStatus(string message)

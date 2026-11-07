@@ -593,7 +593,7 @@ namespace AFMI_Montage_projet_2.Services
                 var defaultSettings = await query.FirstOrDefaultAsync();
                 if (defaultSettings != null) return defaultSettings;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(TextAssistService), $"Erreur ignorée : {swallowedEx.Message}"); }
 
             return new TextAssistSettings
             {

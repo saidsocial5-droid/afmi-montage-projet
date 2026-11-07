@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 
 namespace AFMI_Montage_projet_2.Services
 {
+    /// <summary>
+    /// Le moteur local (Ollama) n'a pas pu produire de réponse. Levée au lieu de renvoyer un texte d'erreur,
+    /// pour que le routeur marque l'appel en échec et que les services activent leur repli sans IA (ADR 27).
+    /// </summary>
+    public class LocalAiUnavailableException : Exception
+    {
+        public LocalAiUnavailableException(string message, Exception? inner = null) : base(message, inner) { }
+    }
+
     public class LocalAiEngine : IAiEngine
     {
         private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(180) };
@@ -15,64 +24,39 @@ namespace AFMI_Montage_projet_2.Services
 
         public async Task<string> GenerateAsync(string prompt, string systemInstruction = "", bool enableSearch = false)
         {
+            var prefs = LocalSettingsService.LoadSettings();
+            string baseUrl = !string.IsNullOrWhiteSpace(prefs.OllamaUrl) ? prefs.OllamaUrl.TrimEnd('/') : "http://localhost:11434";
+            string userModel = prefs.OllamaModel;
+
             try
             {
-                var prefs = LocalSettingsService.LoadSettings();
-                string baseUrl = !string.IsNullOrWhiteSpace(prefs.OllamaUrl) ? prefs.OllamaUrl.TrimEnd('/') : "http://localhost:11434";
-                string userModel = prefs.OllamaModel;
-
                 // 1. D'abord vérifier quels modèles sont disponibles
-                string tagsUrl = baseUrl + "/api/tags";
-                var tagsResponse = await HttpClient.GetAsync(tagsUrl);
-                
-                string selectedModel = "llama3"; // Par défaut
-                
-                if (tagsResponse.IsSuccessStatusCode)
+                var tagsResponse = await HttpClient.GetAsync(baseUrl + "/api/tags");
+                if (!tagsResponse.IsSuccessStatusCode)
+                    throw new LocalAiUnavailableException($"Impossible de contacter Ollama sur {baseUrl} (HTTP {(int)tagsResponse.StatusCode}). Vérifiez qu'il est lancé en arrière-plan.");
+
+                string selectedModel;
+                if (!string.IsNullOrWhiteSpace(userModel))
                 {
-                    if (!string.IsNullOrWhiteSpace(userModel))
-                    {
-                        // L'utilisateur a forcé un modèle
-                        selectedModel = userModel;
-                    }
-                    else 
-                    {
-                        string tagsJson = await tagsResponse.Content.ReadAsStringAsync();
-                        using var docTags = JsonDocument.Parse(tagsJson);
-                        if (docTags.RootElement.TryGetProperty("models", out var modelsArray) && modelsArray.GetArrayLength() > 0)
-                        {
-                            var firstModel = modelsArray[0].GetProperty("name").GetString();
-                            
-                            // Chercher s'il y a un llama3
-                            bool hasLlama3 = false;
-                            foreach(var m in modelsArray.EnumerateArray())
-                            {
-                                var name = m.GetProperty("name").GetString();
-                                if (name != null && name.Contains("llama3")) {
-                                    hasLlama3 = true;
-                                    selectedModel = name;
-                                    break;
-                                }
-                            }
-                            
-                            // Sinon utiliser le premier modèle disponible
-                            if (!hasLlama3 && !string.IsNullOrEmpty(firstModel))
-                            {
-                                selectedModel = firstModel;
-                            }
-                        }
-                        else 
-                        {
-                            return "**[Erreur Local]** Aucun modèle n'est installé dans Ollama. Veuillez télécharger un modèle (ex: ollama run llama3).";
-                        }
-                    }
+                    // L'utilisateur a forcé un modèle
+                    selectedModel = userModel;
                 }
                 else
                 {
-                    return $"**[Erreur Local]** Impossible de contacter Ollama sur {baseUrl}. Veuillez vérifier qu'il est lancé en arrière-plan.";
+                    string tagsJson = await tagsResponse.Content.ReadAsStringAsync();
+                    using var docTags = JsonDocument.Parse(tagsJson);
+                    if (!docTags.RootElement.TryGetProperty("models", out var modelsArray) || modelsArray.GetArrayLength() == 0)
+                        throw new LocalAiUnavailableException("Aucun modèle n'est installé dans Ollama. Téléchargez un modèle (ex. : ollama run llama3).");
+
+                    var names = modelsArray.EnumerateArray()
+                        .Select(m => m.TryGetProperty("name", out var n) ? n.GetString() : null)
+                        .Where(n => !string.IsNullOrEmpty(n))
+                        .ToList();
+                    // llama3 s'il est installé, sinon le premier modèle disponible
+                    selectedModel = names.FirstOrDefault(n => n!.Contains("llama3")) ?? names.FirstOrDefault() ?? "llama3";
                 }
 
                 // 2. Générer avec le modèle trouvé
-                string url = baseUrl + "/api/generate";
                 var requestBody = new
                 {
                     model = selectedModel,
@@ -80,38 +64,31 @@ namespace AFMI_Montage_projet_2.Services
                     system = systemInstruction,
                     stream = false
                 };
+                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
-                var json = JsonSerializer.Serialize(requestBody);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await HttpClient.PostAsync(baseUrl + "/api/generate", content);
+                string responseString = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                    throw new LocalAiUnavailableException($"Ollama a renvoyé une erreur ({(int)response.StatusCode}) : {responseString}");
 
-                var response = await HttpClient.PostAsync(url, content);
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseString = await response.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(responseString);
-                    if (doc.RootElement.TryGetProperty("response", out var respProp))
-                    {
-                        return respProp.GetString() ?? string.Empty;
-                    }
-                }
-                else
-                {
-                    string error = await response.Content.ReadAsStringAsync();
-                    return $"**[Erreur Génération Local]** Ollama a renvoyé une erreur : {error}";
-                }
+                using var doc = JsonDocument.Parse(responseString);
+                if (doc.RootElement.TryGetProperty("response", out var respProp))
+                    return respProp.GetString() ?? string.Empty;
+
+                throw new LocalAiUnavailableException("Réponse d'Ollama inattendue (champ « response » absent).");
             }
-            catch (TaskCanceledException)
+            catch (LocalAiUnavailableException)
             {
-                return "**[Timeout Local]** La réponse du modèle Ollama a pris trop de temps (plus de 3 minutes). Essayez d'utiliser un modèle plus léger ou activez le moteur Cloud dans les paramètres.";
+                throw;
+            }
+            catch (TaskCanceledException ex)
+            {
+                throw new LocalAiUnavailableException("La réponse du modèle Ollama a pris trop de temps (plus de 3 minutes). Essayez un modèle plus léger ou activez le moteur Cloud dans les paramètres.", ex);
             }
             catch (Exception ex)
             {
-                return $"**[Générateur Local Embarqué]**\n\nLe moteur d'IA local Ollama n'est pas actif ou a rencontré une erreur ({ex.Message}). Pour une génération hors ligne, veuillez installer Ollama. Cette fonctionnalité nécessite une connexion à internet si vous souhaitez utiliser le Cloud.";
+                throw new LocalAiUnavailableException($"Le moteur d'IA local Ollama n'est pas actif ou a rencontré une erreur ({ex.Message}). Installez et lancez Ollama pour une génération hors ligne.", ex);
             }
-
-            return "**[Générateur Local Embarqué]**\n\nLe moteur d'IA local Ollama n'est pas actif sur votre système.";
         }
     }
 }
-
-

@@ -96,7 +96,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 }
                 
                 string secret = "";
-                try { secret = AFMI_Montage_projet_2.Helpers.EncryptionHelper.Unprotect(encSecret); } catch {}
+                try { secret = AFMI_Montage_projet_2.Helpers.EncryptionHelper.Unprotect(encSecret); } catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(RegisterViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                 var driveService = await authService.AuthenticateAsync(clientId, secret);
                 var email = await authService.GetUserEmailAsync();

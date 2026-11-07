@@ -390,3 +390,24 @@
 * **Alternatives rejetées :**
   - (a) Squirrel / Velopack / ClickOnce : ce serait une dépendance supplémentaire et une refonte de l'installation existante (Inno Setup, ADR 14).
   - (b) Traduction systématique de toutes les réponses : coût et latence doublés ; le contrôle de langue ne traduit que lorsque c'est nécessaire.
+
+---
+
+## 📋 Décision n° 27 : Fiabilité des replis IA, culture de formatage, consentement cloud des notes vocales (1.9.21)
+* **Contexte (audit du 06/11/2026) :**
+  - La publication GitHub Actions de la v1.9.20 s'arrêtait à l'étape Tests (260/264) : trois tests appelaient le vrai Ollama, absent du serveur, et un test dépendait de la langue de Windows (« 1 200 » / « 1,200 »).
+  - `LocalAiEngine` renvoyait ses erreurs (« **[Générateur Local Embarqué]** … Ollama n'est pas actif ») comme une réponse normale : le routeur comptait l'appel comme réussi, les replis sans IA ne s'activaient jamais et le message d'erreur arrivait comme « proposition » dans les champs.
+  - Les nombres formatés (`{n:N0}`) suivaient la langue de Windows, y compris dans les textes enregistrés et les dossiers exportés.
+  - `VoiceNoteAssistantService` envoyait l'audio des réunions à Gemini ou Whisper dès qu'une clé existait, sans tenir compte de `UseLocalByDefault`, `CloudOptInGranted`, du plafond mensuel ni de `AiLog`.
+  - `ProfileSourceAnalysisService` téléchargeait les pages avec son propre `HttpClient` (pas de contrôle SSRF à la connexion ni aux redirections, pas de limite de taille) ; la clé Gemini passait dans l'URL ; le canal de mise à jour Drive lançait l'installateur sans empreinte.
+* **Décision :**
+  1. **Échec = échec** : `LocalAiEngine` lève `LocalAiUnavailableException`. Le routeur renvoie alors `IsSuccess = false`, `ResponseText` vide et la cause dans `RoutingResult.ErrorMessage` (jamais un message d'erreur déguisé en réponse). `AiAssistantService.CallAiAsync` lève une exception (les appelants l'affichent ou passent à leur repli), `StructuredAiPrompter` s'arrête sans « réparer » un JSON vide, et le chat et la synthèse de réunion affichent la cause.
+  2. **Culture de formatage unique** : `Helpers/AppCulture` fixe fr-FR (`DefaultThreadCurrentCulture`) au démarrage et dans les tests. La langue d'affichage et la propriété `Language` de WPF ne changent pas, donc la saisie des nombres dans les champs liés reste identique.
+  3. **Consentement cloud partagé** : `AiRouterService.IsCloudUseAllowed` (cloud préféré, consentement, plafond) s'applique aussi à l'audio des notes vocales ; sans consentement, l'audio reste sur le poste (dictée Windows locale). Ces envois sont journalisés dans `AiLog` (`AiRouterService.LogExternalCall`) et comptent dans le plafond.
+  4. **Réseau et secrets** : `ProfileSourceAnalysisService` passe par `SafeHttpFetcher` ; la clé Gemini est envoyée dans l'en-tête `x-goog-api-key` ; `version.json` (canal Drive) porte le SHA-256 de l'installateur, calculé à la publication et vérifié avant tout lancement (installateur refusé sans empreinte ou si elle diffère).
+  5. **Tests déterministes** : `LocalSettingsService` suit `AFMI_DATA_DIR` comme la base locale ; `TestEnvironment` y fait pointer Ollama vers un port fermé (`127.0.0.1:9`), si bien qu'aucun test n'appelle une IA réelle, avec ou sans Ollama sur le poste.
+  6. **Journal** : les `catch { }` vides et les `Console.WriteLine` restants passent par `AppLogger` ; la monnaie par défaut n'est définie qu'à un endroit (`Project.DefaultCurrency`, `Project.CurrencyOf`).
+* **Conséquence :** un `version.json` Drive publié avant la 1.9.21 (sans empreinte) est refusé : republier la mise à jour depuis Paramètres › Cloud. Le canal GitHub, prioritaire, n'est pas concerné.
+* **Alternatives rejetées :**
+  - (a) Détecter les messages d'erreur d'Ollama par leur texte : fragile et déjà source du défaut.
+  - (b) Forcer aussi la `Language` WPF en fr-FR : cela changerait le séparateur décimal attendu dans tous les champs numériques liés.

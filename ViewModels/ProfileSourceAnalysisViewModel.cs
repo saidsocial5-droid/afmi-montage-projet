@@ -184,7 +184,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                             ? $"{(fi.Length / (1024.0 * 1024.0)):F1} Mo"
                             : $"{(fi.Length / 1024.0):F0} Ko";
                     }
-                    catch { }
+                    catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProfileSourceAnalysisViewModel), $"Erreur ignorée : {swallowedEx.Message}"); }
 
                     Documents.Add(new AnalysisSourceItem
                     {

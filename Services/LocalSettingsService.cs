@@ -15,8 +15,10 @@ namespace AFMI_Montage_projet_2.Services
 
     public static class LocalSettingsService
     {
-        private static readonly string SettingsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AFMI_Montage_Projet");
-        private static readonly string SettingsFile = Path.Combine(SettingsFolder, "settings.json");
+        // Suit la redirection AFMI_DATA_DIR (tests) comme la base locale : les tests ne lisent ni n'écrasent jamais les réglages réels
+        private static string SettingsFolder => Models.AppDbContext.DataDirectoryOverride
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AFMI_Montage_Projet");
+        private static string SettingsFile => Path.Combine(SettingsFolder, "settings.json");
 
         public static LocalSettings LoadSettings()
         {
@@ -28,9 +30,9 @@ namespace AFMI_Montage_projet_2.Services
                     return JsonSerializer.Deserialize<LocalSettings>(json) ?? new LocalSettings();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore errors
+                AppLogger.Warn(nameof(LocalSettingsService), "Réglages locaux illisibles : valeurs par défaut utilisées.", ex);
             }
             return new LocalSettings();
         }
@@ -45,9 +47,9 @@ namespace AFMI_Montage_projet_2.Services
                 string json = JsonSerializer.Serialize(settings);
                 File.WriteAllText(SettingsFile, json);
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore errors
+                AppLogger.Warn(nameof(LocalSettingsService), "Impossible d'enregistrer les réglages locaux.", ex);
             }
         }
     }

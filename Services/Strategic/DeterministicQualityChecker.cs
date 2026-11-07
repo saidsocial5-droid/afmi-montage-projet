@@ -305,7 +305,7 @@ namespace AFMI_Montage_projet_2.Services.Strategic
             return report;
         }
 
-        private static string CurrencyOf(Project project) => string.IsNullOrWhiteSpace(project.Currency) ? "EUR" : project.Currency;
+        private static string CurrencyOf(Project project) => Project.CurrencyOf(project);
 
         /// <summary>
         /// Règles de cohérence entre modules (arbre à problèmes, cadre logique, chronogramme, budget,

@@ -84,7 +84,7 @@ namespace AFMI_Montage_projet_2.Services
                 var suggestions = JsonSerializer.Deserialize<List<AiSuggestion>>(result, options);
                 if (suggestions != null && suggestions.Any()) return suggestions;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProblemTreeAiHelper), $"Erreur ignorée : {swallowedEx.Message}"); }
             return GetMockAnalysis();
         }
 
@@ -107,7 +107,7 @@ namespace AFMI_Montage_projet_2.Services
                 var suggestions = JsonSerializer.Deserialize<List<AiSuggestion>>(result, options);
                 if (suggestions != null && suggestions.Any()) return suggestions;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProblemTreeAiHelper), $"Erreur ignorée : {swallowedEx.Message}"); }
             return GetMockSuggestions(title);
         }
 
@@ -138,7 +138,7 @@ namespace AFMI_Montage_projet_2.Services
                 var suggestions = JsonSerializer.Deserialize<List<AiSuggestion>>(result, options);
                 if (suggestions != null && suggestions.Any()) return suggestions;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProblemTreeAiHelper), $"Erreur ignorée : {swallowedEx.Message}"); }
             return new List<AiSuggestion> { new AiSuggestion { Text = "Impossible de générer des suggestions valides." } };
         }
 
@@ -179,7 +179,7 @@ namespace AFMI_Montage_projet_2.Services
                 var suggestions = JsonSerializer.Deserialize<List<AiSuggestion>>(result, options);
                 if (suggestions != null && suggestions.Any()) return suggestions;
             }
-            catch { }
+            catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(ProblemTreeAiHelper), $"Erreur ignorée : {swallowedEx.Message}"); }
             return new List<AiSuggestion> { new AiSuggestion { Text = "Erreur de génération", NeedsInput = false } };
         }
 
