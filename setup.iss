@@ -1,6 +1,6 @@
 ﻿#define MyAppName "AFMI Montage Projet"
 ; Doit correspondre à <Version> dans "AFMI Montage projet 2.csproj" (vérifié par build_and_sign.ps1 et par les tests)
-#define MyAppVersion "1.9.21"
+#define MyAppVersion "1.9.22"
 #define MyAppPublisher "Association Forêt Modèle d'Ifrane"
 #define MyAppExeName "AFMI Montage projet 2.exe"
 #define PublishDir "bin\Release\net9.0-windows\win-x64\publish"
