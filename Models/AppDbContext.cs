@@ -75,6 +75,10 @@ namespace AFMI_Montage_projet_2.Models
         public DbSet<GrantOpportunity> GrantsPipeline { get; set; } = null!;
         public DbSet<RssItemCache> RssItemsCache { get; set; } = null!;
 
+        // Base de veille : appels à venir et appels vus non retenus (ADR 28)
+        public DbSet<UpcomingCall> UpcomingCalls { get; set; } = null!;
+        public DbSet<RejectedCall> RejectedCalls { get; set; } = null!;
+
         // Territoire d'intervention et bénéficiaires (ADR 25)
         public DbSet<TerritoryProfile> TerritoryProfiles { get; set; } = null!;
         public DbSet<BeneficiaryGroup> BeneficiaryGroups { get; set; } = null!;
@@ -574,6 +578,9 @@ namespace AFMI_Montage_projet_2.Models
 
             // V7 : Assistant IA Rédactionnel Universel
             CreateTextAssistTablesIfNotExist();
+
+            // Base de veille : notation /25, confirmation et fiche des 13 champs (ADR 28)
+            UpgradeVeilleSchema();
 
             LogSchemaUpgradeSummary();
         }
@@ -1291,6 +1298,42 @@ namespace AFMI_Montage_projet_2.Models
             {
                 AppLogger.Error("Schema", "Radar Table Creation Warning", ex);
             }
+        }
+
+        /// <summary>
+        /// Colonnes de la base de veille sur grants_pipeline (les tables veille_a_venir et veille_non_retenus
+        /// viennent du modèle via EnsureModelTablesExist). Idempotent, pour SQLite et PostgreSQL.
+        /// </summary>
+        private void UpgradeVeilleSchema()
+        {
+            const string table = "grants_pipeline";
+            const string text = "TEXT NOT NULL DEFAULT ''";
+            const string note = "INTEGER NOT NULL DEFAULT 0";
+
+            AddColumnIfMissing(table, "VeilleId", text);
+            AddColumnIfMissing(table, "Priority", text);
+            AddColumnIfMissing(table, "ScorePertinence", note);
+            AddColumnIfMissing(table, "ScoreEligibilite", note);
+            AddColumnIfMissing(table, "ScoreFinancier", note);
+            AddColumnIfMissing(table, "ScoreFaisabilite", note);
+            AddColumnIfMissing(table, "ScoreStrategique", note);
+            AddColumnIfMissing(table, "ScoreTotal", note);
+            AddColumnIfMissing(table, "ScoreJustification", text);
+            AddColumnIfMissing(table, "Confirmation", "TEXT NOT NULL DEFAULT 'non confirmé (agrégateur)'");
+            AddColumnIfMissing(table, "VerifiedAt", NullableDateTimeColumn);
+            AddColumnIfMissing(table, "VeilleAxes", text);
+            AddColumnIfMissing(table, "CallType", text);
+            AddColumnIfMissing(table, "Duration", text);
+            AddColumnIfMissing(table, "Zone", text);
+            AddColumnIfMissing(table, "Eligibility", text);
+            AddColumnIfMissing(table, "Cofinancing", text);
+            AddColumnIfMissing(table, "OverheadCosts", text);
+            AddColumnIfMissing(table, "DetectionSource", text);
+            AddColumnIfMissing(table, "ConsortiumAdvice", text);
+
+            // « Mise sous veille » (statut d'origine du Radar) devient « Nouveau » dans le cycle de veille.
+            RunSchemaStep("Statuts de veille grants_pipeline", () =>
+                Database.ExecuteSqlRaw(@"UPDATE ""grants_pipeline"" SET ""PipelineStatus"" = 'Nouveau' WHERE ""PipelineStatus"" = 'Mise sous veille';"));
         }
     }
 }

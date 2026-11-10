@@ -20,6 +20,9 @@ namespace AFMI_Montage_projet_2.Services.Radar
             _dbContextFactory = dbContextFactory ?? (() => new AppDbContext());
         }
 
+        /// <summary>Fabrique de contexte partagée avec la base de veille (même base, y compris dans les tests).</summary>
+        public Func<AppDbContext> DbContextFactory => _dbContextFactory;
+
         /// <summary>
         /// إضافة فرصة تمويل إلى محفظة المشاريع (grants_pipeline) مع منع التكرار.
         /// </summary>
@@ -53,10 +56,14 @@ namespace AFMI_Montage_projet_2.Services.Radar
                 RelevanceScore = scoreResult?.RelevanceScore ?? item.AiScore ?? 5.0,
                 MatchedAxes = scoreResult?.MatchedAxes != null ? string.Join(", ", scoreResult.MatchedAxes) : (item.AiMatchedAxes ?? string.Empty),
                 Rationale = scoreResult?.Rationale ?? item.AiScoreRationale ?? string.Empty,
-                PipelineStatus = "Mise sous veille",
+                PipelineStatus = VeilleStatus.Nouveau,
                 AddedAt = DateTime.UtcNow,
+                DetectionSource = $"RSS — {item.FeedName}",
                 Notes = $"Ajouté depuis le Radar des Projets ({item.FeedName})"
             };
+
+            // Entrée dans la base de veille : identifiant V-AAAA-NNN et première notation /25
+            await new VeilleBaseService(_dbContextFactory).EnterIntoBaseAsync(db, opp, DateTime.Today);
 
             db.GrantsPipeline.Add(opp);
 

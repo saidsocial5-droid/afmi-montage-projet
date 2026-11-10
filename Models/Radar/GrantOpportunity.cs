@@ -52,7 +52,7 @@ namespace AFMI_Montage_projet_2.Models.Radar
 
         [Required]
         [MaxLength(50)]
-        public string PipelineStatus { get; set; } = "Mise sous veille";
+        public string PipelineStatus { get; set; } = VeilleStatus.Nouveau;
 
         public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
@@ -61,5 +61,60 @@ namespace AFMI_Montage_projet_2.Models.Radar
         public bool IsDeleted { get; set; } = false;
 
         public DateTime? DeletedAt { get; set; }
+
+        // ── Base de veille (onglet APPELS) ──
+
+        /// <summary>Identifiant V-AAAA-NNN, attribué à l'entrée dans la base de veille.</summary>
+        [MaxLength(20)]
+        public string VeilleId { get; set; } = string.Empty;
+
+        /// <summary>A (20-25), B (14-19) ou C (&lt; 14).</summary>
+        [MaxLength(5)]
+        public string Priority { get; set; } = string.Empty;
+
+        // Notation /25 : cinq critères notés de 0 à 5
+        public int ScorePertinence { get; set; }
+        public int ScoreEligibilite { get; set; }
+        public int ScoreFinancier { get; set; }
+        public int ScoreFaisabilite { get; set; }
+        public int ScoreStrategique { get; set; }
+
+        /// <summary>Total après plafonnement (14 au plus tant que l'appel n'est pas confirmé).</summary>
+        public int ScoreTotal { get; set; }
+
+        /// <summary>Justification de chaque note, une ligne par critère.</summary>
+        public string ScoreJustification { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Confirmation { get; set; } = VeilleConfirmation.NonConfirme;
+
+        public DateTime? VerifiedAt { get; set; }
+
+        /// <summary>Axes de veille A1 à A10 touchés (« A1, A2 »).</summary>
+        [MaxLength(100)]
+        public string VeilleAxes { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string CallType { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string Duration { get; set; } = string.Empty;
+
+        [MaxLength(300)]
+        public string Zone { get; set; } = string.Empty;
+
+        public string Eligibility { get; set; } = string.Empty;
+
+        [MaxLength(300)]
+        public string Cofinancing { get; set; } = string.Empty;
+
+        [MaxLength(300)]
+        public string OverheadCosts { get; set; } = string.Empty;
+
+        [MaxLength(300)]
+        public string DetectionSource { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string ConsortiumAdvice { get; set; } = string.Empty;
     }
 }

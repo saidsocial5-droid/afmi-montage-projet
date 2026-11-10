@@ -411,3 +411,18 @@
 * **Alternatives rejetées :**
   - (a) Détecter les messages d'erreur d'Ollama par leur texte : fragile et déjà source du défaut.
   - (b) Forcer aussi la `Language` WPF en fr-FR : cela changerait le séparateur décimal attendu dans tous les champs numériques liés.
+
+---
+
+## 📋 Décision n° 28 : Base de veille des appels à projets, notation /25 (lot 1 de l'agent de veille MCP)
+* **Contexte :** l'AFMI a validé une méthode de veille (passages du 06 au 10/11/2026) pour l'agent MCP (Montage et conception de projets), en 7 blocs : collecte, pré-filtrage, vérification sur la page officielle, notation /25, base permanente, fiches d'opportunité, synthèse. Le Radar faisait déjà la collecte RSS et une note IA sur 10, mais n'avait ni base permanente (À venir, Vus et non retenus, couverture par axe), ni notation /25, ni statut de confirmation, ni contrôle des échéances. Ses 5 axes (`afmi_axes.json`) sont ceux du plan stratégique, pas les 10 axes de veille de la méthode.
+* **Décision (lot 1, sans IA ni réseau) :**
+  1. **Axes** : les 10 axes de veille A1 à A10 sont définis dans le code (`Services/Radar/VeilleAxes`), avec mots-clés FR/EN/AR et détection par mot entier (« eau » ne reconnaît pas « réseau »). Les 5 axes stratégiques restent inchangés pour le profil et la formulation.
+  2. **Notation** (`VeilleScoringService`) : 5 critères de 0 à 5 (pertinence, éligibilité, intérêt financier, faisabilité, valeur stratégique), chacun justifié ; A ≥ 20, B 14-19, C < 14 ; total plafonné à 14 tant que l'appel n'est pas « confirmé » sur la page officielle. Règle du bureau : aucun plafond de montant, un montant élevé n'abaisse jamais la note et déclenche seulement un conseil de consortium. Le premier jet calculé est corrigeable dans le Pipeline, puis recalculé.
+  3. **Base permanente** (`VeilleBaseService`) : APPELS = `grants_pipeline` (nouvelles colonnes : identifiant V-AAAA-NNN, priorité, 5 notes, confirmation, date de vérification, 13 champs de la fiche) ; A_VENIR = `veille_a_venir` (AV-NNN) ; VUS_NON_RETENUS = `veille_non_retenus` (motif obligatoire). Dédoublonnage par bailleur + intitulé normalisé (sans accents ni année) + date limite ; un doublon complète la fiche existante au lieu d'être recréé. Pré-filtrage : zone excluant le Maroc, hors axes, associations non éligibles, clos (avec suivi du prochain cycle si l'appel est récurrent).
+  4. **Statuts** : Nouveau → En cours / En rédaction → Soumis → Clos / Écarté / Trop tard ; « Mise sous veille » devient « Nouveau » à la mise à jour du schéma. Chaque changement est daté dans les notes. Contrôle des échéances au chargement du Radar et sur bouton : DL dépassée → Clos ; DL < 10 jours et appel non engagé → Trop tard ; non confirmé depuis plus de 7 jours avec DL < 15 jours → Trop tard.
+  5. **Interface** : le Pipeline montre ID, priorité (lignes vertes/jaunes/grises), score, axes et confirmation, avec un panneau de notation et de statut ; un onglet « Base de veille » montre la couverture par axe (axe le moins couvert), les appels à venir (saisie, bascule « Ouvert → Appels ») et les appels vus non retenus.
+* **Hors lot 1 :** lot 2 = nouvelles sources (agrégateurs), passage complet le lundi / rapide les autres jours, vérification sur la page officielle et prompt système de l'agent (bloc 0) via `AiRouterService` ; lot 3 = fiches d'opportunité, synthèse en 5 lignes, export .xlsx en 5 onglets, alerte.
+* **Alternatives rejetées :**
+  - (a) Remplacer les 5 axes stratégiques par les 10 axes de veille : le profil, la formulation et les tests reposent sur les 5 axes officiels du plan stratégique.
+  - (b) Laisser l'IA noter sur 25 : la méthode exige des règles vérifiables (plafond, seuils, « trop tard ») ; l'IA pourra proposer des notes au lot 2, que ces règles encadreront.

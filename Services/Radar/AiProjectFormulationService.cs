@@ -312,7 +312,7 @@ namespace AFMI_Montage_projet_2.Services.Radar
             var existingGrant = await db.GrantsPipeline.FirstOrDefaultAsync(g => g.ExternalId == item.ExternalId && !g.IsDeleted);
             if (existingGrant == null)
             {
-                db.GrantsPipeline.Add(new GrantOpportunity
+                var grant = new GrantOpportunity
                 {
                     ExternalId = item.ExternalId,
                     Title = item.Title,
@@ -326,15 +326,18 @@ namespace AFMI_Montage_projet_2.Services.Radar
                     RelevanceScore = item.AiScore ?? 7.5,
                     MatchedAxes = item.AiMatchedAxes ?? string.Empty,
                     Rationale = item.AiScoreRationale ?? "Projet créé et initié depuis le Radar",
-                    PipelineStatus = "En rédaction",
+                    PipelineStatus = VeilleStatus.EnRedaction,
                     AddedAt = DateTime.UtcNow,
+                    DetectionSource = $"RSS — {item.FeedName}",
                     Notes = $"Lié au projet #{project.Id} : {project.Title}"
-                });
+                };
+                await new VeilleBaseService().EnterIntoBaseAsync(db, grant, DateTime.Today);
+                db.GrantsPipeline.Add(grant);
             }
             else
             {
-                existingGrant.PipelineStatus = "En rédaction";
-                existingGrant.Notes = $"Lié au projet #{project.Id} : {project.Title}";
+                existingGrant.PipelineStatus = VeilleStatus.EnRedaction;
+                existingGrant.Notes = VeilleBaseService.AppendNote(existingGrant.Notes, DateTime.Today, $"Lié au projet #{project.Id} : {project.Title}");
             }
 
             await db.SaveChangesAsync();

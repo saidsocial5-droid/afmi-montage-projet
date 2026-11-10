@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:viewmodels="clr-namespace:AFMI_Montage_projet_2.ViewModels.Radar"
+             xmlns:helpers="clr-namespace:AFMI_Montage_projet_2.Helpers"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              FlowDirection="{Binding FlowDirection}">
@@ -446,12 +447,13 @@
                 </Grid>
             </TabItem>
 
-            <!-- TAB 2: Pipeline des Projets -->
+            <!-- TAB 2: Pipeline des Projets = onglet APPELS de la base de veille -->
             <TabItem Header="📥 Pipeline des Projets" FontSize="13" FontWeight="SemiBold" Padding="15,8">
                 <Grid Margin="0,15,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
@@ -462,29 +464,51 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Pipeline des opportunités de financement" FontSize="16" FontWeight="Bold" Foreground="#1E293B"/>
-                                <TextBlock Text="Opportunités sélectionnées et enregistrées en base locale, prêtes pour le montage de dossiers de subvention." Foreground="#64748B" FontSize="12" Margin="0,3,0,0"/>
+                                <TextBlock Text="Base de veille permanente : notation /25, priorité A/B/C, confirmation sur la page officielle. Seuls les statuts changent." Foreground="#64748B" FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding VeilleSummaryMessage}" Foreground="#065F46" FontSize="12" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding DeadlineCheckMessage}" Foreground="#92400E" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" FontWeight="Bold" Foreground="#059669">
-                                <Run Text="{Binding PipelineOpportunities.Count, Mode=OneWay}"/>
-                                <Run Text=" opportunité(s)"/>
-                            </TextBlock>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="#059669" HorizontalAlignment="Right">
+                                    <Run Text="{Binding PipelineOpportunities.Count, Mode=OneWay}"/>
+                                    <Run Text=" opportunité(s)"/>
+                                </TextBlock>
+                                <Button Content="📅 Contrôle des échéances" Command="{Binding RunDeadlineCheckCommand}" Margin="0,8,0,0"
+                                        ToolTip="DL dépassée → Clos ; DL à moins de 10 jours et appel non engagé → Trop tard"
+                                        Background="#B45309" Foreground="White" BorderThickness="0" Padding="12,6" FontWeight="SemiBold" Cursor="Hand"/>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
-                    <!-- Pipeline Items List -->
+                    <!-- Pipeline Items List (lignes colorées par priorité : A vert, B jaune, C gris) -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding PipelineOpportunities}" AutoGenerateColumns="False"
+                              SelectedItem="{Binding SelectedPipelineOpportunity, Mode=TwoWay}" SelectionMode="Single" IsReadOnly="True"
                               CanUserAddRows="False" CanUserDeleteRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               BorderBrush="#CBD5E1" BorderThickness="1" Background="White"
                               RowHeaderWidth="0" FontSize="12" RowHeight="45">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Priority}" Value="A"><Setter Property="Background" Value="#DCFCE7"/></DataTrigger>
+                                    <DataTrigger Binding="{Binding Priority}" Value="B"><Setter Property="Background" Value="#FEF9C3"/></DataTrigger>
+                                    <DataTrigger Binding="{Binding Priority}" Value="C"><Setter Property="Background" Value="#F1F5F9"/></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding VeilleId}" Width="90"/>
+                            <DataGridTextColumn Header="Prio" Binding="{Binding Priority}" Width="45" FontWeight="Bold"/>
+                            <DataGridTextColumn Header="Score /25" Binding="{Binding ScoreTotal}" Width="70"/>
                             <DataGridTextColumn Header="Bailleur" Binding="{Binding Donor}" Width="120" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Titre de l'opportunité" Binding="{Binding Title}" Width="3*"/>
-                            <DataGridTextColumn Header="Budget Est." Binding="{Binding EstimatedBudget, StringFormat={}{0:N0}}" Width="110"/>
-                            <DataGridTextColumn Header="Devise" Binding="{Binding Currency}" Width="60"/>
-                            <DataGridTextColumn Header="Échéance" Binding="{Binding Deadline, StringFormat={}{0:dd/MM/yyyy}}" Width="95"/>
-                            <DataGridTextColumn Header="Statut" Binding="{Binding PipelineStatus}" Width="120"/>
-                            <DataGridTemplateColumn Header="Actions" Width="180">
+                            <DataGridTextColumn Header="Axes" Binding="{Binding VeilleAxes}" Width="90"/>
+                            <DataGridTextColumn Header="Budget Est." Binding="{Binding EstimatedBudget, StringFormat={}{0:N0}}" Width="100"/>
+                            <DataGridTextColumn Header="Devise" Binding="{Binding Currency}" Width="55"/>
+                            <DataGridTextColumn Header="Échéance" Binding="{Binding Deadline, StringFormat={}{0:dd/MM/yyyy}}" Width="90"/>
+                            <DataGridTextColumn Header="Confirmation" Binding="{Binding Confirmation}" Width="140"/>
+                            <DataGridTextColumn Header="Statut" Binding="{Binding PipelineStatus}" Width="100"/>
+                            <DataGridTemplateColumn Header="Actions" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -502,10 +526,178 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Notation /25 et statut de l'appel sélectionné -->
+                    <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,12,0,0"
+                            Visibility="{Binding HasSelectedPipelineOpportunity, Converter={StaticResource BoolToVisConverter}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="3*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock FontWeight="Bold" Foreground="#1E293B" FontSize="13" TextWrapping="Wrap">
+                                    <Run Text="Notation de "/><Run Text="{Binding SelectedPipelineOpportunity.VeilleId, Mode=OneWay}"/>
+                                </TextBlock>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="Pertinence (axes, cœur de mission)" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding NoteOptions}" SelectedItem="{Binding EditPertinence}" Width="60" Margin="0,2"/>
+                                    <TextBlock Grid.Row="1" Text="Éligibilité de l'AFMI" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding NoteOptions}" SelectedItem="{Binding EditEligibilite}" Width="60" Margin="0,2"/>
+                                    <TextBlock Grid.Row="2" Text="Intérêt financier (aucun plafond de montant)" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding NoteOptions}" SelectedItem="{Binding EditFinancier}" Width="60" Margin="0,2"/>
+                                    <TextBlock Grid.Row="3" Text="Faisabilité (délai, pièces)" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding NoteOptions}" SelectedItem="{Binding EditFaisabilite}" Width="60" Margin="0,2"/>
+                                    <TextBlock Grid.Row="4" Text="Valeur stratégique" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding NoteOptions}" SelectedItem="{Binding EditStrategique}" Width="60" Margin="0,2"/>
+                                    <TextBlock Grid.Row="5" Text="Confirmation" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding ConfirmationOptions}" SelectedItem="{Binding EditConfirmation}" Width="170" Margin="0,2"/>
+                                </Grid>
+                                <TextBlock Text="{Binding EditTotalPreview}" FontWeight="Bold" Foreground="#065F46" Margin="0,8,0,0"/>
+                                <TextBlock Text="{Binding SelectedPipelineOpportunity.ConsortiumAdvice}" Foreground="#1D4ED8" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Justification des notes (une phrase par critère)" FontWeight="SemiBold" Foreground="#334155"/>
+                                <TextBox Text="{Binding EditJustification, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                                         Height="110" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0" FontSize="12"/>
+                                <Button Content="💾 Enregistrer la notation" Command="{Binding SaveVeilleScoreCommand}" HorizontalAlignment="Right" Margin="0,6,0,0"
+                                        Background="#065F46" Foreground="White" BorderThickness="0" Padding="12,6" FontWeight="SemiBold" Cursor="Hand"/>
+
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Statut :" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold"/>
+                                    <ComboBox Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding EditStatus}"/>
+                                    <TextBox Grid.Column="2" Text="{Binding EditStatusReason, UpdateSourceTrigger=PropertyChanged}" Margin="6,0"
+                                             ToolTip="Motif du changement (obligatoire pour « Écarté »)" VerticalContentAlignment="Center"/>
+                                    <Button Grid.Column="3" Content="Appliquer" Command="{Binding ApplyVeilleStatusCommand}"
+                                            Background="#0284C7" Foreground="White" BorderThickness="0" Padding="12,6" FontWeight="SemiBold" Cursor="Hand"/>
+                                </Grid>
+                                <TextBlock Text="{Binding SelectedPipelineOpportunity.Notes}" Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="60"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
 
-            <!-- TAB 3: Sources RSS / Atom -->
+            <!-- TAB 3: Base de veille (couverture par axe, À venir, Vus et non retenus) -->
+            <TabItem Header="🗂️ Base de veille" FontSize="13" FontWeight="SemiBold" Padding="15,8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,15,0,0">
+                    <StackPanel>
+                        <Border Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Couverture par axe (appels suivis)" FontSize="15" FontWeight="Bold" Foreground="#1E293B"/>
+                                <TextBlock Text="L'axe le moins couvert oriente les requêtes du passage suivant et donne un bonus de valeur stratégique." Foreground="#64748B" FontSize="12" Margin="0,3,0,8" TextWrapping="Wrap"/>
+                                <DataGrid ItemsSource="{Binding AxisCoverages}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal" RowHeaderWidth="0" FontSize="12" BorderBrush="#CBD5E1" Background="White">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLeastCovered}" Value="True"><Setter Property="Background" Value="#FFEDD5"/></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Axe" Binding="{Binding Code}" Width="50" FontWeight="Bold"/>
+                                        <DataGridTextColumn Header="Intitulé" Binding="{Binding Label}" Width="3*"/>
+                                        <DataGridTextColumn Header="A" Binding="{Binding CountA}" Width="45"/>
+                                        <DataGridTextColumn Header="B" Binding="{Binding CountB}" Width="45"/>
+                                        <DataGridTextColumn Header="C" Binding="{Binding CountC}" Width="45"/>
+                                        <DataGridTextColumn Header="Total" Binding="{Binding Total, Mode=OneWay}" Width="55"/>
+                                        <DataGridTextColumn Header="Commentaire" Binding="{Binding Comment, Mode=OneWay}" Width="2*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="À venir (appels annoncés, pas encore ouverts)" FontSize="15" FontWeight="Bold" Foreground="#1E293B"/>
+                                <TextBlock Text="Bailleur, programme, ouverture prévue, date limite prévue et lien officiel :" Foreground="#64748B" FontSize="12" Margin="0,3,0,0"/>
+                                <Grid Margin="0,6,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding NewUpcomingDonor, UpdateSourceTrigger=PropertyChanged}" ToolTip="Bailleur" Margin="0,0,6,0" VerticalContentAlignment="Center"/>
+                                    <TextBox Grid.Column="1" Text="{Binding NewUpcomingProgramme, UpdateSourceTrigger=PropertyChanged}" ToolTip="Programme / intitulé de l'appel" Margin="0,0,6,0" VerticalContentAlignment="Center"/>
+                                    <TextBox Grid.Column="2" Text="{Binding NewUpcomingOpening, UpdateSourceTrigger=PropertyChanged}" ToolTip="Ouverture prévue (ex. mars 2027)" Margin="0,0,6,0" VerticalContentAlignment="Center"/>
+                                    <DatePicker Grid.Column="3" SelectedDate="{Binding NewUpcomingDeadline}" ToolTip="Date limite prévue" Margin="0,0,6,0"/>
+                                    <TextBox Grid.Column="4" Text="{Binding NewUpcomingLink, UpdateSourceTrigger=PropertyChanged}" ToolTip="Lien officiel" helpers:AiTextAssistant.IsExcluded="True" helpers:AiTextAssistant.ExclusionReason="Adresse web" Margin="0,0,6,0" VerticalContentAlignment="Center"/>
+                                    <Button Grid.Column="5" Content="➕ Ajouter" Command="{Binding AddUpcomingCallCommand}"
+                                            Background="#0284C7" Foreground="White" BorderThickness="0" Padding="12,6" FontWeight="SemiBold" Cursor="Hand"/>
+                                </Grid>
+                                <DataGrid ItemsSource="{Binding UpcomingCalls}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal" RowHeaderWidth="0" FontSize="12" BorderBrush="#CBD5E1" Background="White" MaxHeight="260">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ID" Binding="{Binding VeilleId}" Width="60"/>
+                                        <DataGridTextColumn Header="Bailleur" Binding="{Binding Donor}" Width="120"/>
+                                        <DataGridTextColumn Header="Programme" Binding="{Binding Programme}" Width="2*"/>
+                                        <DataGridTextColumn Header="Ouverture prévue" Binding="{Binding ExpectedOpening}" Width="120"/>
+                                        <DataGridTextColumn Header="DL prévue" Binding="{Binding ExpectedDeadline, StringFormat={}{0:dd/MM/yyyy}}" Width="85"/>
+                                        <DataGridTextColumn Header="Montant" Binding="{Binding Amount}" Width="110"/>
+                                        <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="2*"/>
+                                        <DataGridTemplateColumn Header="" Width="120">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="Ouvert → Appels" Command="{Binding DataContext.PromoteUpcomingCallCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}" ToolTip="La page de l'appel est ouverte : basculer vers le pipeline (statut Nouveau)"
+                                                            Background="#DCFCE7" Foreground="#065F46" BorderThickness="0" Padding="6,2" Cursor="Hand">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding PromotedGrantId}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="White" CornerRadius="8" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Vus et non retenus" FontSize="15" FontWeight="Bold" Foreground="#1E293B"/>
+                                <TextBlock Text="Appels déjà examinés et écartés au pré-filtrage, avec leur motif : ils ne sont pas revérifiés aux passages suivants." Foreground="#64748B" FontSize="12" Margin="0,3,0,8" TextWrapping="Wrap"/>
+                                <DataGrid ItemsSource="{Binding RejectedCalls}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal" RowHeaderWidth="0" FontSize="12" BorderBrush="#CBD5E1" Background="White" MaxHeight="260">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding SeenAt, StringFormat={}{0:dd/MM/yyyy}}" Width="85"/>
+                                        <DataGridTextColumn Header="Bailleur" Binding="{Binding Donor}" Width="120"/>
+                                        <DataGridTextColumn Header="Intitulé" Binding="{Binding Title}" Width="3*"/>
+                                        <DataGridTextColumn Header="Motif" Binding="{Binding Reason}" Width="2*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 4: Sources RSS / Atom -->
             <TabItem Header="⚙️ Sources des Flux RSS" FontSize="13" FontWeight="SemiBold" Padding="15,8">
                 <Grid Margin="0,15,0,0">
                     <Grid.RowDefinitions>

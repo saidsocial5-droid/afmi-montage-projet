@@ -109,3 +109,11 @@
 - [ ] تشغيل كافة اختبارات المشروع القديمة والجديدة والتأكد من نجاحها بالكامل (100% Green).
 - [ ] تشغيل تقرير الفروق الآلي (Diff Audit) للتأكد من أن الأسطر المحذوفة أو المعدلة في الملفات القائمة = 0.
 - [ ] إعداد التقرير الختامي المفصل `docs/REPORT_RADAR.md`.
+
+---
+
+### Base de veille de l'agent MCP (ADR 28)
+
+- [x] **Lot 1 — base et notation (sans IA)** : axes de veille A1-A10, notation /25 et classement A/B/C (plafond 14 si non confirmé, aucun plafond de montant), identifiants V-AAAA-NNN et AV-NNN, tables `veille_a_venir` et `veille_non_retenus`, pré-filtrage et dédoublonnage, contrôle des échéances, couverture par axe, panneau de notation et onglet « Base de veille ». Tests : `VeilleBaseTests` (20).
+- [ ] **Lot 2 — collecte** : sources agrégateurs (tanmia.ma, Terra Viva Grants, fundsforNGOs, africanngos, ReliefWeb, Google Alertes) à tester au premier lancement ; passage complet le lundi, rapide les autres jours ; vérification sur la page officielle (13 champs, statut de confirmation) ; bloc 0 comme prompt système de l'agent, via `AiRouterService`.
+- [ ] **Lot 3 — restitution** : fiche d'opportunité par nouvel appel A, synthèse en 5 lignes et « Points à valider » (rappel de la déclaration au SGG), export .xlsx en 5 onglets, alerte dans le logiciel.
