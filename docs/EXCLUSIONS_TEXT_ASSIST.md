@@ -40,13 +40,14 @@ Une zone de texte ne peut être exemptée que si elle satisfait à **l'un des cr
 | `Views/SimilarProjectsView.xaml` | `TextBox Text="{Binding Keywords}"` | **Requête technique** | Mots-clés anglais transmis aux bases de projets (Banque mondiale, IATI). Une reformulation IA modifierait la requête. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/TranslationWindow.xaml` | `TextBox x:Name="TxtTranslation"` | **Résultat IA en relecture** | Traduction produite par l'IA, en cours de relecture dans la fenêtre de traduction : un nouvel appel à l'assistant sur ce champ serait récursif. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/SettingsView.xaml` | `TextBox Text="{Binding GitHubRepository}"` | **ID Technique** | Identifiant du dépôt GitHub des mises à jour (propriétaire/dépôt). | `AiTextAssistant.IsExcluded="True"` |
+| `Views/Radar/ProjectRadarView.xaml` | `TextBox Text="{Binding NewUpcomingLink}"` | **URL Réseau** | Lien officiel d'un appel « À venir » (base de veille). Une adresse web ne doit pas être reformulée. | `AiTextAssistant.IsExcluded="True"` |
 
 *Note sur les contrôles `PasswordBox` :* Les contrôles natifs `PasswordBox` (`LoginWindow.xaml`, `RegisterWindow.xaml`, `CloudSyncView.xaml`) n'héritent pas de `TextBoxBase` et sont par nature physiquement étanches et exempts de tout hook d'assistance. Le mot de passe PostgreSQL de `CloudSyncView.xaml` était auparavant saisi dans un `TextBox` non exclu (donc exposé à l'assistant IA) ; il utilise désormais un `PasswordBox` et est stocké chiffré DPAPI (`PasswordProtected` dans `dbconfig.json`).
 
 ---
 
 ## 3. Garantie de Couverture Intégrale (100 %)
-En dehors des 18 contrôles expressément et légitimement exclus ci-dessus pour des motifs de sécurité ou d'infrastructure, **100 % des autres zones de texte (139 champs répartis dans les 26 vues et composants du logiciel)** sont intégralement dotées de l'Assistant Rédactionnel IA :
+En dehors des 19 contrôles expressément et légitimement exclus ci-dessus pour des motifs de sécurité ou d'infrastructure, **100 % des autres zones de texte (139 champs répartis dans les 26 vues et composants du logiciel)** sont intégralement dotées de l'Assistant Rédactionnel IA :
 
 - **Socle & Cadrage :** Titre, Justification, Problème central, Bénéficiaires, Zone d'intervention, Objectif général (`CadrageView.xaml`, `StrategicPlanningView.xaml`).
 - **Analyses Stratégiques :** SWOT (Forces, Faiblesses, Opportunités, Menaces), PESTEL (6 dimensions), Évaluation des besoins, Options stratégiques (`StrategicPlanningView.xaml`).

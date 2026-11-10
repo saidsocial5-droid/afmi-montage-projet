@@ -25,7 +25,7 @@ namespace AFMI_Montage_projet_2.ViewModels.Radar
         private readonly PipelineService _pipelineService;
         private CancellationTokenSource? _refreshCts;
 
-        // 0 = Opportunités, 1 = Pipeline, 2 = Sources RSS
+        // 0 = Opportunités, 1 = Pipeline, 2 = Base de veille, 3 = Sources RSS
         [ObservableProperty]
         private int _selectedTabIndex = 0;
 
@@ -167,6 +167,7 @@ namespace AFMI_Montage_projet_2.ViewModels.Radar
             _rssService = rssService ?? new RssFeedService();
             _scoringService = scoringService ?? new OpportunityScoringService();
             _pipelineService = pipelineService ?? new PipelineService();
+            _veilleService = new VeilleBaseService(_pipelineService.DbContextFactory);
             _onOpenProjectRequested = onOpenProjectRequested;
 
             LoadAxesOptions();
@@ -238,12 +239,16 @@ namespace AFMI_Montage_projet_2.ViewModels.Radar
 
         public async Task LoadPipelineAsync()
         {
+            await PrepareVeilleBaseAsync();
+
             var pipeline = await _pipelineService.GetPipelineAsync();
             PipelineOpportunities.Clear();
             foreach (var opp in pipeline)
             {
                 PipelineOpportunities.Add(opp);
             }
+
+            await LoadVeilleTablesAsync();
         }
 
         partial void OnSearchQueryChanged(string value) => ApplyFilters();
