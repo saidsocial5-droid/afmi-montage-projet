@@ -40,14 +40,24 @@ namespace AFMI_Montage_projet_2.ViewModels
 
         private async Task CheckForUpdatesAsync()
         {
-            // 1. Releases GitHub (canal principal, ADR 26)
+            // 1. Releases GitHub (canal principal, ADR 26 ; mise à jour automatique, ADR 29)
             try
             {
                 var github = new Services.Updates.GitHubUpdateService();
                 var check = await github.CheckAsync();
+
+                // Dépôt privé sans clé valide sur ce poste : inviter à l'activer, puis enchaîner sur la vérification
+                if (check.NeedsAccessToken)
+                {
+                    AppLogger.Info(nameof(MainViewModel), check.Message);
+                    var validated = await Views.GitHubTokenWindow.PromptAsync(Application.Current?.MainWindow);
+                    if (validated == null) return;
+                    check = validated;
+                }
+
                 if (check.UpdateAvailable && check.Release != null)
                 {
-                    await Views.UpdateWindow.OfferAsync(check, Application.Current?.MainWindow);
+                    await ApplyGitHubUpdateAsync(check, github);
                     return;
                 }
                 if (check.IsConfigured) return; // dépôt configuré et application à jour : pas de canal secondaire
@@ -103,6 +113,31 @@ namespace AFMI_Montage_projet_2.ViewModels
             {
                 AppLogger.Warn(nameof(MainViewModel), "Erreur lors de la vérification automatique des mises à jour.", ex);
             }
+        }
+
+        /// <summary>
+        /// Mise à jour automatique activée : téléchargement et vérification en arrière-plan, installation à la fermeture,
+        /// avec la possibilité d'installer tout de suite. Sinon (ou si le téléchargement échoue) : fenêtre de proposition.
+        /// </summary>
+        private static async Task ApplyGitHubUpdateAsync(Services.Updates.UpdateCheckResult check, Services.Updates.GitHubUpdateService github)
+        {
+            var release = check.Release!;
+            if (!Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled ||
+                !await Services.Updates.AutoUpdateCoordinator.PrepareAsync(release, github))
+            {
+                await Views.UpdateWindow.OfferAsync(check, Application.Current?.MainWindow);
+                return;
+            }
+
+            var owner = Application.Current?.MainWindow;
+            string text = $"La version {release.Version} d'AFMI Montage Projet a été téléchargée et vérifiée.\n\n" +
+                          "Elle s'installera automatiquement à la fermeture du logiciel : vos projets ne sont pas touchés.\n\n" +
+                          "Voulez-vous l'installer maintenant ? (le logiciel se fermera puis redémarrera)";
+            var answer = owner != null && owner.IsLoaded
+                ? MessageBox.Show(owner, text, "Mise à jour prête", MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.No)
+                : MessageBox.Show(text, "Mise à jour prête", MessageBoxButton.YesNo, MessageBoxImage.Information, MessageBoxResult.No);
+            if (answer == MessageBoxResult.Yes && Services.Updates.AutoUpdateCoordinator.PendingInstallerPath is string path)
+                Services.Updates.GitHubUpdateService.LaunchInstallerAndExit(path);
         }
 
         [RelayCommand]

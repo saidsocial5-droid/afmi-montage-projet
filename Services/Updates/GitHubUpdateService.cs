@@ -41,6 +41,9 @@ namespace AFMI_Montage_projet_2.Services.Updates
     {
         public bool IsConfigured { get; set; }
         public bool UpdateAvailable { get; set; }
+
+        /// <summary>Dépôt privé inaccessible depuis ce poste : clé d'accès absente, expirée ou sans droit sur le dépôt (ADR 29).</summary>
+        public bool NeedsAccessToken { get; set; }
         public GitHubRelease? Release { get; set; }
         public string CurrentVersion { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
@@ -167,6 +170,7 @@ namespace AFMI_Montage_projet_2.Services.Updates
             }
             catch (SafeFetchException ex) when (ex.Message.StartsWith("HTTP 404", StringComparison.Ordinal) || ex.Message.StartsWith("HTTP 401", StringComparison.Ordinal))
             {
+                result.NeedsAccessToken = true;
                 result.Message = HasAccessToken
                     ? $"Dépôt {repo} introuvable avec la clé d'accès de ce poste, ou aucune version publiée (clé expirée ou sans accès à ce dépôt ?)."
                     : $"Dépôt {repo} privé ou sans version publiée : saisissez la clé d'accès GitHub dans Paramètres › Mises à jour.";
@@ -294,6 +298,8 @@ namespace AFMI_Montage_projet_2.Services.Updates
         /// </summary>
         public static void LaunchInstallerAndExit(string installerPath)
         {
+            // L'installation à la fermeture (AutoUpdateCoordinator) ne doit pas relancer un second installateur
+            AutoUpdateCoordinator.MarkInstallerLaunched();
             Process.Start(new ProcessStartInfo
             {
                 FileName = installerPath,

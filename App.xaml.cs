@@ -70,7 +70,7 @@ namespace AFMI_Montage_projet_2
                                 MessageBoxImage.Error);
             }
 
-            // La vérification des mises à jour est effectuée par MainViewModel (AutoUpdaterService via Google Drive).
+            // La vérification des mises à jour est effectuée par MainViewModel (GitHub, puis Google Drive à défaut).
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -81,6 +81,9 @@ namespace AFMI_Montage_projet_2
                 _mutex?.Dispose();
             }
             catch (Exception swallowedEx) { global::AFMI_Montage_projet_2.Services.AppLogger.Info(nameof(App), $"Erreur ignorée : {swallowedEx.Message}"); }
+
+            // Mise à jour téléchargée et vérifiée pendant la session : installée maintenant, mutex déjà libéré (ADR 29)
+            Services.Updates.AutoUpdateCoordinator.InstallPendingOnExit();
             AppLogger.Info("App", $"Fermeture (code {e.ApplicationExitCode})");
             base.OnExit(e);
         }

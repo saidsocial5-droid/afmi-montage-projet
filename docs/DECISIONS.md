@@ -426,3 +426,21 @@
 * **Alternatives rejetées :**
   - (a) Remplacer les 5 axes stratégiques par les 10 axes de veille : le profil, la formulation et les tests reposent sur les 5 axes officiels du plan stratégique.
   - (b) Laisser l'IA noter sur 25 : la méthode exige des règles vérifiables (plafond, seuils, « trop tard ») ; l'IA pourra proposer des notes au lot 2, que ces règles encadreront.
+
+---
+
+## 📋 Décision n° 29 : Mise à jour automatique : installation à la fermeture et invitation à saisir la clé d'accès (1.9.23)
+* **Contexte :** depuis la 1.9.21, les versions sont publiées automatiquement sur GitHub, mais elles n'arrivaient pas toutes seules sur les postes :
+  - le dépôt est privé : sans clé d'accès, la vérification au démarrage échouait en silence (simple ligne dans le journal) ;
+  - le champ de la clé, dans les Paramètres, n'était visible que pour un super-administrateur, alors que chaque poste a besoin de sa propre clé ;
+  - une nouvelle version demandait toujours une confirmation, et l'installation immédiate fermait le logiciel en plein travail.
+* **Décision :**
+  1. **Clé manquante ou refusée** (`UpdateCheckResult.NeedsAccessToken`, réponses 401/404 de GitHub) : au démarrage, `GitHubTokenWindow` explique comment créer la clé (lien direct vers GitHub, dépôt unique, Contents en lecture seule), la reçoit dans un `PasswordBox`, la chiffre (DPAPI) et la teste aussitôt. L'invitation revient à chaque démarrage tant que la clé manque, sauf si l'utilisateur coche « Ne plus me le demander sur ce poste » (`Update_TokenPromptDisabled`). « Rechercher une mise à jour » l'affiche toujours.
+  2. **Clé saisissable par tout utilisateur** dans Paramètres › Mises à jour. Le dépôt reste réservé aux super-administrateurs.
+  3. **Installation automatique** (`AutoUpdateCoordinator`, réglage `Update_AutoInstall`, activé par défaut) : au démarrage, la nouvelle version est téléchargée et vérifiée (SHA-256) en arrière-plan. L'utilisateur peut l'installer tout de suite (fermeture puis relance) ; sinon elle s'installe en silence à la fermeture (`App.OnExit`, après libération du mutex, arguments `/SILENT /NORESTARTAPPLICATIONS`). L'empreinte est recontrôlée juste avant le lancement (fichier dans %TEMP%), et un seul installateur est lancé par session. En cas d'échec du téléchargement, la fenêtre de proposition habituelle s'affiche.
+  4. Réglage désactivé : comportement de la 1.9.22 (fenêtre « Mise à jour disponible » à chaque nouvelle version).
+* **Limite :** si le logiciel est installé pour tous les utilisateurs, Windows demande une confirmation administrateur (UAC) au lancement de l'installateur, y compris à la fermeture.
+* **Alternatives rejetées :**
+  - (a) Clé unique intégrée à l'installateur ou distribuée par l'espace d'équipe : extractible par quiconque possède le fichier (ADR 26).
+  - (b) Rendre le dépôt public : le code de l'association deviendrait accessible à tous.
+  - (c) Installation silencieuse immédiate au démarrage : elle fermerait le logiciel pendant que l'utilisateur commence à travailler.
