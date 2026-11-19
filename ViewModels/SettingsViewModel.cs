@@ -77,6 +77,20 @@ namespace AFMI_Montage_projet_2.ViewModels
 
         [ObservableProperty] private string _gitHubTokenStatus = string.Empty;
 
+        /// <summary>Mise à jour automatique (ADR 29) : téléchargée au démarrage, installée à la fermeture.</summary>
+        [ObservableProperty] private bool _autoInstallUpdates = true;
+
+        partial void OnAutoInstallUpdatesChanged(bool value)
+        {
+            if (_loadingSettings) return;
+            Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled = value;
+            // Réactiver la mise à jour automatique relance aussi l'invitation à saisir la clé si elle manque
+            if (value) Services.Updates.AutoUpdateCoordinator.TokenPromptEnabled = true;
+            UpdateStatus = value
+                ? "Mise à jour automatique activée : les nouvelles versions s'installeront à la fermeture du logiciel."
+                : "Mise à jour automatique désactivée : chaque nouvelle version vous sera proposée au démarrage.";
+        }
+
         private void RefreshGitHubTokenStatus() =>
             GitHubTokenStatus = Services.Updates.GitHubUpdateService.HasAccessToken
                 ? "🔒 Clé d'accès enregistrée sur ce poste."
@@ -90,6 +104,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 return;
             }
             Services.Updates.GitHubUpdateService.SaveAccessToken(token);
+            Services.Updates.AutoUpdateCoordinator.TokenPromptEnabled = true;
             RefreshGitHubTokenStatus();
             UpdateStatus = "Clé d'accès enregistrée (chiffrée). Cliquez sur « Rechercher une mise à jour » pour la tester.";
         }
@@ -126,6 +141,15 @@ namespace AFMI_Montage_projet_2.ViewModels
             {
                 var check = await new Services.Updates.GitHubUpdateService().CheckAsync();
                 UpdateStatus = check.Message;
+                // Recherche demandée explicitement : l'invitation à saisir la clé s'affiche même si elle avait été refusée
+                if (check.NeedsAccessToken)
+                {
+                    var validated = await Views.GitHubTokenWindow.PromptAsync(Application.Current?.MainWindow, force: true);
+                    if (validated == null) return;
+                    check = validated;
+                    RefreshGitHubTokenStatus();
+                    UpdateStatus = check.Message;
+                }
                 if (check.UpdateAvailable) await Views.UpdateWindow.OfferAsync(check, Application.Current?.MainWindow);
             }
             catch (Exception ex)
@@ -190,6 +214,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 SelectedFontSize = SettingsService.GetSetting("Font_Size", "Normal");
 
                 _loadingSettings = true;
+                AutoInstallUpdates = Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled;
                 string language = SettingsService.GetSetting(AiRouterService.ResponseLanguageSetting, Services.Language.AppLanguages.Auto);
                 SelectedResponseLanguage = ResponseLanguageOptions.FirstOrDefault(o => o.Code == language) ?? ResponseLanguageOptions[0];
                 _loadingSettings = false;
