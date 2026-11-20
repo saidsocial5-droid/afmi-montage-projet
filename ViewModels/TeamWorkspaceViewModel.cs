@@ -69,7 +69,7 @@ namespace AFMI_Montage_projet_2.ViewModels
     /// </summary>
     public partial class TeamWorkspaceViewModel : ObservableObject, IDisposable
     {
-        private const string AccessCodePrefix = "AFMI1";
+        private const string AccessCodePrefix = AuthService.AccessCodePrefix;
 
         private readonly AuthService _auth = AuthService.Instance;
         private readonly TeamWorkspaceService _team = TeamWorkspaceService.Instance;
@@ -230,27 +230,14 @@ namespace AFMI_Montage_projet_2.ViewModels
         [RelayCommand]
         private void ApplyAccessCode()
         {
-            try
+            if (!AuthService.TryApplyAccessCode(AccessCodeInput, out var error))
             {
-                var raw = Encoding.UTF8.GetString(Convert.FromBase64String(AccessCodeInput.Trim()));
-                var parts = raw.Split('|');
-                string clientId, clientSecret;
-                if (parts.Length == 3 && parts[0] == AccessCodePrefix) { clientId = parts[1]; clientSecret = parts[2]; }
-                else if (parts.Length == 3) { clientId = parts[0]; clientSecret = parts[1]; } // ancien code « Rejoindre un espace »
-                else throw new FormatException();
-
-                if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret)) throw new FormatException();
-
-                SettingsService.SaveSetting("Google_ClientId", clientId);
-                SettingsService.SaveSetting("Google_ClientSecret", AFMI_Montage_projet_2.Helpers.EncryptionHelper.Protect(clientSecret));
-                AccessCodeInput = string.Empty;
-                RefreshState();
-                StatusMessage = "Code d'accès enregistré. Cliquez maintenant sur « Se connecter avec Google » et choisissez VOTRE compte Google.";
+                StatusMessage = error;
+                return;
             }
-            catch (FormatException)
-            {
-                StatusMessage = "Code d'accès invalide. Copiez-le en entier, sans espace.";
-            }
+            AccessCodeInput = string.Empty;
+            RefreshState();
+            StatusMessage = "Code d'accès enregistré. Cliquez maintenant sur « Se connecter avec Google » et choisissez VOTRE compte Google.";
         }
 
         [RelayCommand]

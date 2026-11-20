@@ -20,8 +20,12 @@ namespace AFMI_Montage_projet_2.Services.Drive
 
         public bool IsAuthenticated => _credential != null;
 
-        public async Task<DriveService?> AuthenticateAsync(string clientId, string clientSecret)
+        /// <summary>Cause du dernier échec d'authentification (affichée à l'utilisateur), vide si succès.</summary>
+        public string LastError { get; private set; } = string.Empty;
+
+        public async Task<DriveService?> AuthenticateAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
         {
+            LastError = string.Empty;
             try
             {
                 var secrets = new ClientSecrets
@@ -34,7 +38,7 @@ namespace AFMI_Montage_projet_2.Services.Drive
                     secrets,
                     Scopes,
                     "user", // On gère un seul compte actif localement pour cette instance
-                    CancellationToken.None,
+                    cancellationToken,
                     new DpapiDataStore()
                 );
 
@@ -46,8 +50,15 @@ namespace AFMI_Montage_projet_2.Services.Drive
 
                 return _driveService;
             }
+            catch (OperationCanceledException)
+            {
+                LastError = "Délai dépassé : la connexion Google n'a pas été terminée dans le navigateur.";
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(GoogleDriveAuthService), LastError);
+                return null;
+            }
             catch (Exception ex)
             {
+                LastError = ex.Message;
                 global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(GoogleDriveAuthService), "Échec de l'authentification Google", ex);
                 return null;
             }
@@ -63,8 +74,10 @@ namespace AFMI_Montage_projet_2.Services.Drive
                 var about = await request.ExecuteAsync();
                 return about.User?.EmailAddress;
             }
-            catch
+            catch (Exception ex)
             {
+                LastError = ex.Message;
+                global::AFMI_Montage_projet_2.Services.AppLogger.Warn(nameof(GoogleDriveAuthService), "Lecture de l'email Google impossible", ex);
                 return null;
             }
         }

@@ -13,6 +13,10 @@
         <viewmodels:RegisterViewModel />
     </Window.DataContext>
 
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
     <Grid>
         <!-- Background Image -->
         <Image Source="pack://application:,,,/Assets/login_bg.jpg" Stretch="UniformToFill" />
@@ -53,18 +57,32 @@
                     </PasswordBox.Resources>
                 </PasswordBox>
 
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,10">
+                <!-- Message (erreur ou consigne) : visible dès qu'il n'est pas vide (il était toujours masqué avant la 1.9.25) -->
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#B91C1C" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,10">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Setter Property="Visibility" Value="Visible" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding ErrorMessage}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ErrorMessage}" Value="{x:Null}">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
+
+                <!-- Code d'accès de l'équipe : affiché quand ce poste n'a pas encore l'identifiant Google (ADR 31) -->
+                <StackPanel Visibility="{Binding ShowAccessCodePanel, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                    <TextBlock Text="Code d'accès de l'équipe" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,5" />
+                    <TextBox Text="{Binding AccessCodeInput, UpdateSourceTrigger=PropertyChanged}"
+                             helpers:AiTextAssistant.IsExcluded="True"
+                             helpers:AiTextAssistant.ExclusionReason="Code d'accès d'équipe contenant le secret OAuth Google"
+                             Padding="8" FontSize="12" BorderBrush="#CBD5E1" BorderThickness="1" Margin="0,0,0,6"/>
+                    <Button Content="Valider le code" Command="{Binding ApplyAccessCodeCommand}" HorizontalAlignment="Right" Padding="12,5" Cursor="Hand"/>
+                </StackPanel>
 
                 <Button Content="S'inscrire avec Google" Command="{Binding RegisterWithGoogleCommand}" 
                         Background="#DBEAFE" Foreground="#1E40AF" FontWeight="Bold" FontSize="14" Padding="10" BorderThickness="1" BorderBrush="#93C5FD" Cursor="Hand" Margin="0,0,0,10">
