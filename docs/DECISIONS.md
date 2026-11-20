@@ -454,3 +454,22 @@
   2. **Choix explicite** : `Update_AutoInstall` n'a plus de valeur par défaut (`AutoUpdateCoordinator.AutoInstallDecided`). La première fois qu'une nouvelle version est détectée, au démarrage comme par « Rechercher une mise à jour », le logiciel demande « Voulez-vous activer la mise à jour automatique ? » : Oui = téléchargement et vérification en arrière-plan, installation à la fermeture (ou tout de suite) ; Non = la nouvelle version est proposée à chaque fois. La réponse est gardée et se modifie dans l'onglet.
   3. Les postes en 1.9.23 qui n'avaient jamais touché au réglage se voient poser la question à la prochaine version.
 * **Alternative rejetée :** activation silencieuse par défaut. L'installation se fait à la fermeture et peut demander une confirmation administrateur : l'utilisateur doit l'avoir choisie.
+
+---
+
+## 📋 Décision n° 31 : Inscription avec Google : message visible, code d'accès sur place, erreurs expliquées (1.9.25)
+* **Contexte :** dans « Créer un compte », le bouton « S'inscrire avec Google » semblait ne rien faire :
+  - le message d'erreur de la fenêtre était toujours masqué (style `Collapsed` par défaut et dans son déclencheur) ;
+  - sur un poste sans identifiant client OAuth (`Google_ClientId` / `Google_ClientSecret`), la commande s'arrêtait avant d'ouvrir le navigateur, avec ce message invisible ;
+  - les échecs de `GoogleDriveAuthService.AuthenticateAsync` étaient ramenés à `null` sans cause, et une connexion abandonnée dans le navigateur bloquait la fenêtre indéfiniment.
+* **Décision :**
+  1. Le message de la fenêtre s'affiche dès qu'il n'est pas vide (consignes comprises : « Ouverture du navigateur… »).
+  2. Identifiant absent : la fenêtre l'explique et affiche un champ « Code d'accès de l'équipe » (le code que l'administrateur copie depuis l'espace d'équipe). La lecture du code est partagée : `AuthService.TryApplyAccessCode`, utilisée aussi par l'espace d'équipe.
+  3. `GoogleDriveAuthService.LastError` garde la cause ; `RegisterViewModel.DescribeGoogleError` traduit `invalid_client`, `redirect_uri_mismatch` et `access_denied` en consignes. Délai de 5 minutes pour finir la connexion dans le navigateur ; bouton désactivé pendant l'attente.
+
+---
+
+## 📋 Décision n° 32 : Publication automatique à la fusion dans main (1.9.25)
+* **Contexte :** publier demandait, après la fusion, de créer à la main l'étiquette ou la release « vX.Y.Z » ; l'étape était oubliée ou bloquée (connexion Git), et les postes ne recevaient rien.
+* **Décision :** `release.yml` se déclenche aussi à chaque arrivée de code sur `main`. Un premier job (Linux, quelques secondes) lit `<Version>` du `.csproj` : si l'étiquette `vX.Y.Z` existe déjà, rien n'est publié ; sinon la version est construite, testée, l'installateur et son empreinte sont publiés dans une release, et l'étiquette est créée sur le commit construit. Publier revient donc à : monter la version (`.csproj` + `setup.iss`) dans une pull request, puis la fusionner. L'envoi manuel d'une étiquette et le lancement manuel (construction de test) fonctionnent comme avant ; un groupe de concurrence évite deux publications simultanées.
+* **Conséquence :** une fusion qui ne change pas la version ne publie rien ; une pull request qui change la version publie dès sa fusion. La fusion reste une décision humaine (relecture de la pull request).

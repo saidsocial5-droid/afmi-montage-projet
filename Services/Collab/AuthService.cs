@@ -89,6 +89,37 @@ namespace AFMI_Montage_projet_2.Services.Collab
         public bool CanDecide() => _currentUser != null &&
             (SecurityConstants.IsSuperAdmin(_currentUser.Email) || (_currentTeamConfig?.CanDecide(_currentUser.Email) ?? false));
 
+        /// <summary>Préfixe des codes d'accès d'équipe (base64 de « AFMI1|clientId|clientSecret »).</summary>
+        public const string AccessCodePrefix = "AFMI1";
+
+        /// <summary>
+        /// Enregistre sur ce poste l'identifiant client OAuth contenu dans un code d'accès d'équipe
+        /// (copié par l'administrateur depuis l'espace d'équipe). Le secret est chiffré (DPAPI).
+        /// </summary>
+        public static bool TryApplyAccessCode(string? code, out string error)
+        {
+            error = string.Empty;
+            try
+            {
+                var raw = Encoding.UTF8.GetString(Convert.FromBase64String((code ?? string.Empty).Trim()));
+                var parts = raw.Split('|');
+                string clientId, clientSecret;
+                if (parts.Length == 3 && parts[0] == AccessCodePrefix) { clientId = parts[1]; clientSecret = parts[2]; }
+                else if (parts.Length == 3) { clientId = parts[0]; clientSecret = parts[1]; } // ancien code « Rejoindre un espace »
+                else throw new FormatException();
+                if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret)) throw new FormatException();
+
+                SettingsService.SaveSetting("Google_ClientId", clientId.Trim());
+                SettingsService.SaveSetting("Google_ClientSecret", AFMI_Montage_projet_2.Helpers.EncryptionHelper.Protect(clientSecret.Trim()));
+                return true;
+            }
+            catch (FormatException)
+            {
+                error = "Code d'accès invalide. Copiez-le en entier, sans espace.";
+                return false;
+            }
+        }
+
         /// <summary>Lit l'identifiant client OAuth (Paramètres ou code d'accès de l'équipe).</summary>
         public static bool TryGetClientCredentials(out string clientId, out string clientSecret)
         {

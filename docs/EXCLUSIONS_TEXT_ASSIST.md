@@ -31,6 +31,7 @@ Une zone de texte ne peut être exemptée que si elle satisfait à **l'un des cr
 | `Views/LoginWindow.xaml` | `TextBox Text="{Binding UsernameOrEmail}"` | **Identifiant Connexion** | Identifiant de connexion ou email du compte utilisateur. Pas de contenu d'ingénierie de projet. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/RegisterWindow.xaml` | `TextBox Text="{Binding Username}"` | **Identifiant Compte** | Pseudonyme utilisateur à la création du compte. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/RegisterWindow.xaml` | `TextBox Text="{Binding Email}"` | **Email Utilisateur** | Adresse de courriel de l'utilisateur pour l'inscription. | `AiTextAssistant.IsExcluded="True"` |
+| `Views/RegisterWindow.xaml` | `TextBox Text="{Binding AccessCodeInput}"` | **Secret OAuth** | Code d'accès de l'équipe saisi à l'inscription quand le poste n'a pas l'identifiant Google (identifiant et secret client encodés). Ne doit jamais être transmis à un LLM. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/CloudSyncView.xaml` | `TextBox Text="{Binding Settings.Host}"` | **URL Réseau** | Adresse du serveur PostgreSQL distant. Infrastructure, aucun contenu rédactionnel. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/CloudSyncView.xaml` | `TextBox Text="{Binding Settings.Port}"` | **Champ numérique** | Port réseau du serveur PostgreSQL. | `AiTextAssistant.IsExcluded="True"` |
 | `Views/CloudSyncView.xaml` | `TextBox Text="{Binding Settings.Database}"` | **ID Technique** | Nom technique de la base de données distante. | `AiTextAssistant.IsExcluded="True"` |
