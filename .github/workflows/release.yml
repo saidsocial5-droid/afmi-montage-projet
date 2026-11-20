@@ -26,32 +26,38 @@ concurrency:
 
 jobs:
   # Décide s'il faut publier : étiquette envoyée, ou nouvelle version arrivée sur main
+  # Machine Windows aussi : sur ce compte, les tâches Linux sont refusées (facturation), pas les tâches Windows
   detect:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     outputs:
       version: ${{ steps.v.outputs.version }}
       publish: ${{ steps.v.outputs.publish }}
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v4
       - id: v
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(grep -oP '(?<=<Version>)[^<]+' "AFMI Montage projet 2.csproj" | head -1)
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            if gh api "repos/${{ github.repository }}/git/ref/tags/v$version" > /dev/null 2>&1; then
-              echo "La version $version est déjà publiée (étiquette v$version) : rien à faire."
-              echo "publish=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "Nouvelle version $version sur main : publication automatique."
-              echo "publish=true" >> "$GITHUB_OUTPUT"
-            fi
-          else
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-          fi
+          $version = ([xml](Get-Content "AFMI Montage projet 2.csproj")).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          "version=$version" | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $publish = "false"
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $publish = "true"
+          }
+          elseif ("${{ github.event_name }}" -eq "push") {
+            gh api "repos/${{ github.repository }}/git/ref/tags/v$version" 2>$null | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "La version $version est déjà publiée (étiquette v$version) : rien à faire."
+            } else {
+              Write-Host "Nouvelle version $version sur main : publication automatique."
+              $publish = "true"
+            }
+            $global:LASTEXITCODE = 0
+          }
+          "publish=$publish" | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
 
   release:
     needs: detect
