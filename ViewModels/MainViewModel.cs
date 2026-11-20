@@ -119,9 +119,27 @@ namespace AFMI_Montage_projet_2.ViewModels
         /// Mise à jour automatique activée : téléchargement et vérification en arrière-plan, installation à la fermeture,
         /// avec la possibilité d'installer tout de suite. Sinon (ou si le téléchargement échoue) : fenêtre de proposition.
         /// </summary>
-        private static async Task ApplyGitHubUpdateAsync(Services.Updates.UpdateCheckResult check, Services.Updates.GitHubUpdateService github)
+        public static async Task ApplyGitHubUpdateAsync(Services.Updates.UpdateCheckResult check, Services.Updates.GitHubUpdateService github)
         {
             var release = check.Release!;
+
+            // Première nouvelle version détectée sur ce poste : demander si la mise à jour doit devenir automatique (ADR 30)
+            if (!Services.Updates.AutoUpdateCoordinator.AutoInstallDecided)
+            {
+                var mainWindow = Application.Current?.MainWindow;
+                string question = $"Une nouvelle version d'AFMI Montage Projet est disponible : {release.Version}.\n\n" +
+                                  "Voulez-vous activer la mise à jour automatique ?\n\n" +
+                                  "• Oui : cette version et les suivantes sont téléchargées et vérifiées en arrière-plan, puis installées " +
+                                  "toutes seules à la fermeture du logiciel (vous pourrez aussi les installer tout de suite).\n" +
+                                  "• Non : chaque nouvelle version vous sera proposée au démarrage.\n\n" +
+                                  "Ce choix se modifie à tout moment dans Paramètres › Mises à jour.";
+                var choice = mainWindow != null && mainWindow.IsLoaded
+                    ? MessageBox.Show(mainWindow, question, "Mise à jour automatique", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes)
+                    : MessageBox.Show(question, "Mise à jour automatique", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
+                Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled = choice == MessageBoxResult.Yes;
+                AppLogger.Info(nameof(MainViewModel), $"Mise à jour automatique {(choice == MessageBoxResult.Yes ? "activée" : "refusée")} par l'utilisateur.");
+            }
+
             if (!Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled ||
                 !await Services.Updates.AutoUpdateCoordinator.PrepareAsync(release, github))
             {

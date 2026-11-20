@@ -444,3 +444,13 @@
   - (a) Clé unique intégrée à l'installateur ou distribuée par l'espace d'équipe : extractible par quiconque possède le fichier (ADR 26).
   - (b) Rendre le dépôt public : le code de l'association deviendrait accessible à tous.
   - (c) Installation silencieuse immédiate au démarrage : elle fermerait le logiciel pendant que l'utilisateur commence à travailler.
+
+---
+
+## 📋 Décision n° 30 : Mise à jour automatique choisie par l'utilisateur, onglet dédié (1.9.24)
+* **Contexte :** après l'installation de la 1.9.23, le réglage de la mise à jour automatique était introuvable (au milieu de l'onglet « Apparence & Typographie »), et il était activé d'office sans que l'utilisateur l'ait choisi.
+* **Décision :**
+  1. **Onglet « 🔄 Mises à jour »** en tête des Paramètres, visible par tous : version installée, case « Activer la mise à jour automatique » avec son explication et son état, clé d'accès du poste, bouton « Rechercher une mise à jour ».
+  2. **Choix explicite** : `Update_AutoInstall` n'a plus de valeur par défaut (`AutoUpdateCoordinator.AutoInstallDecided`). La première fois qu'une nouvelle version est détectée, au démarrage comme par « Rechercher une mise à jour », le logiciel demande « Voulez-vous activer la mise à jour automatique ? » : Oui = téléchargement et vérification en arrière-plan, installation à la fermeture (ou tout de suite) ; Non = la nouvelle version est proposée à chaque fois. La réponse est gardée et se modifie dans l'onglet.
+  3. Les postes en 1.9.23 qui n'avaient jamais touché au réglage se voient poser la question à la prochaine version.
+* **Alternative rejetée :** activation silencieuse par défaut. L'installation se fait à la fermeture et peut demander une confirmation administrateur : l'utilisateur doit l'avoir choisie.
