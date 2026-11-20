@@ -9,7 +9,8 @@ namespace AFMI_Montage_projet_2.Services.Updates
     /// <summary>
     /// Mise à jour automatique (ADR 29) : au démarrage, la nouvelle version est téléchargée et vérifiée (SHA-256)
     /// en arrière-plan, puis installée en silence à la fermeture du logiciel, sans interrompre le travail en cours.
-    /// L'utilisateur peut aussi l'installer tout de suite. Réglage « Update_AutoInstall » (activé par défaut).
+    /// L'utilisateur peut aussi l'installer tout de suite. Réglage « Update_AutoInstall » : tant qu'il n'est pas
+    /// choisi, la question est posée la première fois qu'une nouvelle version est détectée (ADR 30).
     /// </summary>
     public static class AutoUpdateCoordinator
     {
@@ -21,11 +22,24 @@ namespace AFMI_Montage_projet_2.Services.Updates
 
         private static readonly object Gate = new();
 
+        /// <summary>Vrai seulement si l'utilisateur a activé la mise à jour automatique (non choisi = faux).</summary>
         public static bool AutoInstallEnabled
         {
-            get => !string.Equals(SettingsService.GetSetting(AutoInstallSetting, "true"), "false", StringComparison.OrdinalIgnoreCase);
+            get => string.Equals(SettingsService.GetSetting(AutoInstallSetting, ""), "true", StringComparison.OrdinalIgnoreCase);
             set => SettingsService.SaveSetting(AutoInstallSetting, value ? "true" : "false");
         }
+
+        /// <summary>Faux tant que l'utilisateur n'a pas répondu à la question (ni coché/décoché le réglage).</summary>
+        public static bool AutoInstallDecided =>
+            !string.IsNullOrWhiteSpace(SettingsService.GetSetting(AutoInstallSetting, ""));
+
+        /// <summary>Phrase d'état affichée dans Paramètres › Mises à jour.</summary>
+        public static string DescribeAutoInstall() =>
+            !AutoInstallDecided
+                ? "État : pas encore choisi. La question vous sera posée à la prochaine nouvelle version."
+                : AutoInstallEnabled
+                    ? "État : ✅ activée. Les nouvelles versions s'installent toutes seules à la fermeture du logiciel."
+                    : "État : désactivée. Chaque nouvelle version vous sera proposée au démarrage.";
 
         /// <summary>Faux si l'utilisateur a demandé à ne plus être invité à saisir la clé d'accès sur ce poste.</summary>
         public static bool TokenPromptEnabled

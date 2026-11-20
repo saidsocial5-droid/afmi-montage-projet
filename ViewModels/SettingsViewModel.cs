@@ -78,7 +78,10 @@ namespace AFMI_Montage_projet_2.ViewModels
         [ObservableProperty] private string _gitHubTokenStatus = string.Empty;
 
         /// <summary>Mise à jour automatique (ADR 29) : téléchargée au démarrage, installée à la fermeture.</summary>
-        [ObservableProperty] private bool _autoInstallUpdates = true;
+        [ObservableProperty] private bool _autoInstallUpdates;
+
+        /// <summary>État lisible du réglage (activée, désactivée ou pas encore choisie).</summary>
+        [ObservableProperty] private string _autoInstallStatus = string.Empty;
 
         partial void OnAutoInstallUpdatesChanged(bool value)
         {
@@ -86,9 +89,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled = value;
             // Réactiver la mise à jour automatique relance aussi l'invitation à saisir la clé si elle manque
             if (value) Services.Updates.AutoUpdateCoordinator.TokenPromptEnabled = true;
-            UpdateStatus = value
-                ? "Mise à jour automatique activée : les nouvelles versions s'installeront à la fermeture du logiciel."
-                : "Mise à jour automatique désactivée : chaque nouvelle version vous sera proposée au démarrage.";
+            AutoInstallStatus = Services.Updates.AutoUpdateCoordinator.DescribeAutoInstall();
         }
 
         private void RefreshGitHubTokenStatus() =>
@@ -150,7 +151,13 @@ namespace AFMI_Montage_projet_2.ViewModels
                     RefreshGitHubTokenStatus();
                     UpdateStatus = check.Message;
                 }
-                if (check.UpdateAvailable) await Views.UpdateWindow.OfferAsync(check, Application.Current?.MainWindow);
+                // Même parcours qu'au démarrage : question sur la mise à jour automatique si elle n'est pas encore choisie
+                if (check.UpdateAvailable && check.Release != null)
+                {
+                    await MainViewModel.ApplyGitHubUpdateAsync(check, new Services.Updates.GitHubUpdateService());
+                    AutoInstallUpdates = Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled;
+                    AutoInstallStatus = Services.Updates.AutoUpdateCoordinator.DescribeAutoInstall();
+                }
             }
             catch (Exception ex)
             {
@@ -215,6 +222,7 @@ namespace AFMI_Montage_projet_2.ViewModels
 
                 _loadingSettings = true;
                 AutoInstallUpdates = Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled;
+                AutoInstallStatus = Services.Updates.AutoUpdateCoordinator.DescribeAutoInstall();
                 string language = SettingsService.GetSetting(AiRouterService.ResponseLanguageSetting, Services.Language.AppLanguages.Auto);
                 SelectedResponseLanguage = ResponseLanguageOptions.FirstOrDefault(o => o.Code == language) ?? ResponseLanguageOptions[0];
                 _loadingSettings = false;

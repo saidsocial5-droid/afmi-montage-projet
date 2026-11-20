@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using AFMI_Montage_projet_2.Services;
 using AFMI_Montage_projet_2.Services.Updates;
 using Xunit;
 
@@ -26,17 +27,29 @@ namespace AFMI_Montage_Projet.Tests
         }
 
         [Fact]
-        public void AutoInstall_IsEnabledByDefault_AndCanBeTurnedOff()
+        public void AutoInstall_IsUndecidedUntilTheUserChooses()
         {
+            // ADR 30 : tant que l'utilisateur n'a pas répondu, rien n'est installé automatiquement et la question sera posée
             try
             {
-                Assert.True(AutoUpdateCoordinator.AutoInstallEnabled);
-                AutoUpdateCoordinator.AutoInstallEnabled = false;
+                SettingsService.SaveSetting(AutoUpdateCoordinator.AutoInstallSetting, "");
+                Assert.False(AutoUpdateCoordinator.AutoInstallDecided);
                 Assert.False(AutoUpdateCoordinator.AutoInstallEnabled);
+                Assert.Contains("pas encore choisi", AutoUpdateCoordinator.DescribeAutoInstall());
+
+                AutoUpdateCoordinator.AutoInstallEnabled = true;
+                Assert.True(AutoUpdateCoordinator.AutoInstallDecided);
+                Assert.True(AutoUpdateCoordinator.AutoInstallEnabled);
+                Assert.Contains("activée", AutoUpdateCoordinator.DescribeAutoInstall());
+
+                AutoUpdateCoordinator.AutoInstallEnabled = false;
+                Assert.True(AutoUpdateCoordinator.AutoInstallDecided);
+                Assert.False(AutoUpdateCoordinator.AutoInstallEnabled);
+                Assert.Contains("désactivée", AutoUpdateCoordinator.DescribeAutoInstall());
             }
             finally
             {
-                AutoUpdateCoordinator.AutoInstallEnabled = true;
+                SettingsService.SaveSetting(AutoUpdateCoordinator.AutoInstallSetting, "");
             }
         }
 
