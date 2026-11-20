@@ -1,7 +1,11 @@
 # Publication d'une version d'AFMI Montage Projet (ADR 26)
 #
-# Déclenchement : envoi d'une étiquette « vX.Y.Z » (identique à <Version> du .csproj et à MyAppVersion de setup.iss),
-# ou lancement manuel depuis l'onglet Actions (version de test, sans publication).
+# Déclenchement (ADR 32) :
+#  - automatique : chaque arrivée de code sur « main » (fusion d'une pull request). Si la version du .csproj
+#    n'a pas encore d'étiquette « vX.Y.Z », la version est construite, testée et publiée, et l'étiquette est créée ;
+#    sinon rien n'est publié (une fusion sans changement de version ne crée pas de release) ;
+#  - envoi manuel d'une étiquette « vX.Y.Z » (identique à <Version> du .csproj et à MyAppVersion de setup.iss) ;
+#  - lancement manuel depuis l'onglet Actions (version de test, sans publication).
 # Résultat : une « Release » GitHub contenant l'installateur Windows et son empreinte SHA-256 ;
 # les postes installés la détectent au démarrage et proposent la mise à jour.
 
@@ -9,14 +13,50 @@ name: Publication de l'installateur Windows
 
 on:
   push:
+    branches: [ main ]
     tags: [ 'v*' ]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: publication
+  cancel-in-progress: false
+
 jobs:
+  # Décide s'il faut publier : étiquette envoyée, ou nouvelle version arrivée sur main
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(grep -oP '(?<=<Version>)[^<]+' "AFMI Montage projet 2.csproj" | head -1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            if gh api "repos/${{ github.repository }}/git/ref/tags/v$version" > /dev/null 2>&1; then
+              echo "La version $version est déjà publiée (étiquette v$version) : rien à faire."
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "Nouvelle version $version sur main : publication automatique."
+              echo "publish=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
   release:
+    needs: detect
+    # Lancement manuel : construction de test ; push : seulement si une publication est nécessaire
+    if: github.event_name == 'workflow_dispatch' || needs.detect.outputs.publish == 'true'
     runs-on: windows-latest
     defaults:
       run:
@@ -69,16 +109,19 @@ jobs:
           }
 
       - name: Artefact (lancement manuel)
-        if: github.ref_type != 'tag'
+        if: needs.detect.outputs.publish != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: installateur-${{ env.VERSION }}
           path: Installer/*
 
       - name: Publication de la version
-        if: github.ref_type == 'tag'
+        if: needs.detect.outputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          # Crée l'étiquette sur le commit construit si elle n'existe pas encore (publication automatique)
+          tag_name: v${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
           name: AFMI Montage Projet ${{ env.VERSION }}
           files: |
             Installer/*.exe
