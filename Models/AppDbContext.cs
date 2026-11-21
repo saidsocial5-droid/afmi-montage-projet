@@ -374,6 +374,16 @@ namespace AFMI_Montage_projet_2.Models
             EnsureModelTablesExist();
             _columnCache = null;
 
+            // Comptes créés avant les rôles (ADR 34) : les comptes existants restent actifs, et un administrateur système garde ses droits
+            bool usersHadStatus = GetExistingColumns("Users")?.Contains("Status") ?? true;
+            AddColumnIfMissing("Users", "Status", "TEXT NOT NULL DEFAULT 'Active'");
+            AddColumnIfMissing("Users", "Role", "TEXT NOT NULL DEFAULT 'Reader'");
+            if (!usersHadStatus)
+                RunSchemaStep("Rôles des comptes existants", () =>
+                    Database.ExecuteSqlRaw(IsSqliteProvider
+                        ? "UPDATE \"Users\" SET \"Role\" = 'SuperAdmin' WHERE \"IsSystemAdmin\" = 1;"
+                        : "UPDATE \"Users\" SET \"Role\" = 'SuperAdmin' WHERE \"IsSystemAdmin\" = TRUE;"));
+
             MigrateObsoleteGeminiModels();
 
             // V4 & V5 : Inject BaseEntity collaborative fields safely
@@ -581,6 +591,10 @@ namespace AFMI_Montage_projet_2.Models
 
             // Base de veille : notation /25, confirmation et fiche des 13 champs (ADR 28)
             UpgradeVeilleSchema();
+
+            // En dernier, après toutes les mises à niveau qui fixent leurs propres valeurs par défaut :
+            // toute colonne du modèle encore absente d'une ancienne table est ajoutée (ADR 34)
+            EnsureModelColumnsExist();
 
             LogSchemaUpgradeSummary();
         }
