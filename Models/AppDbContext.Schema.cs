@@ -32,6 +32,59 @@ namespace AFMI_Montage_projet_2.Models
 
         private bool IsSqliteProvider => Database.IsSqlite();
 
+        /// <summary>
+        /// Ajoute toute colonne du modèle EF absente d'une table existante (ADR 34). Les anciennes bases avaient des tables
+        /// créées par les blocs « CREATE TABLE » historiques, avant que le modèle ne gagne des colonnes (ex. Users.Status/Role) :
+        /// l'insertion échouait alors avec « An error occurred while saving the entity changes ». Les colonnes obligatoires
+        /// reçoivent une valeur par défaut neutre (texte vide, 0, faux, 2000-01-01) pour les lignes déjà présentes.
+        /// Renvoie les colonnes ajoutées (« Table.Colonne »).
+        /// </summary>
+        private List<string> EnsureModelColumnsExist()
+        {
+            var added = new List<string>();
+            _columnCache = null; // des étapes précédentes ont pu créer ou modifier des tables
+            foreach (var entityType in Model.GetEntityTypes())
+            {
+                string? table = entityType.GetTableName();
+                if (table == null || entityType.IsOwned()) continue;
+                var store = Microsoft.EntityFrameworkCore.Metadata.StoreObjectIdentifier.Table(table, entityType.GetSchema());
+                var existing = GetExistingColumns(table);
+                if (existing == null) continue; // table absente : créée par EnsureModelTablesExist
+
+                foreach (var property in entityType.GetProperties())
+                {
+                    string? column = property.GetColumnName(store);
+                    if (column == null || existing.Contains(column) || property.IsPrimaryKey()) continue;
+                    string? definition = ColumnDefinition(property);
+                    if (definition == null) continue;
+                    int before = _addedColumns.Count;
+                    AddColumnIfMissing(table, column, definition);
+                    if (_addedColumns.Count > before) added.Add($"{table}.{column}");
+                }
+            }
+            return added;
+        }
+
+        /// <summary>Définition SQL d'une colonne ajoutée a posteriori (type du fournisseur + défaut si obligatoire).</summary>
+        private string? ColumnDefinition(Microsoft.EntityFrameworkCore.Metadata.IProperty property)
+        {
+            string? type = property.GetColumnType();
+            if (string.IsNullOrWhiteSpace(type)) return null;
+            if (property.IsNullable) return type;
+
+            var clr = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
+            string? literal =
+                clr == typeof(string) ? "''" :
+                clr == typeof(bool) ? (IsSqliteProvider ? "0" : "FALSE") :
+                clr.IsEnum || clr == typeof(int) || clr == typeof(long) || clr == typeof(short) || clr == typeof(byte) ||
+                clr == typeof(decimal) || clr == typeof(double) || clr == typeof(float) ? "0" :
+                clr == typeof(DateTime) || clr == typeof(DateTimeOffset) ? "'2000-01-01 00:00:00'" :
+                clr == typeof(Guid) ? "'00000000-0000-0000-0000-000000000000'" :
+                null;
+            // Type sans valeur neutre connue (ex. tableau d'octets) : colonne facultative plutôt qu'un échec
+            return literal == null ? type : $"{type} NOT NULL DEFAULT {literal}";
+        }
+
         /// <summary>Colonnes existantes d'une table (null si la table n'existe pas). Mis en cache pour la durée du contexte.</summary>
         private HashSet<string>? GetExistingColumns(string table)
         {

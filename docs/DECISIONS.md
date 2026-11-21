@@ -485,3 +485,13 @@
   - si un poste garde une clé expirée ou révoquée, GitHub répond 401 : `GitHubUpdateService` réessaie sans clé (`AnonymousAccess`) et télécharge l'installateur par son adresse publique pour le reste de la session ;
   - le champ de clé reste disponible, au cas où le dépôt redeviendrait privé.
 * **Limite :** sans clé, l'API GitHub accepte 60 requêtes par heure et par adresse IP, largement assez pour une vérification au démarrage.
+
+---
+
+## 📋 Décision n° 34 : Réparation automatique des colonnes manquantes des anciennes tables (1.9.26)
+* **Contexte :** « Créer un compte » échouait avec « An error occurred while saving the entity changes ». Sur une base existante, `EnsureCreated` ne fait rien et le bloc historique `CreateLegacySqliteTablesIfNotExist` crée `Users` avec ses six colonnes d'origine, avant que `EnsureModelTablesExist` ne puisse créer la table complète. Les colonnes `Status` et `Role`, ajoutées au modèle plus tard, n'avaient pas d'`AddColumnIfMissing` : l'insertion d'un compte échouait.
+* **Décision :**
+  1. `Users.Status` (défaut `'Active'`) et `Users.Role` (défaut `'Reader'`, puis `'SuperAdmin'` pour les comptes `IsSystemAdmin`) sont ajoutés explicitement : les comptes existants restent utilisables.
+  2. **Filet général** `EnsureModelColumnsExist` : en fin de mise à niveau, toute propriété du modèle EF sans colonne dans une table existante est ajoutée (type du fournisseur ; si obligatoire, défaut neutre : texte vide, 0, faux, 2000-01-01). Il passe après les mises à niveau spécifiques, qui gardent leurs valeurs par défaut propres. Idempotent, SQLite et PostgreSQL.
+  3. La fenêtre d'inscription affiche la cause réelle (`GetBaseException`) et la journalise.
+* **Conséquence :** oublier un `AddColumnIfMissing` ne casse plus une ancienne base ; l'appel explicite reste préférable quand la valeur par défaut a un sens métier.

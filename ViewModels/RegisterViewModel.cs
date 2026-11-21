@@ -75,7 +75,9 @@ namespace AFMI_Montage_projet_2.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = "Erreur : " + ex.Message;
+                // La vraie cause d'un échec d'enregistrement est dans l'exception interne (ex. colonne manquante)
+                Services.AppLogger.Error(nameof(RegisterViewModel), "Création du compte impossible.", ex);
+                ErrorMessage = "Création du compte impossible : " + (ex.GetBaseException().Message);
             }
         }
 
