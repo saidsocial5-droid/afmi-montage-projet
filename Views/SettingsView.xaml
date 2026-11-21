@@ -94,7 +94,7 @@
                             <!-- Clé d'accès : propre à chaque poste, donc saisissable par tout utilisateur (ADR 29) -->
                             <StackPanel Margin="0,10,0,0">
                                 <TextBlock FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,4"
-                                           Text="Clé d'accès de ce poste (dépôt privé) : jeton GitHub « fine-grained » limité à ce dépôt, permission Contents en lecture seule. Chiffrée sur ce poste uniquement."/>
+                                           Text="Clé d'accès de ce poste : nécessaire seulement si le dépôt GitHub est privé (inutile pour un dépôt public). Jeton « fine-grained » limité à ce dépôt, permission Contents en lecture seule, chiffré sur ce poste uniquement."/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>

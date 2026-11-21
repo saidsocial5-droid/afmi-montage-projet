@@ -136,6 +136,12 @@ namespace AFMI_Montage_projet_2.Services.Updates
         public static bool LooksLikeToken(string? token) =>
             !string.IsNullOrWhiteSpace(token) && Regex.IsMatch(token.Trim(), @"^(ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})$");
 
+        /// <summary>
+        /// Vrai quand GitHub a refusé la clé de ce poste (401) mais a répondu sans elle : le dépôt est public,
+        /// la suite de la session (téléchargement compris) se fait sans clé (ADR 33).
+        /// </summary>
+        public static bool AnonymousAccess { get; set; }
+
         private static Dictionary<string, string> ApiHeaders(string accept = "application/vnd.github+json")
         {
             var headers = new Dictionary<string, string>
@@ -144,7 +150,7 @@ namespace AFMI_Montage_projet_2.Services.Updates
                 ["X-GitHub-Api-Version"] = "2022-11-28"
             };
             string token = AccessToken;
-            if (token.Length > 0) headers["Authorization"] = "Bearer " + token;
+            if (token.Length > 0 && !AnonymousAccess) headers["Authorization"] = "Bearer " + token;
             return headers;
         }
 
@@ -163,13 +169,25 @@ namespace AFMI_Montage_projet_2.Services.Updates
             }
             result.IsConfigured = true;
 
+            string latestUrl = $"https://api.github.com/repos/{repo}/releases/latest";
             SafeFetchResponse response;
             try
             {
-                response = await _fetcher.FetchWithRetryAsync($"https://api.github.com/repos/{repo}/releases/latest", cancellationToken: cancellationToken, headers: ApiHeaders());
+                try
+                {
+                    response = await _fetcher.FetchWithRetryAsync(latestUrl, cancellationToken: cancellationToken, headers: ApiHeaders());
+                }
+                catch (SafeFetchException ex) when (ex.Message.StartsWith("HTTP 401", StringComparison.Ordinal) && HasAccessToken && !AnonymousAccess)
+                {
+                    // Clé expirée ou révoquée : un dépôt public répond quand même sans clé (ADR 33)
+                    AnonymousAccess = true;
+                    response = await _fetcher.FetchWithRetryAsync(latestUrl, cancellationToken: cancellationToken, headers: ApiHeaders());
+                    AppLogger.Info(nameof(GitHubUpdateService), "Clé d'accès refusée par GitHub, dépôt public : mise à jour sans clé.");
+                }
             }
             catch (SafeFetchException ex) when (ex.Message.StartsWith("HTTP 404", StringComparison.Ordinal) || ex.Message.StartsWith("HTTP 401", StringComparison.Ordinal))
             {
+                AnonymousAccess = false;
                 result.NeedsAccessToken = true;
                 result.Message = HasAccessToken
                     ? $"Dépôt {repo} introuvable avec la clé d'accès de ce poste, ou aucune version publiée (clé expirée ou sans accès à ce dépôt ?)."
@@ -277,7 +295,7 @@ namespace AFMI_Montage_projet_2.Services.Updates
         /// </summary>
         public static (string Url, Dictionary<string, string>? Headers) AssetRequest(ReleaseAsset asset)
         {
-            if (HasAccessToken && IsGitHubApiUrl(asset.ApiUrl))
+            if (HasAccessToken && !AnonymousAccess && IsGitHubApiUrl(asset.ApiUrl))
                 return (asset.ApiUrl, ApiHeaders("application/octet-stream"));
 
             if (!Uri.TryCreate(asset.DownloadUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
