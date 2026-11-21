@@ -225,12 +225,20 @@ namespace AFMI_Montage_Projet.Tests
                 Assert.Equal("application/octet-stream", headers!["Accept"]);
                 Assert.StartsWith("Bearer github_pat_", headers["Authorization"]);
 
+                // Clé refusée mais dépôt public (ADR 33) : téléchargement public, sans clé
+                GitHubUpdateService.AnonymousAccess = true;
+                var (anonUrl, anonHeaders) = GitHubUpdateService.AssetRequest(asset);
+                Assert.Equal(asset.DownloadUrl, anonUrl);
+                Assert.Null(anonHeaders);
+                GitHubUpdateService.AnonymousAccess = false;
+
                 // Adresse API falsifiée : pas de clé envoyée ailleurs qu'à api.github.com
                 asset.ApiUrl = "https://evil.example.com/assets/42";
                 Assert.Equal(asset.DownloadUrl, GitHubUpdateService.AssetRequest(asset).Url);
             }
             finally
             {
+                GitHubUpdateService.AnonymousAccess = false;
                 GitHubUpdateService.SaveAccessToken(null);
             }
         }

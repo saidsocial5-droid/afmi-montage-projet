@@ -473,3 +473,15 @@
 * **Contexte :** publier demandait, après la fusion, de créer à la main l'étiquette ou la release « vX.Y.Z » ; l'étape était oubliée ou bloquée (connexion Git), et les postes ne recevaient rien.
 * **Décision :** `release.yml` se déclenche aussi à chaque arrivée de code sur `main`. Un premier job (Linux, quelques secondes) lit `<Version>` du `.csproj` : si l'étiquette `vX.Y.Z` existe déjà, rien n'est publié ; sinon la version est construite, testée, l'installateur et son empreinte sont publiés dans une release, et l'étiquette est créée sur le commit construit. Publier revient donc à : monter la version (`.csproj` + `setup.iss`) dans une pull request, puis la fusionner. L'envoi manuel d'une étiquette et le lancement manuel (construction de test) fonctionnent comme avant ; un groupe de concurrence évite deux publications simultanées.
 * **Conséquence :** une fusion qui ne change pas la version ne publie rien ; une pull request qui change la version publie dès sa fusion. La fusion reste une décision humaine (relecture de la pull request).
+* **Note (20/11/2026) :** le job `detect` tourne sur `windows-latest` : sur ce compte, GitHub refuse de démarrer les tâches Linux (« recent account payments have failed or your spending limit needs to be increased »), alors que les tâches Windows s'exécutent.
+
+---
+
+## 📋 Décision n° 33 : Dépôt public, mises à jour sans clé (1.9.25)
+* **Contexte :** le plan gratuit de GitHub limite les tâches automatiques des dépôts privés (12 $ de calcul et 0,5 Go par mois pour tout le compte, épuisés en novembre 2026 surtout par un autre dépôt), ce qui a bloqué la publication automatique. Les dépôts publics ont des tâches automatiques gratuites et illimitées, et leurs versions se téléchargent sans clé d'accès.
+* **Décision :** l'utilisateur rend le dépôt public (21/11/2026). Avant cela, tout l'historique Git a été vérifié : aucune clé, aucun mot de passe ni aucune base de données, seulement des valeurs fictives de test, les adresses Gmail des administrateurs (déjà dans `SecurityConstants`) et le guide utilisateur. La sécurité ne repose pas sur le secret du code : comptes Google, clés DPAPI par poste, empreinte SHA-256 des installateurs, signatures HMAC.
+* **Dans le logiciel :**
+  - sans clé, un dépôt public répond normalement : l'invitation à saisir une clé (ADR 29) ne s'affiche plus ;
+  - si un poste garde une clé expirée ou révoquée, GitHub répond 401 : `GitHubUpdateService` réessaie sans clé (`AnonymousAccess`) et télécharge l'installateur par son adresse publique pour le reste de la session ;
+  - le champ de clé reste disponible, au cas où le dépôt redeviendrait privé.
+* **Limite :** sans clé, l'API GitHub accepte 60 requêtes par heure et par adresse IP, largement assez pour une vérification au démarrage.
