@@ -495,3 +495,14 @@
   2. **Filet général** `EnsureModelColumnsExist` : en fin de mise à niveau, toute propriété du modèle EF sans colonne dans une table existante est ajoutée (type du fournisseur ; si obligatoire, défaut neutre : texte vide, 0, faux, 2000-01-01). Il passe après les mises à niveau spécifiques, qui gardent leurs valeurs par défaut propres. Idempotent, SQLite et PostgreSQL.
   3. La fenêtre d'inscription affiche la cause réelle (`GetBaseException`) et la journalise.
 * **Conséquence :** oublier un `AddColumnIfMissing` ne casse plus une ancienne base ; l'appel explicite reste préférable quand la valeur par défaut a un sens métier.
+
+---
+
+## 📋 Décision n° 35 : Mots de passe des comptes locaux hachés, compilation sans avertissement (1.9.27)
+* **Contexte :** la colonne `Users.PasswordHash` contenait en réalité le mot de passe en clair, comparé tel quel en SQL à la connexion. Toute copie de `projects.db` (sauvegarde, poste prêté, base PostgreSQL partagée) exposait les mots de passe. Par ailleurs la compilation produisait 38 avertissements, dont plusieurs signalaient de vraies erreurs possibles (utilisateur non connecté, réponse Drive vide).
+* **Décision :**
+  1. `Security/PasswordHasher` : PBKDF2-HMAC-SHA512, 210 000 itérations, sel aléatoire de 16 octets, comparaison en temps constant. Format stocké : `PBKDF2$SHA512$itérations$sel$empreinte` (base64). Uniquement `System.Security.Cryptography` : aucune dépendance ajoutée.
+  2. Inscription, changement de mot de passe et réinitialisation par un administrateur enregistrent l'empreinte. La connexion charge les comptes correspondant à l'identifiant puis vérifie le mot de passe hors de la base.
+  3. Conversion des comptes existants : `SeedDefaultData` hache au démarrage tout mot de passe encore en clair (`HashLegacyPasswords`, idempotent). En filet, un compte resté en clair (base PostgreSQL modifiée par une ancienne version) est accepté une dernière fois puis converti à la connexion.
+  4. Avertissements : nullabilité corrigée (types nullables explicites, gardes là où un utilisateur absent provoquait une `NullReferenceException`), code mort retiré, `EF1002` désactivé localement avec justification sur le SQL de schéma construit uniquement à partir de constantes (même règle que `AddColumnIfMissing`).
+* **Conséquence :** les mots de passe ne sont plus lisibles dans la base. Un poste resté sur une version antérieure à 1.9.27 et connecté à la même base PostgreSQL ne peut plus ouvrir les comptes convertis : mettre tous les postes à jour. Les mots de passe oubliés se réinitialisent toujours depuis la gestion des utilisateurs. Toute nouvelle écriture de mot de passe doit passer par `PasswordHasher.Hash`.
