@@ -856,7 +856,7 @@ namespace AFMI_Montage_projet_2.Services
             }).GeneratePdf(filePath);
         }
 
-        public static void ExportOrganizationProfileToWord(string filePath, AfmiProfile profile = null)
+        public static void ExportOrganizationProfileToWord(string filePath, AfmiProfile? profile = null)
         {
             profile ??= ProjectRadarConfigService.LoadProfile();
 
@@ -955,7 +955,7 @@ namespace AFMI_Montage_projet_2.Services
             doc.Save();
         }
 
-        public static void ExportOrganizationProfileToPdf(string filePath, AfmiProfile profile = null)
+        public static void ExportOrganizationProfileToPdf(string filePath, AfmiProfile? profile = null)
         {
             profile ??= ProjectRadarConfigService.LoadProfile();
 

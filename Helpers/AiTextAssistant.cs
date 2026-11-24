@@ -174,12 +174,7 @@ namespace AFMI_Montage_projet_2.Helpers
                 return true;
             }
 
-            // 2. Détection de PasswordBox ou mot de passe
-            if (tb is PasswordBox)
-            {
-                reason = "Mot de passe sécurisé.";
-                return true;
-            }
+            // 2. Mot de passe : un PasswordBox n'est pas un TextBoxBase, il ne reçoit donc jamais l'assistant.
 
             // 3. Les zones de texte multi-lignes et les RichTextBox sont par nature des zones rédactionnelles
             // (Justification, Contexte, Objectifs, Impacts, etc.) et ne sont jamais des dates ni des montants.

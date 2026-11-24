@@ -39,8 +39,8 @@ namespace AFMI_Montage_projet_2.ViewModels
             // 1. Load Activities with Reports and BudgetItems
             var activities = db.Activities
                 .Include(a => a.Result)
-                .ThenInclude(r => r.Objective)
-                .Where(a => a.Result.Objective.ProjectId == _project.Id)
+                .ThenInclude(r => r!.Objective)
+                .Where(a => a.Result!.Objective!.ProjectId == _project.Id)
                 .ToList();
 
             var reports = db.ActivityReports.Where(ar => ar.Status == "Approved").ToList();

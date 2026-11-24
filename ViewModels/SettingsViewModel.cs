@@ -441,7 +441,12 @@ namespace AFMI_Montage_projet_2.ViewModels
                         CloudStatusMessage = "Erreur lors de l'upload du fichier EXE.";
                         return;
                     }
-                    var uploadedExeId = request.ResponseBody.Id;
+                    var uploadedExeId = request.ResponseBody?.Id;
+                    if (string.IsNullOrEmpty(uploadedExeId))
+                    {
+                        CloudStatusMessage = "Erreur lors de l'upload du fichier EXE.";
+                        return;
+                    }
 
                     // Create version.json
                     var updateInfo = new AFMI_Montage_projet_2.Services.DriveUpdateInfo
@@ -455,7 +460,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     string json = System.Text.Json.JsonSerializer.Serialize(updateInfo);
                     
                     // Check if version.json exists
-                    string versionJsonId = null;
+                    string? versionJsonId = null;
                     var searchReq = driveService.Files.List();
                     searchReq.Q = $"'{updateFolderId}' in parents and name = 'version.json' and trashed = false";
                     var searchRes = await searchReq.ExecuteAsync();

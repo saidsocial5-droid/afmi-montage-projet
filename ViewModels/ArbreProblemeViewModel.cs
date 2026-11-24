@@ -117,8 +117,11 @@ namespace AFMI_Montage_projet_2.ViewModels
             
             using (var checkDb = new AppDbContext())
             {
-                isAdmin = checkDb.ProjectRoles.Any(r => r.ProjectId == _projectId && r.UserId == currentUser.Id && r.RoleName == "Admin") 
-                          || (currentUser?.IsSystemAdmin ?? false);
+                // Sans utilisateur connecté, personne n'est administrateur (évitait une NullReferenceException).
+                int? currentUserId = currentUser?.Id;
+                isAdmin = currentUserId != null &&
+                          (checkDb.ProjectRoles.Any(r => r.ProjectId == _projectId && r.UserId == currentUserId && r.RoleName == "Admin")
+                           || (currentUser?.IsSystemAdmin ?? false));
             }
 
             newNode.ProposedByUserId = currentUser?.Id;

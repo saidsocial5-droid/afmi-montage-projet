@@ -5,7 +5,7 @@ namespace AFMI_Montage_projet_2.Views
 {
     public partial class AiRiskAuditDialog : Window
     {
-        public AiRiskAuditDialog(string auditReportText, string title = null)
+        public AiRiskAuditDialog(string auditReportText, string? title = null)
         {
             InitializeComponent();
             if (!string.IsNullOrWhiteSpace(title))

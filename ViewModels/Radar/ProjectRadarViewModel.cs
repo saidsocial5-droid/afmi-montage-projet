@@ -582,7 +582,7 @@ namespace AFMI_Montage_projet_2.ViewModels.Radar
                 }
 
                 // Fermer la fenêtre pop-up ProjectRadarWindow si elle est ouverte
-                foreach (Window win in Application.Current.Windows)
+                foreach (Window win in Application.Current!.Windows)
                 {
                     if (win is ProjectRadarWindow radarWin)
                     {

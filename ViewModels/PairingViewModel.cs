@@ -19,12 +19,12 @@ namespace AFMI_Montage_projet_2.ViewModels
     {
         private readonly DevicePairingService _pairingService;
         private readonly string _workspaceId;
-        private PairingSessionPayload _currentPayload;
-        private DispatcherTimer _timer;
-        private DispatcherTimer _pollTimer;
+        private PairingSessionPayload? _currentPayload;
+        private DispatcherTimer? _timer;
+        private DispatcherTimer? _pollTimer;
 
         [ObservableProperty]
-        private BitmapImage _qrCodeImage;
+        private BitmapImage? _qrCodeImage;
 
         [ObservableProperty]
         private int _timeRemaining = 120;
@@ -35,8 +35,8 @@ namespace AFMI_Montage_projet_2.ViewModels
         [ObservableProperty]
         private bool _isExpired = false;
 
-        public Action OnPairingSuccess;
-        public Action OnCloseRequested;
+        public Action? OnPairingSuccess;
+        public Action? OnCloseRequested;
 
         public PairingViewModel(DevicePairingService pairingService, string workspaceId)
         {
@@ -51,14 +51,15 @@ namespace AFMI_Montage_projet_2.ViewModels
             StatusText = "Génération du code...";
 
             var userEmail = SessionManager.CurrentUser?.Email ?? "";
-            _currentPayload = await _pairingService.CreatePairingSessionAsync(_workspaceId, userEmail);
+            var currentPayload = await _pairingService.CreatePairingSessionAsync(_workspaceId, userEmail);
+            _currentPayload = currentPayload;
 
             var json = JsonSerializer.Serialize(new { 
-                v = _currentPayload.Version, 
-                w = _currentPayload.WorkspaceId, 
-                u = _currentPayload.UserEmail, 
-                q = _currentPayload.QrId, 
-                n = _currentPayload.Nonce 
+                v = currentPayload.Version, 
+                w = currentPayload.WorkspaceId, 
+                u = currentPayload.UserEmail, 
+                q = currentPayload.QrId, 
+                n = currentPayload.Nonce 
             });
 
             using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
@@ -83,10 +84,10 @@ namespace AFMI_Montage_projet_2.ViewModels
             _pollTimer.Tick += PollTimer_Tick;
             _pollTimer.Start();
             
-            AFMI_Montage_projet_2.Security.AuditLogger.Log("Génération QR Code", $"QR Code de couplage généré. QrId: {_currentPayload.QrId}");
+            AFMI_Montage_projet_2.Security.AuditLogger.Log("Génération QR Code", $"QR Code de couplage généré. QrId: {currentPayload.QrId}");
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
             TimeRemaining--;
             if (TimeRemaining <= 0)
@@ -95,15 +96,17 @@ namespace AFMI_Montage_projet_2.ViewModels
             }
         }
 
-        private async void PollTimer_Tick(object sender, EventArgs e)
+        private async void PollTimer_Tick(object? sender, EventArgs e)
         {
-            _pollTimer.Stop();
+            _pollTimer?.Stop();
+            var currentPayload = _currentPayload;
+            if (currentPayload == null) return;
             try
             {
-                var payload = await _pairingService.CheckPairingSessionAsync(_workspaceId, _currentPayload.QrId);
+                var payload = await _pairingService.CheckPairingSessionAsync(_workspaceId, currentPayload.QrId);
                 if (payload != null && payload.Status == "scanned")
                 {
-                    _timer.Stop();
+                    _timer?.Stop();
                     // Vérification de sécurité et confirmation
                     var confirm = MessageBox.Show(
                         $"Un appareil '{payload.RequestingDeviceName}' demande à se connecter à votre compte.\n\nAutoriser cet appareil ?",
@@ -126,7 +129,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                         // Notifier l'appareil que c'est approuvé
                         // Dans un scénario réel on mettrait à jour le fichier Drive pour que l'app sache
                         // Mais ici on supprime le fichier (Atomic burn) pour éviter la réutilisation
-                        await _pairingService.DeletePairingSessionAsync(_workspaceId, _currentPayload.QrId);
+                        await _pairingService.DeletePairingSessionAsync(_workspaceId, currentPayload.QrId);
                         
                         AFMI_Montage_projet_2.Security.AuditLogger.Log("Couplage réussi", $"Appareil {device.DeviceName} couplé.");
                         StatusText = "Appareil couplé avec succès !";
@@ -137,7 +140,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     else
                     {
                         // Refusé
-                        await _pairingService.DeletePairingSessionAsync(_workspaceId, _currentPayload.QrId);
+                        await _pairingService.DeletePairingSessionAsync(_workspaceId, currentPayload.QrId);
                         AFMI_Montage_projet_2.Security.AuditLogger.Log("Couplage refusé", $"Couplage rejeté par l'utilisateur pour l'appareil {payload.RequestingDeviceName}.");
                         StatusText = "Couplage refusé.";
                         IsExpired = true;
@@ -150,7 +153,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 // Ignore transient errors
             }
 
-            if (!IsExpired) _pollTimer.Start();
+            if (!IsExpired) _pollTimer?.Start();
         }
 
         private async void ExpireSession()
@@ -183,7 +186,7 @@ namespace AFMI_Montage_projet_2.ViewModels
         }
 
         [RelayCommand]
-        private async Task CancelAndClose()
+        private void CancelAndClose()
         {
             ExpireSession();
             OnCloseRequested?.Invoke();
