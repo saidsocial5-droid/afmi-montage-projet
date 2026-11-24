@@ -254,3 +254,10 @@
 - حُذف `Services/TextEnhancementService.cs`: لم يكن التطبيق يستدعيه (الصياغة تمر عبر `TextAssistService`). نُقل التعدادان `TextEnhancementMode` و`AiEnhancementAction` إلى `Services/TextEnhancementMode.cs` لأن `AiTextAssistant` و`AiTextEnhancementDialog` و`StrategicPlanningView` ما زالت تستعملهما، وحُذفت من `TextEnhancementTests.cs` الاختبارات الخاصة بالخدمة المحذوفة.
 - حُذف `Models/PendingContribution.cs` (غير مستعمل) والدليلان القديمان `Guide_Utilisateur_AFMI_V3.html` و`Guide_Utilisation_AFMI.pdf` (غير مرجعيين في البناء ولا المثبّت).
 - `ARCHITECTURE.md` و`CLAUDE.md`: تصحيح قناة التحديث (GitHub أولاً ثم Google Drive احتياطياً) والإشارة إلى الملفات الحالية بدل المحذوفة.
+
+---
+
+## 🔐 الإصدار 1.9.27: تجزئة كلمات المرور وإزالة تحذيرات البناء (ADR 35)
+
+- **كلمات المرور:** كانت تُحفظ نصاً مقروءاً في `Users.PasswordHash`. صارت تُحفظ بصمةً (PBKDF2-SHA512 مع ملح عشوائي) عبر `Security/PasswordHasher`، وتُحوَّل الحسابات القديمة تلقائياً عند تشغيل البرنامج، مع قبول الحساب القديم مرة أخيرة عند الدخول إن بقي دون تحويل. الاختبارات في `PasswordHashingTests.cs`.
+- **التحذيرات:** أُزيلت التحذيرات الـ 38 التي كان البناء يعرضها، ومنها مواضع كانت قد تتعطل فعلاً عند غياب مستخدم متصل (`ActivityReportsViewModel` و`ArbreProblemeViewModel` و`UserAccountViewModel`) أو عند رفع ملف إلى Drive دون رد (`SettingsViewModel`).

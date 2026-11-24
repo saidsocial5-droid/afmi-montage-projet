@@ -29,7 +29,6 @@ namespace AFMI_Montage_projet_2.ViewModels
         [ObservableProperty]
         private NotebookLmPromptPreset? _selectedPrompt;
 
-        public event Action? RequestClose;
 
         public NotebookLmViewModel(OrganizationProfileViewModel parentViewModel)
         {

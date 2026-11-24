@@ -18,7 +18,7 @@ namespace AFMI_Montage_projet_2.ViewModels
 {
     public partial class OrganizationProfileViewModel : ObservableObject
     {
-        private readonly Project _activeProject;
+        private readonly Project? _activeProject;
 
         [ObservableProperty]
         private bool _isBusy;
@@ -104,7 +104,7 @@ namespace AFMI_Montage_projet_2.ViewModels
         public bool HasActiveProject => _activeProject != null;
         public string ActiveProjectTitle => _activeProject?.Title ?? string.Empty;
 
-        public OrganizationProfileViewModel(Project activeProject = null)
+        public OrganizationProfileViewModel(Project? activeProject = null)
         {
             _activeProject = activeProject;
             LoadFromConfig();

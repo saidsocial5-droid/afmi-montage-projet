@@ -384,6 +384,9 @@ namespace AFMI_Montage_projet_2.Models
                         ? "UPDATE \"Users\" SET \"Role\" = 'SuperAdmin' WHERE \"IsSystemAdmin\" = 1;"
                         : "UPDATE \"Users\" SET \"Role\" = 'SuperAdmin' WHERE \"IsSystemAdmin\" = TRUE;"));
 
+            // ADR 35 : les mots de passe enregistrés en clair par les versions antérieures sont remplacés par leur empreinte PBKDF2.
+            RunSchemaStep("Hachage des mots de passe des comptes locaux", HashLegacyPasswords);
+
             MigrateObsoleteGeminiModels();
 
             // V4 & V5 : Inject BaseEntity collaborative fields safely
@@ -416,7 +419,9 @@ namespace AFMI_Montage_projet_2.Models
                 {
                     if (GetExistingColumns(tableName)?.Contains("GlobalId") != true) continue;
                     string newId = IsSqliteProvider ? "hex(randomblob(16))" : "md5(random()::text || clock_timestamp()::text)";
+#pragma warning disable EF1002 // Nom de table issu du modèle EF et expression SQL constante, jamais une saisie utilisateur.
                     RunSchemaStep($"GlobalId {tableName}", () => Database.ExecuteSqlRaw($"UPDATE \"{tableName}\" SET \"GlobalId\" = {newId} WHERE \"GlobalId\" IS NULL OR \"GlobalId\" = '';"));
+#pragma warning restore EF1002
                 }
             }
 
@@ -691,6 +696,23 @@ namespace AFMI_Montage_projet_2.Models
                 Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Votes_ContributionId_VoterEmail"" ON ""Votes"" (""ContributionId"", ""VoterEmail"");");
             }
             catch (Exception ex) { AppLogger.Error("Schema", "Échec d'une étape de création/mise à niveau du schéma.", ex); }
+        }
+
+        /// <summary>
+        /// Remplace chaque mot de passe encore enregistré en clair par son empreinte PBKDF2 (ADR 35).
+        /// Idempotent : les empreintes déjà présentes ne sont pas touchées.
+        /// </summary>
+        public void HashLegacyPasswords()
+        {
+            var legacyUsers = Users.AsEnumerable()
+                .Where(u => !string.IsNullOrEmpty(u.PasswordHash) && !AFMI_Montage_projet_2.Security.PasswordHasher.IsHashed(u.PasswordHash))
+                .ToList();
+            if (legacyUsers.Count == 0) return;
+
+            foreach (var user in legacyUsers)
+                user.PasswordHash = AFMI_Montage_projet_2.Security.PasswordHasher.Hash(user.PasswordHash);
+            SaveChanges();
+            AppLogger.Info("Schema", $"{legacyUsers.Count} mot(s) de passe converti(s) en empreinte PBKDF2.");
         }
 
         /// <summary>Migre les anciens identifiants de modèles Gemini obsolètes vers la version 3.6.</summary>
@@ -1183,6 +1205,7 @@ namespace AFMI_Montage_projet_2.Models
             }
         }
 
+#pragma warning disable EF1002 // Seuls des types SQL constants (selon le fournisseur) sont insérés, jamais une saisie utilisateur.
         private void CreateTextAssistTablesIfNotExist()
         {
             try
@@ -1313,6 +1336,7 @@ namespace AFMI_Montage_projet_2.Models
                 AppLogger.Error("Schema", "Radar Table Creation Warning", ex);
             }
         }
+#pragma warning restore EF1002
 
         /// <summary>
         /// Colonnes de la base de veille sur grants_pipeline (les tables veille_a_venir et veille_non_retenus
