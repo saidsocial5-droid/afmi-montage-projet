@@ -419,7 +419,12 @@ namespace AFMI_Montage_projet_2.ViewModels
                 {
                     var authService = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveAuthService();
                     var driveService = await authService.AuthenticateAsync(GoogleClientId, GoogleClientSecret);
-                    var manager = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveManager(driveService!);
+                    if (driveService == null)
+                    {
+                        CloudStatusMessage = "Connexion Google impossible : vérifiez l'identifiant client et réessayez.";
+                        return;
+                    }
+                    var manager = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveManager(driveService);
                     
                     var systemFolderId = await manager.GetOrCreateFolderAsync("_system", WorkspaceId);
                     var updateFolderId = await manager.GetOrCreateFolderAsync("update", systemFolderId);
