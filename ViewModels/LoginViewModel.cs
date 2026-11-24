@@ -80,9 +80,25 @@ namespace AFMI_Montage_projet_2.ViewModels
             {
                 using var db = new AppDbContext();
 
-                var user = db.Users.FirstOrDefault(u => 
-                    (u.Email == UsernameOrEmail || u.Username == UsernameOrEmail) && 
-                    u.PasswordHash == password);
+                // Vérification hors base : le mot de passe n'est plus comparé en SQL (empreinte PBKDF2, ADR 35).
+                var login = UsernameOrEmail.Trim();
+                User? user = null;
+                bool needsRehash = false;
+                foreach (var candidate in db.Users.Where(u => u.Email == login || u.Username == login).ToList())
+                {
+                    if (AFMI_Montage_projet_2.Security.PasswordHasher.Verify(candidate.PasswordHash, password, out needsRehash))
+                    {
+                        user = candidate;
+                        break;
+                    }
+                }
+
+                if (user != null && needsRehash)
+                {
+                    // Ancien compte enregistré en clair : conversion transparente à la première connexion réussie.
+                    user.PasswordHash = AFMI_Montage_projet_2.Security.PasswordHasher.Hash(password);
+                    db.SaveChanges();
+                }
 
                 if (user != null)
                 {

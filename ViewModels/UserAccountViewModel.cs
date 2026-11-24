@@ -46,7 +46,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     dbUser.Email = Email.Trim();
                     if (!string.IsNullOrWhiteSpace(NewPassword))
                     {
-                        dbUser.PasswordHash = NewPassword;
+                        dbUser.PasswordHash = AFMI_Montage_projet_2.Security.PasswordHasher.Hash(NewPassword);
                     }
                     db.SaveChanges();
 
