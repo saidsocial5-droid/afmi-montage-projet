@@ -419,7 +419,12 @@ namespace AFMI_Montage_projet_2.ViewModels
                 {
                     var authService = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveAuthService();
                     var driveService = await authService.AuthenticateAsync(GoogleClientId, GoogleClientSecret);
-                    var manager = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveManager(driveService!);
+                    if (driveService == null)
+                    {
+                        CloudStatusMessage = "Publication annulée : connexion à Google Drive impossible.";
+                        return;
+                    }
+                    var manager = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveManager(driveService);
                     
                     var systemFolderId = await manager.GetOrCreateFolderAsync("_system", WorkspaceId);
                     var updateFolderId = await manager.GetOrCreateFolderAsync("update", systemFolderId);
@@ -455,7 +460,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     string json = System.Text.Json.JsonSerializer.Serialize(updateInfo);
                     
                     // Check if version.json exists
-                    string versionJsonId = null;
+                    string? versionJsonId = null;
                     var searchReq = driveService.Files.List();
                     searchReq.Q = $"'{updateFolderId}' in parents and name = 'version.json' and trashed = false";
                     var searchRes = await searchReq.ExecuteAsync();

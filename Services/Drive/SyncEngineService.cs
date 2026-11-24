@@ -152,8 +152,8 @@ namespace AFMI_Montage_projet_2.Services.Drive
                     var p = new Project
                     {
                         Id = int.Parse(element.GetProperty("id").GetString() ?? "0"),
-                        Title = element.GetProperty("title").GetString(),
-                        GeneralObjective = element.GetProperty("description").GetString(),
+                        Title = element.GetProperty("title").GetString() ?? string.Empty,
+                        GeneralObjective = element.GetProperty("description").GetString() ?? string.Empty,
                         TotalBudget = (decimal)element.GetProperty("budgetTotal").GetDouble(),
                     };
                     

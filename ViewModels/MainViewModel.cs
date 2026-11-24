@@ -38,34 +38,50 @@ namespace AFMI_Montage_projet_2.ViewModels
             }
         }
 
-        private async Task CheckForUpdatesAsync()
+        private static Task<bool>? _gitHubUpdateCheck;
+
+        /// <summary>
+        /// Vérification GitHub, une seule fois par lancement. App.OnStartup la démarre dès l'écran de connexion (ADR 35) :
+        /// un poste qui ne parvient pas à se connecter reçoit quand même la version qui corrige la connexion.
+        /// Renvoie vrai quand le canal GitHub est configuré (le canal Google Drive est alors inutile).
+        /// </summary>
+        public static Task<bool> StartGitHubUpdateCheck() => _gitHubUpdateCheck ??= CheckGitHubUpdatesAsync();
+
+        private static async Task<bool> CheckGitHubUpdatesAsync()
         {
-            // 1. Releases GitHub (canal principal, ADR 26 ; mise à jour automatique, ADR 29)
+            // Releases GitHub (canal principal, ADR 26 ; mise à jour automatique, ADR 29 et 35)
             try
             {
                 var github = new Services.Updates.GitHubUpdateService();
                 var check = await github.CheckAsync();
+                AppLogger.Info(nameof(MainViewModel), $"Mises à jour : {check.Message}");
 
                 // Dépôt privé sans clé valide sur ce poste : inviter à l'activer, puis enchaîner sur la vérification
                 if (check.NeedsAccessToken)
                 {
-                    AppLogger.Info(nameof(MainViewModel), check.Message);
                     var validated = await Views.GitHubTokenWindow.PromptAsync(Application.Current?.MainWindow);
-                    if (validated == null) return;
+                    if (validated == null) return true;
                     check = validated;
                 }
 
                 if (check.UpdateAvailable && check.Release != null)
                 {
                     await ApplyGitHubUpdateAsync(check, github);
-                    return;
+                    return true;
                 }
-                if (check.IsConfigured) return; // dépôt configuré et application à jour : pas de canal secondaire
+                return check.IsConfigured; // dépôt configuré et application à jour : pas de canal secondaire
             }
             catch (Exception ex)
             {
                 AppLogger.Warn(nameof(MainViewModel), "Vérification des mises à jour GitHub impossible.", ex);
+                return false;
             }
+        }
+
+        private async Task CheckForUpdatesAsync()
+        {
+            // 1. Releases GitHub : vérification déjà lancée au démarrage, attendue ici (jamais répétée)
+            if (await StartGitHubUpdateCheck()) return;
 
             // 2. Espace Google Drive de l'équipe (canal historique, publications d'administrateur uniquement)
             try
@@ -123,23 +139,8 @@ namespace AFMI_Montage_projet_2.ViewModels
         {
             var release = check.Release!;
 
-            // Première nouvelle version détectée sur ce poste : demander si la mise à jour doit devenir automatique (ADR 30)
-            if (!Services.Updates.AutoUpdateCoordinator.AutoInstallDecided)
-            {
-                var mainWindow = Application.Current?.MainWindow;
-                string question = $"Une nouvelle version d'AFMI Montage Projet est disponible : {release.Version}.\n\n" +
-                                  "Voulez-vous activer la mise à jour automatique ?\n\n" +
-                                  "• Oui : cette version et les suivantes sont téléchargées et vérifiées en arrière-plan, puis installées " +
-                                  "toutes seules à la fermeture du logiciel (vous pourrez aussi les installer tout de suite).\n" +
-                                  "• Non : chaque nouvelle version vous sera proposée au démarrage.\n\n" +
-                                  "Ce choix se modifie à tout moment dans Paramètres › Mises à jour.";
-                var choice = mainWindow != null && mainWindow.IsLoaded
-                    ? MessageBox.Show(mainWindow, question, "Mise à jour automatique", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes)
-                    : MessageBox.Show(question, "Mise à jour automatique", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
-                Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled = choice == MessageBoxResult.Yes;
-                AppLogger.Info(nameof(MainViewModel), $"Mise à jour automatique {(choice == MessageBoxResult.Yes ? "activée" : "refusée")} par l'utilisateur.");
-            }
-
+            // Mise à jour automatique activée par défaut (ADR 35) : plus de question préalable, seul un refus explicite
+            // dans Paramètres › Mises à jour revient à la simple proposition
             if (!Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled ||
                 !await Services.Updates.AutoUpdateCoordinator.PrepareAsync(release, github))
             {

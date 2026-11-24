@@ -44,8 +44,8 @@ namespace AFMI_Montage_projet_2.ViewModels
             using var db = new AppDbContext();
             var acts = db.Activities
                 .Include(a => a.Result)
-                .ThenInclude(r => r.Objective)
-                .Where(a => a.Result.Objective.ProjectId == _project.Id)
+                .ThenInclude(r => r!.Objective)
+                .Where(a => a.Result!.Objective!.ProjectId == _project.Id)
                 .OrderBy(a => a.Code)
                 .ToList();
             
@@ -93,7 +93,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             bool isAdmin = false;
             using (var checkDb = new AppDbContext())
             {
-                isAdmin = checkDb.ProjectRoles.Any(r => r.ProjectId == _project.Id && r.UserId == currentUser.Id && r.RoleName == "Admin") 
+                isAdmin = (currentUser != null && checkDb.ProjectRoles.Any(r => r.ProjectId == _project.Id && r.UserId == currentUser.Id && r.RoleName == "Admin"))
                           || (currentUser?.IsSystemAdmin ?? false);
             }
 

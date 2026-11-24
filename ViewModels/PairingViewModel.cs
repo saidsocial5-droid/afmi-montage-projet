@@ -19,12 +19,13 @@ namespace AFMI_Montage_projet_2.ViewModels
     {
         private readonly DevicePairingService _pairingService;
         private readonly string _workspaceId;
-        private PairingSessionPayload _currentPayload;
-        private DispatcherTimer _timer;
-        private DispatcherTimer _pollTimer;
+        // Créés par la génération du code, avant tout usage
+        private PairingSessionPayload _currentPayload = null!;
+        private DispatcherTimer _timer = null!;
+        private DispatcherTimer _pollTimer = null!;
 
         [ObservableProperty]
-        private BitmapImage _qrCodeImage;
+        private BitmapImage? _qrCodeImage;
 
         [ObservableProperty]
         private int _timeRemaining = 120;
@@ -35,8 +36,8 @@ namespace AFMI_Montage_projet_2.ViewModels
         [ObservableProperty]
         private bool _isExpired = false;
 
-        public Action OnPairingSuccess;
-        public Action OnCloseRequested;
+        public Action? OnPairingSuccess;
+        public Action? OnCloseRequested;
 
         public PairingViewModel(DevicePairingService pairingService, string workspaceId)
         {
@@ -86,7 +87,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             AFMI_Montage_projet_2.Security.AuditLogger.Log("Génération QR Code", $"QR Code de couplage généré. QrId: {_currentPayload.QrId}");
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
             TimeRemaining--;
             if (TimeRemaining <= 0)
@@ -95,7 +96,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             }
         }
 
-        private async void PollTimer_Tick(object sender, EventArgs e)
+        private async void PollTimer_Tick(object? sender, EventArgs e)
         {
             _pollTimer.Stop();
             try
@@ -145,9 +146,10 @@ namespace AFMI_Montage_projet_2.ViewModels
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore transient errors
+                // Erreur passagère (réseau) : nouvel essai au prochain tic
+                AppLogger.Info(nameof(PairingViewModel), $"Vérification du couplage reportée : {ex.Message}");
             }
 
             if (!IsExpired) _pollTimer.Start();
@@ -183,7 +185,7 @@ namespace AFMI_Montage_projet_2.ViewModels
         }
 
         [RelayCommand]
-        private async Task CancelAndClose()
+        private void CancelAndClose()
         {
             ExpireSession();
             OnCloseRequested?.Invoke();

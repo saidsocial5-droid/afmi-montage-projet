@@ -15,11 +15,11 @@ namespace AFMI_Montage_projet_2.ViewModels
         [ObservableProperty] private string _newPassword = string.Empty;
         [ObservableProperty] private string _statusMessage = string.Empty;
 
-        private readonly User _currentUser;
+        private readonly User? _currentUser;
 
         public UserAccountViewModel()
         {
-            _currentUser = SessionManager.CurrentUser!;
+            _currentUser = SessionManager.CurrentUser;
             if (_currentUser != null)
             {
                 Username = _currentUser.Username;
@@ -30,6 +30,12 @@ namespace AFMI_Montage_projet_2.ViewModels
         [RelayCommand]
         private void Save()
         {
+            if (_currentUser == null)
+            {
+                StatusMessage = "Aucun utilisateur connecté : reconnectez-vous pour modifier votre compte.";
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Email))
             {
                 StatusMessage = "Le nom d'utilisateur et l'email sont requis.";

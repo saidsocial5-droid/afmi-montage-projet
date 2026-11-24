@@ -416,7 +416,9 @@ namespace AFMI_Montage_projet_2.Models
                 {
                     if (GetExistingColumns(tableName)?.Contains("GlobalId") != true) continue;
                     string newId = IsSqliteProvider ? "hex(randomblob(16))" : "md5(random()::text || clock_timestamp()::text)";
+#pragma warning disable EF1002 // Types SQL et noms de tables constants ou issus du modèle EF, jamais une saisie utilisateur.
                     RunSchemaStep($"GlobalId {tableName}", () => Database.ExecuteSqlRaw($"UPDATE \"{tableName}\" SET \"GlobalId\" = {newId} WHERE \"GlobalId\" IS NULL OR \"GlobalId\" = '';"));
+#pragma warning restore EF1002
                 }
             }
 
@@ -1183,6 +1185,7 @@ namespace AFMI_Montage_projet_2.Models
             }
         }
 
+#pragma warning disable EF1002 // Types SQL et noms de tables constants ou issus du modèle EF, jamais une saisie utilisateur.
         private void CreateTextAssistTablesIfNotExist()
         {
             try
@@ -1313,6 +1316,8 @@ namespace AFMI_Montage_projet_2.Models
                 AppLogger.Error("Schema", "Radar Table Creation Warning", ex);
             }
         }
+
+#pragma warning restore EF1002
 
         /// <summary>
         /// Colonnes de la base de veille sur grants_pipeline (les tables veille_a_venir et veille_non_retenus

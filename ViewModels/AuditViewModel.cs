@@ -420,8 +420,8 @@ Retourne UNIQUEMENT ta réponse selon ce format structuré exact (N'UTILISE PAS 
                     if (IntegrateLogicalFramework && !string.IsNullOrWhiteSpace(GeneratedLogicalFramework))
                     {
                         var lines = GeneratedLogicalFramework.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                        Objective currentObj = null;
-                        Result currentRes = null;
+                        Objective? currentObj = null;
+                        Result? currentRes = null;
                         
                         int objCount = db.Objectives.Count(o => o.ProjectId == dbProject.Id);
                         int resCount = 0;

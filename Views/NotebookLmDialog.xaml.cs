@@ -9,7 +9,6 @@ namespace AFMI_Montage_projet_2.Views
         {
             InitializeComponent();
             var vm = new NotebookLmViewModel(parentViewModel);
-            vm.RequestClose += () => Close();
             DataContext = vm;
         }
 

@@ -495,3 +495,19 @@
   2. **Filet général** `EnsureModelColumnsExist` : en fin de mise à niveau, toute propriété du modèle EF sans colonne dans une table existante est ajoutée (type du fournisseur ; si obligatoire, défaut neutre : texte vide, 0, faux, 2000-01-01). Il passe après les mises à niveau spécifiques, qui gardent leurs valeurs par défaut propres. Idempotent, SQLite et PostgreSQL.
   3. La fenêtre d'inscription affiche la cause réelle (`GetBaseException`) et la journalise.
 * **Conséquence :** oublier un `AddColumnIfMissing` ne casse plus une ancienne base ; l'appel explicite reste préférable quand la valeur par défaut a un sens métier.
+
+---
+
+## 📋 Décision n° 35 : Mise à jour automatique active par défaut, vérifiée dès l'écran de connexion (1.9.27)
+* **Contexte (revue du 24/11/2026) :** le poste de développement est resté en 1.9.24 alors que 1.9.25 et 1.9.26 étaient publiées. Deux causes dans le code :
+  1. `Update_AutoInstall` non choisi valait « désactivé » (ADR 30) : tant que l'utilisateur n'avait pas répondu à la question, rien ne s'installait tout seul, et Paramètres › Mises à jour affichait la case décochée.
+  2. La vérification partait de `MainViewModel`, créé **après** la connexion (`StartupUri` = `LoginWindow`). Un poste qui ne parvient pas à se connecter (défauts d'inscription corrigés en 1.9.25 et 1.9.26, ADR 31 et 34) ne recevait donc jamais la version qui corrige la connexion.
+
+  Le journal montrait aussi, à chaque premier démarrage, quatre erreurs « no such table: AppSettings » : `ThemeManager.Initialize()` lisait les polices avant que `SeedDefaultData()` ne crée les tables.
+* **Décision :**
+  1. **Activée par défaut** : seul un « false » explicite (case décochée) désactive la mise à jour automatique ; la question préalable de l'ADR 30 est supprimée. L'état affiché précise « (réglage par défaut) ».
+  2. **Vérification au démarrage de l'application** : `App.OnStartup` lance `MainViewModel.StartGitHubUpdateCheck()` (une seule fois par lancement) ; `MainViewModel` attend ce même résultat et ne consulte Google Drive que si GitHub n'est pas configuré. Chaque vérification est journalisée (« Mises à jour : … »).
+  3. **Ordre de démarrage** : base de données (`SeedDefaultData`), puis thème, puis assistant IA.
+  4. **Qualité du code** : les 33 avertissements du compilateur sont corrigés (0 avertissement). Trois étaient de vrais risques d'arrêt brutal : enregistrement d'un compte rendu d'activité, d'un nœud de l'arbre à problèmes ou du compte utilisateur sans utilisateur connecté, et publication Drive quand l'authentification Google n'aboutit pas. Les requêtes SQL de schéma construites à partir de constantes gardent `ExecuteSqlRaw`, avec un `#pragma` justifié (EF1002).
+* **Conséquence :** un poste en 1.9.24 à 1.9.26 reçoit la 1.9.27 au prochain démarrage où il vérifie (1.9.24 pose encore la question de l'ADR 30, avec « Oui » par défaut) ; à partir de la 1.9.27, les versions suivantes arrivent sans question, même sans connexion. Windows demande l'autorisation d'administrateur à l'installation (installation dans Program Files).
+* **Alternative rejetée :** relancer la vérification après la connexion en plus du démarrage : une seule vérification par lancement suffit et évite deux fenêtres de mise à jour.

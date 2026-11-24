@@ -27,15 +27,15 @@ namespace AFMI_Montage_Projet.Tests
         }
 
         [Fact]
-        public void AutoInstall_IsUndecidedUntilTheUserChooses()
+        public void AutoInstall_IsEnabledByDefault_UntilTheUserTurnsItOff()
         {
-            // ADR 30 : tant que l'utilisateur n'a pas répondu, rien n'est installé automatiquement et la question sera posée
+            // ADR 35 : un poste qui n'a jamais choisi reçoit les mises à jour automatiquement
             try
             {
                 SettingsService.SaveSetting(AutoUpdateCoordinator.AutoInstallSetting, "");
                 Assert.False(AutoUpdateCoordinator.AutoInstallDecided);
-                Assert.False(AutoUpdateCoordinator.AutoInstallEnabled);
-                Assert.Contains("pas encore choisi", AutoUpdateCoordinator.DescribeAutoInstall());
+                Assert.True(AutoUpdateCoordinator.AutoInstallEnabled);
+                Assert.Contains("réglage par défaut", AutoUpdateCoordinator.DescribeAutoInstall());
 
                 AutoUpdateCoordinator.AutoInstallEnabled = true;
                 Assert.True(AutoUpdateCoordinator.AutoInstallDecided);

@@ -143,7 +143,7 @@ namespace AFMI_Montage_projet_2.ViewModels
             BudgetItems = new ObservableCollection<BudgetItemRowViewModel>(rows);
 
             Activities = new ObservableCollection<Activity>(
-                db.Activities.Where(a => a.Result != null && a.Result.Objective.ProjectId == _project.Id).ToList()
+                db.Activities.Where(a => a.Result != null && a.Result.Objective!.ProjectId == _project.Id).ToList()
             );
 
             // Charger les sources de financement

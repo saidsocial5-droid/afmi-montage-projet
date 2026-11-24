@@ -50,12 +50,8 @@ namespace AFMI_Montage_projet_2
                 MessageBox.Show($"Erreur lors de la migration des données :\n{ex.Message}", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
-            ThemeManager.Initialize();
-
-            // Initialiser l'assistance IA universelle pour tous les contrôles texte de l'application
-            AFMI_Montage_projet_2.Helpers.AiTextAssistant.InitializeGlobalHooks();
-
-            // Initialiser la base de données au démarrage
+            // Initialiser la base de données avant le thème : ThemeManager lit les polices dans AppSettings,
+            // table absente d'une base neuve tant que SeedDefaultData n'a pas tourné (ADR 35)
             try
             {
                 using var db = new AppDbContext();
@@ -70,7 +66,14 @@ namespace AFMI_Montage_projet_2
                                 MessageBoxImage.Error);
             }
 
-            // La vérification des mises à jour est effectuée par MainViewModel (GitHub, puis Google Drive à défaut).
+            ThemeManager.Initialize();
+
+            // Initialiser l'assistance IA universelle pour tous les contrôles texte de l'application
+            AFMI_Montage_projet_2.Helpers.AiTextAssistant.InitializeGlobalHooks();
+
+            // Mises à jour GitHub vérifiées dès l'écran de connexion, sans attendre l'ouverture de session (ADR 35) ;
+            // MainViewModel attend ce même résultat puis consulte Google Drive si GitHub n'est pas configuré.
+            _ = ViewModels.MainViewModel.StartGitHubUpdateCheck();
         }
 
         protected override void OnExit(ExitEventArgs e)
