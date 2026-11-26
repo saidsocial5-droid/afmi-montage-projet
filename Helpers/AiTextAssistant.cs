@@ -174,7 +174,7 @@ namespace AFMI_Montage_projet_2.Helpers
                 return true;
             }
 
-            // 2. Les PasswordBox n'héritent pas de TextBoxBase : elles ne passent jamais par ici
+            // 2. Mot de passe : un PasswordBox n'est pas un TextBoxBase, il ne reçoit donc jamais l'assistant.
 
             // 3. Les zones de texte multi-lignes et les RichTextBox sont par nature des zones rédactionnelles
             // (Justification, Contexte, Objectifs, Impacts, etc.) et ne sont jamais des dates ni des montants.

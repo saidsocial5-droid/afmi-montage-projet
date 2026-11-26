@@ -45,14 +45,15 @@ namespace AFMI_Montage_projet_2.ViewModels
             try
             {
                 using var db = new AppDbContext();
-                var dbUser = db.Users.FirstOrDefault(u => u.Id == _currentUser.Id);
+                int currentUserId = _currentUser.Id;
+                var dbUser = db.Users.FirstOrDefault(u => u.Id == currentUserId);
                 if (dbUser != null)
                 {
                     dbUser.Username = Username.Trim();
                     dbUser.Email = Email.Trim();
                     if (!string.IsNullOrWhiteSpace(NewPassword))
                     {
-                        dbUser.PasswordHash = NewPassword;
+                        dbUser.PasswordHash = AFMI_Montage_projet_2.Security.PasswordHasher.Hash(NewPassword);
                     }
                     db.SaveChanges();
 

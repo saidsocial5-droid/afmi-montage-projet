@@ -51,7 +51,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 {
                     Username = Username.Trim(),
                     Email = Email.Trim(),
-                    PasswordHash = password, // Note: L'utilisateur devra lier son compte Google pour valider l'email, ou on s'inscrit directement via Google.
+                    PasswordHash = AFMI_Montage_projet_2.Security.PasswordHasher.Hash(password),
                     IsSystemAdmin = isSuperAdmin,
                     Status = isSuperAdmin ? "Active" : "Pending",
                     Role = isSuperAdmin ? "SuperAdmin" : "Reader"

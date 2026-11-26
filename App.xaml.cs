@@ -51,7 +51,7 @@ namespace AFMI_Montage_projet_2
             }
 
             // Initialiser la base de données avant le thème : ThemeManager lit les polices dans AppSettings,
-            // table absente d'une base neuve tant que SeedDefaultData n'a pas tourné (ADR 35)
+            // table absente d'une base neuve tant que SeedDefaultData n'a pas tourné (ADR 36)
             try
             {
                 using var db = new AppDbContext();
@@ -71,7 +71,7 @@ namespace AFMI_Montage_projet_2
             // Initialiser l'assistance IA universelle pour tous les contrôles texte de l'application
             AFMI_Montage_projet_2.Helpers.AiTextAssistant.InitializeGlobalHooks();
 
-            // Mises à jour GitHub vérifiées dès l'écran de connexion, sans attendre l'ouverture de session (ADR 35) ;
+            // Mises à jour GitHub vérifiées dès l'écran de connexion, sans attendre l'ouverture de session (ADR 36) ;
             // MainViewModel attend ce même résultat puis consulte Google Drive si GitHub n'est pas configuré.
             _ = ViewModels.MainViewModel.StartGitHubUpdateCheck();
         }

@@ -421,7 +421,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                     var driveService = await authService.AuthenticateAsync(GoogleClientId, GoogleClientSecret);
                     if (driveService == null)
                     {
-                        CloudStatusMessage = "Publication annulée : connexion à Google Drive impossible.";
+                        CloudStatusMessage = "Connexion Google impossible : vérifiez l'identifiant client et réessayez.";
                         return;
                     }
                     var manager = new AFMI_Montage_projet_2.Services.Drive.GoogleDriveManager(driveService);
@@ -446,7 +446,12 @@ namespace AFMI_Montage_projet_2.ViewModels
                         CloudStatusMessage = "Erreur lors de l'upload du fichier EXE.";
                         return;
                     }
-                    var uploadedExeId = request.ResponseBody.Id;
+                    var uploadedExeId = request.ResponseBody?.Id;
+                    if (string.IsNullOrEmpty(uploadedExeId))
+                    {
+                        CloudStatusMessage = "Erreur lors de l'upload du fichier EXE.";
+                        return;
+                    }
 
                     // Create version.json
                     var updateInfo = new AFMI_Montage_projet_2.Services.DriveUpdateInfo

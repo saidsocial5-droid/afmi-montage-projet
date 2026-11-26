@@ -57,8 +57,7 @@ namespace AFMI_Montage_projet_2.Helpers
                             if (!string.IsNullOrEmpty(entity.AuthorColor))
                             {
                                 var converter = new BrushConverter();
-                                var brush = (Brush)converter.ConvertFromString(entity.AuthorColor)!;
-                                textBlock.Foreground = brush;
+                                textBlock.Foreground = converter.ConvertFromString(entity.AuthorColor) as Brush ?? Brushes.Orange;
                             }
                             else
                             {
@@ -71,7 +70,7 @@ namespace AFMI_Montage_projet_2.Helpers
                     {
                         textBlock.Text = text;
                         // Reset to original color
-                        textBlock.Foreground = (Brush)new BrushConverter().ConvertFromString("#334155")!;
+                        textBlock.Foreground = new BrushConverter().ConvertFromString("#334155") as Brush ?? Brushes.Black;
                     }
                 }
             }

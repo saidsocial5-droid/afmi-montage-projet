@@ -41,7 +41,7 @@ namespace AFMI_Montage_projet_2.ViewModels
         private static Task<bool>? _gitHubUpdateCheck;
 
         /// <summary>
-        /// Vérification GitHub, une seule fois par lancement. App.OnStartup la démarre dès l'écran de connexion (ADR 35) :
+        /// Vérification GitHub, une seule fois par lancement. App.OnStartup la démarre dès l'écran de connexion (ADR 36) :
         /// un poste qui ne parvient pas à se connecter reçoit quand même la version qui corrige la connexion.
         /// Renvoie vrai quand le canal GitHub est configuré (le canal Google Drive est alors inutile).
         /// </summary>
@@ -139,7 +139,7 @@ namespace AFMI_Montage_projet_2.ViewModels
         {
             var release = check.Release!;
 
-            // Mise à jour automatique activée par défaut (ADR 35) : plus de question préalable, seul un refus explicite
+            // Mise à jour automatique activée par défaut (ADR 36) : plus de question préalable, seul un refus explicite
             // dans Paramètres › Mises à jour revient à la simple proposition
             if (!Services.Updates.AutoUpdateCoordinator.AutoInstallEnabled ||
                 !await Services.Updates.AutoUpdateCoordinator.PrepareAsync(release, github))

@@ -29,6 +29,7 @@ namespace AFMI_Montage_projet_2.ViewModels
         [ObservableProperty]
         private NotebookLmPromptPreset? _selectedPrompt;
 
+
         public NotebookLmViewModel(OrganizationProfileViewModel parentViewModel)
         {
             _parentViewModel = parentViewModel ?? throw new ArgumentNullException(nameof(parentViewModel));

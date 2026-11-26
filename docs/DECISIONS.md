@@ -498,7 +498,16 @@
 
 ---
 
-## 📋 Décision n° 35 : Mise à jour automatique active par défaut, vérifiée dès l'écran de connexion (1.9.27)
+## 📋 Décision n° 35 : Mots de passe des comptes locaux hachés, compilation sans avertissement (1.9.27)
+* **Contexte :** la colonne `Users.PasswordHash` contenait en réalité le mot de passe en clair, comparé tel quel en SQL à la connexion. Toute copie de `projects.db` (sauvegarde, poste prêté, base PostgreSQL partagée) exposait les mots de passe. Par ailleurs la compilation produisait 38 avertissements, dont plusieurs signalaient de vraies erreurs possibles (utilisateur non connecté, réponse Drive vide).
+* **Décision :**
+  1. `Security/PasswordHasher` : PBKDF2-HMAC-SHA512, 210 000 itérations, sel aléatoire de 16 octets, comparaison en temps constant. Format stocké : `PBKDF2$SHA512$itérations$sel$empreinte` (base64). Uniquement `System.Security.Cryptography` : aucune dépendance ajoutée.
+  2. Inscription, changement de mot de passe et réinitialisation par un administrateur enregistrent l'empreinte. La connexion charge les comptes correspondant à l'identifiant puis vérifie le mot de passe hors de la base.
+  3. Conversion des comptes existants : `SeedDefaultData` hache au démarrage tout mot de passe encore en clair (`HashLegacyPasswords`, idempotent). En filet, un compte resté en clair (base PostgreSQL modifiée par une ancienne version) est accepté une dernière fois puis converti à la connexion.
+  4. Avertissements : nullabilité corrigée (types nullables explicites, gardes là où un utilisateur absent provoquait une `NullReferenceException`), code mort retiré, `EF1002` désactivé localement avec justification sur le SQL de schéma construit uniquement à partir de constantes (même règle que `AddColumnIfMissing`).
+* **Conséquence :** les mots de passe ne sont plus lisibles dans la base. Un poste resté sur une version antérieure à 1.9.27 et connecté à la même base PostgreSQL ne peut plus ouvrir les comptes convertis : mettre tous les postes à jour. Les mots de passe oubliés se réinitialisent toujours depuis la gestion des utilisateurs. Toute nouvelle écriture de mot de passe doit passer par `PasswordHasher.Hash`.
+
+## 📋 Décision n° 36 : Mise à jour automatique active par défaut, vérifiée dès l'écran de connexion (1.9.28)
 * **Contexte (revue du 24/11/2026) :** le poste de développement est resté en 1.9.24 alors que 1.9.25 et 1.9.26 étaient publiées. Deux causes dans le code :
   1. `Update_AutoInstall` non choisi valait « désactivé » (ADR 30) : tant que l'utilisateur n'avait pas répondu à la question, rien ne s'installait tout seul, et Paramètres › Mises à jour affichait la case décochée.
   2. La vérification partait de `MainViewModel`, créé **après** la connexion (`StartupUri` = `LoginWindow`). Un poste qui ne parvient pas à se connecter (défauts d'inscription corrigés en 1.9.25 et 1.9.26, ADR 31 et 34) ne recevait donc jamais la version qui corrige la connexion.
@@ -508,6 +517,6 @@
   1. **Activée par défaut** : seul un « false » explicite (case décochée) désactive la mise à jour automatique ; la question préalable de l'ADR 30 est supprimée. L'état affiché précise « (réglage par défaut) ».
   2. **Vérification au démarrage de l'application** : `App.OnStartup` lance `MainViewModel.StartGitHubUpdateCheck()` (une seule fois par lancement) ; `MainViewModel` attend ce même résultat et ne consulte Google Drive que si GitHub n'est pas configuré. Chaque vérification est journalisée (« Mises à jour : … »).
   3. **Ordre de démarrage** : base de données (`SeedDefaultData`), puis thème, puis assistant IA.
-  4. **Qualité du code** : les 33 avertissements du compilateur sont corrigés (0 avertissement). Trois étaient de vrais risques d'arrêt brutal : enregistrement d'un compte rendu d'activité, d'un nœud de l'arbre à problèmes ou du compte utilisateur sans utilisateur connecté, et publication Drive quand l'authentification Google n'aboutit pas. Les requêtes SQL de schéma construites à partir de constantes gardent `ExecuteSqlRaw`, avec un `#pragma` justifié (EF1002).
-* **Conséquence :** un poste en 1.9.24 à 1.9.26 reçoit la 1.9.27 au prochain démarrage où il vérifie (1.9.24 pose encore la question de l'ADR 30, avec « Oui » par défaut) ; à partir de la 1.9.27, les versions suivantes arrivent sans question, même sans connexion. Windows demande l'autorisation d'administrateur à l'installation (installation dans Program Files).
+  4. **Robustesse** (en complément de l'ADR 35) : la recherche de la fenêtre active du Radar ne suppose plus `Application.Current` non nul, et les erreurs passagères du couplage mobile sont journalisées au lieu d'être ignorées.
+* **Conséquence :** un poste en 1.9.24 à 1.9.27 reçoit la 1.9.28 au prochain démarrage où il vérifie (1.9.24 pose encore la question de l'ADR 30, avec « Oui » par défaut) ; à partir de la 1.9.28, les versions suivantes arrivent sans question, même sans connexion. Windows demande l'autorisation d'administrateur à l'installation (installation dans Program Files).
 * **Alternative rejetée :** relancer la vérification après la connexion en plus du démarrage : une seule vérification par lancement suffit et évite deux fenêtres de mise à jour.

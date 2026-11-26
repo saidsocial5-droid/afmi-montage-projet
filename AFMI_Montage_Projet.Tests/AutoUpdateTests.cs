@@ -29,7 +29,7 @@ namespace AFMI_Montage_Projet.Tests
         [Fact]
         public void AutoInstall_IsEnabledByDefault_UntilTheUserTurnsItOff()
         {
-            // ADR 35 : un poste qui n'a jamais choisi reçoit les mises à jour automatiquement
+            // ADR 36 : un poste qui n'a jamais choisi reçoit les mises à jour automatiquement
             try
             {
                 SettingsService.SaveSetting(AutoUpdateCoordinator.AutoInstallSetting, "");

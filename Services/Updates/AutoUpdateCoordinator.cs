@@ -10,7 +10,7 @@ namespace AFMI_Montage_projet_2.Services.Updates
     /// Mise à jour automatique (ADR 29) : au démarrage, la nouvelle version est téléchargée et vérifiée (SHA-256)
     /// en arrière-plan, puis installée en silence à la fermeture du logiciel, sans interrompre le travail en cours.
     /// L'utilisateur peut aussi l'installer tout de suite. Réglage « Update_AutoInstall » : activé par défaut,
-    /// seul un « false » explicite (case décochée dans Paramètres › Mises à jour) la désactive (ADR 35).
+    /// seul un « false » explicite (case décochée dans Paramètres › Mises à jour) la désactive (ADR 36).
     /// </summary>
     public static class AutoUpdateCoordinator
     {
@@ -23,7 +23,7 @@ namespace AFMI_Montage_projet_2.Services.Updates
         private static readonly object Gate = new();
 
         /// <summary>
-        /// Vrai sauf si l'utilisateur a explicitement désactivé la mise à jour automatique (non choisi = activée, ADR 35) :
+        /// Vrai sauf si l'utilisateur a explicitement désactivé la mise à jour automatique (non choisi = activée, ADR 36) :
         /// un poste qui n'a jamais répondu à la question de l'ADR 30 ne doit pas rester bloqué sur une ancienne version.
         /// </summary>
         public static bool AutoInstallEnabled

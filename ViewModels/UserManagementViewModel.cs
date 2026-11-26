@@ -142,7 +142,7 @@ namespace AFMI_Montage_projet_2.ViewModels
                 if (dbUser != null)
                 {
                     string tempPassword = Guid.NewGuid().ToString().Substring(0, 8);
-                    dbUser.PasswordHash = tempPassword;
+                    dbUser.PasswordHash = AFMI_Montage_projet_2.Security.PasswordHasher.Hash(tempPassword);
                     db.SaveChanges();
                     StatusMessage = $"Mot de passe de '{dbUser.Username}' réinitialisé. Nouveau MDP : {tempPassword}";
                 }
