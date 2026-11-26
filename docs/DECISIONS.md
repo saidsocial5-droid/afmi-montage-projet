@@ -506,3 +506,17 @@
   3. Conversion des comptes existants : `SeedDefaultData` hache au démarrage tout mot de passe encore en clair (`HashLegacyPasswords`, idempotent). En filet, un compte resté en clair (base PostgreSQL modifiée par une ancienne version) est accepté une dernière fois puis converti à la connexion.
   4. Avertissements : nullabilité corrigée (types nullables explicites, gardes là où un utilisateur absent provoquait une `NullReferenceException`), code mort retiré, `EF1002` désactivé localement avec justification sur le SQL de schéma construit uniquement à partir de constantes (même règle que `AddColumnIfMissing`).
 * **Conséquence :** les mots de passe ne sont plus lisibles dans la base. Un poste resté sur une version antérieure à 1.9.27 et connecté à la même base PostgreSQL ne peut plus ouvrir les comptes convertis : mettre tous les postes à jour. Les mots de passe oubliés se réinitialisent toujours depuis la gestion des utilisateurs. Toute nouvelle écriture de mot de passe doit passer par `PasswordHasher.Hash`.
+
+## 📋 Décision n° 36 : Mise à jour automatique active par défaut, vérifiée dès l'écran de connexion (1.9.28)
+* **Contexte (revue du 24/11/2026) :** le poste de développement est resté en 1.9.24 alors que 1.9.25 et 1.9.26 étaient publiées. Deux causes dans le code :
+  1. `Update_AutoInstall` non choisi valait « désactivé » (ADR 30) : tant que l'utilisateur n'avait pas répondu à la question, rien ne s'installait tout seul, et Paramètres › Mises à jour affichait la case décochée.
+  2. La vérification partait de `MainViewModel`, créé **après** la connexion (`StartupUri` = `LoginWindow`). Un poste qui ne parvient pas à se connecter (défauts d'inscription corrigés en 1.9.25 et 1.9.26, ADR 31 et 34) ne recevait donc jamais la version qui corrige la connexion.
+
+  Le journal montrait aussi, à chaque premier démarrage, quatre erreurs « no such table: AppSettings » : `ThemeManager.Initialize()` lisait les polices avant que `SeedDefaultData()` ne crée les tables.
+* **Décision :**
+  1. **Activée par défaut** : seul un « false » explicite (case décochée) désactive la mise à jour automatique ; la question préalable de l'ADR 30 est supprimée. L'état affiché précise « (réglage par défaut) ».
+  2. **Vérification au démarrage de l'application** : `App.OnStartup` lance `MainViewModel.StartGitHubUpdateCheck()` (une seule fois par lancement) ; `MainViewModel` attend ce même résultat et ne consulte Google Drive que si GitHub n'est pas configuré. Chaque vérification est journalisée (« Mises à jour : … »).
+  3. **Ordre de démarrage** : base de données (`SeedDefaultData`), puis thème, puis assistant IA.
+  4. **Robustesse** (en complément de l'ADR 35) : la recherche de la fenêtre active du Radar ne suppose plus `Application.Current` non nul, et les erreurs passagères du couplage mobile sont journalisées au lieu d'être ignorées.
+* **Conséquence :** un poste en 1.9.24 à 1.9.27 reçoit la 1.9.28 au prochain démarrage où il vérifie (1.9.24 pose encore la question de l'ADR 30, avec « Oui » par défaut) ; à partir de la 1.9.28, les versions suivantes arrivent sans question, même sans connexion. Windows demande l'autorisation d'administrateur à l'installation (installation dans Program Files).
+* **Alternative rejetée :** relancer la vérification après la connexion en plus du démarrage : une seule vérification par lancement suffit et évite deux fenêtres de mise à jour.

@@ -148,9 +148,10 @@ namespace AFMI_Montage_projet_2.ViewModels
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore transient errors
+                // Erreur passagère (réseau) : nouvel essai au prochain tic
+                AppLogger.Info(nameof(PairingViewModel), $"Vérification du couplage reportée : {ex.Message}");
             }
 
             if (!IsExpired) _pollTimer?.Start();

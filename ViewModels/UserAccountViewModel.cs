@@ -30,6 +30,12 @@ namespace AFMI_Montage_projet_2.ViewModels
         [RelayCommand]
         private void Save()
         {
+            if (_currentUser == null)
+            {
+                StatusMessage = "Aucun utilisateur connecté : reconnectez-vous pour modifier votre compte.";
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Email))
             {
                 StatusMessage = "Le nom d'utilisateur et l'email sont requis.";
@@ -39,11 +45,6 @@ namespace AFMI_Montage_projet_2.ViewModels
             try
             {
                 using var db = new AppDbContext();
-                if (_currentUser == null)
-                {
-                    StatusMessage = "Aucun utilisateur connecté.";
-                    return;
-                }
                 int currentUserId = _currentUser.Id;
                 var dbUser = db.Users.FirstOrDefault(u => u.Id == currentUserId);
                 if (dbUser != null)
